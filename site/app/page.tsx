@@ -146,7 +146,7 @@ export default function Home() {
   const [paid, setPaid] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
-  const [accountEmail, setAccountEmail] = useState("romualdo@exemplo.com");
+  const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
   const [accountError, setAccountError] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
@@ -1568,11 +1568,11 @@ export default function Home() {
             <div className="mt-8 grid gap-5 sm:grid-cols-2">
               <label className="space-y-2 text-sm font-bold text-[#2b1722]">
                 <span>Nome completo</span>
-                <Input defaultValue="Romualdo Silva" className="h-12 rounded-xl border-rose-200" />
+                <Input placeholder="Nome completo" className="h-12 rounded-xl border-rose-200" />
               </label>
               <label className="space-y-2 text-sm font-bold text-[#2b1722]">
                 <span>E-mail para entrega</span>
-                <Input type="email" defaultValue="romualdo@exemplo.com" className="h-12 rounded-xl border-rose-200" />
+                <Input type="email" placeholder="exemplo@exemplo.com" className="h-12 rounded-xl border-rose-200" />
               </label>
             </div>
 
@@ -1807,6 +1807,7 @@ export default function Home() {
                   autoComplete="email"
                   value={accountEmail}
                   onChange={(event) => setAccountEmail(event.target.value)}
+                  placeholder="exemplo@exemplo.com"
                   className="h-12 rounded-xl border-rose-200"
                   required
                 />

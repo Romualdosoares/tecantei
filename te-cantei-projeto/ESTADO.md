@@ -843,3 +843,15 @@ Estado concluído:
 - nenhum e-mail, UUID, senha, token ou chave foi registrado no repositório.
 
 Próxima validação operacional: entrar novamente se necessário e abrir `/admin`; depois conectar as credenciais de OpenAI e Kie.ai em modo controlado antes de qualquer geração real.
+
+## Continuação de 13/09/2026 — remoção de dados pessoais dos exemplos
+
+Pedido: remover “romualdo” do e-mail exibido como exemplo no cadastro.
+
+Alterações:
+
+- campo de acesso/cadastro agora inicia vazio e usa `exemplo@exemplo.com` somente como placeholder;
+- simulação de pagamento também deixou de preencher automaticamente nome e e-mail pessoais;
+- busca no código confirmou a remoção de `romualdo@exemplo.com` e `Romualdo Silva`.
+
+Validação: lint sem erros e build Next.js de produção concluído com sucesso, incluindo TypeScript e 15 páginas estáticas.
