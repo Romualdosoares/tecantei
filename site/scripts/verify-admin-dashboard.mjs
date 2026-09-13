@@ -45,9 +45,14 @@ assert.match(dashboardRoute, /span < 0 \|\| span > 365 \|\| to > today/);
 assert.match(adminDashboard, /Hoje.*Ontem.*7 dias.*15 dias.*30 dias.*Personalizado/s);
 assert.match(adminDashboard, /type="date"/);
 assert.match(adminDashboard, /dashboardUrl\(range, from, to\)/);
+assert.match(adminDashboard, /<nav aria-label="Seções do painel administrativo"/);
+assert.match(adminDashboard, /onClick=\{\(\) => setActiveTab\(value\)\}/);
+assert.match(adminDashboard, /<Tabs value=\{activeTab\} onValueChange=/);
+assert.match(adminDashboard, /supabase\.auth\.signOut\(\)/);
 
 console.log("PASS: painel administrativo exige papel ativo, audita mutações e não expõe conteúdo privado");
 console.log("PASS: configurações de IA guardam somente modelos e modos; chaves ficam no servidor");
 console.log("PASS: exclusão de usuário é lógica e preserva o histórico operacional");
 console.log("PASS: métricas de acesso usam identificador aleatório com hash, sem endereço IP");
 console.log("PASS: gráficos aceitam hoje, ontem, 7, 15, 30 dias e período personalizado validado");
+console.log("PASS: navegação lateral e abas compartilham estado; logout encerra a sessão real");

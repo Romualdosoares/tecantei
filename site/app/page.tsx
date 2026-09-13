@@ -156,6 +156,7 @@ export default function Home() {
   const [orderError, setOrderError] = useState("");
   const [draftRequestId] = useState(() => crypto.randomUUID());
   const [persistedOrderId, setPersistedOrderId] = useState<string | null>(null);
+  const [deliveryNotice, setDeliveryNotice] = useState("");
   const supabaseEnabled = getSupabaseBrowserClient() !== null;
 
   const effectiveOccasion = occasion === "Outro" ? (customOccasion.trim() || "Outro") : occasion;
@@ -462,6 +463,14 @@ export default function Home() {
     if (supabase) await supabase.auth.signOut();
     setSignedIn(false);
     setAccountPassword("");
+  };
+
+  const openOrderDelivery = () => {
+    if (!persistedOrderId) {
+      setDeliveryNotice("Esta é uma demonstração da entrega. Na compra real, o download e o link privado ficam disponíveis em Meus pedidos.");
+      return;
+    }
+    window.location.assign(`/pedidos/${persistedOrderId}`);
   };
 
   const sendPasswordReset = async () => {
@@ -1719,13 +1728,15 @@ export default function Home() {
 
                 {/* Actions */}
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  <Button size="lg" className="h-12 rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] text-white font-bold">
-                    <Download className="mr-2 size-4" /> Baixar Áudio MP3
+                  <Button type="button" size="lg" className="h-12 rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] text-white font-bold" onClick={openOrderDelivery}>
+                    <Download className="mr-2 size-4" /> Abrir entrega e baixar
                   </Button>
-                  <Button size="lg" variant="outline" className="h-12 rounded-full border-rose-300 font-bold text-rose-950 hover:bg-rose-50">
-                    <Share2 className="mr-2 size-4 text-rose-700" /> Compartilhar Link
+                  <Button type="button" size="lg" variant="outline" className="h-12 rounded-full border-rose-300 font-bold text-rose-950 hover:bg-rose-50" onClick={openOrderDelivery}>
+                    <Share2 className="mr-2 size-4 text-rose-700" /> Criar link do presente
                   </Button>
                 </div>
+
+                {deliveryNotice && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold leading-5 text-amber-950">{deliveryNotice}</p>}
 
                 <div className="mt-6 rounded-2xl bg-rose-50/70 p-4 text-xs text-[#3d182b] border border-rose-200/60">
                   <div className="flex items-start gap-2.5">

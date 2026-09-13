@@ -855,3 +855,18 @@ Alterações:
 - busca no código confirmou a remoção de `romualdo@exemplo.com` e `Romualdo Silva`.
 
 Validação: lint sem erros e build Next.js de produção concluído com sucesso, incluindo TypeScript e 15 páginas estáticas.
+
+## Continuação de 13/09/2026 — auditoria de navegação e correção do painel
+
+Pedido: corrigir a barra lateral não clicável do painel administrativo e auditar links e ações do projeto.
+
+Alterações:
+
+- as seis opções da barra lateral agora são botões semânticos e controlam o mesmo estado das abas de Resumo, Usuários, Gerações, Vendas, Integrações e Auditoria;
+- item selecionado ganhou indicação visual, `aria-current`, foco por teclado e estados de interação;
+- “Sair do painel” passou a encerrar a sessão no Supabase antes de voltar à página principal;
+- tabelas administrativas vazias agora exibem uma mensagem clara em vez de uma área em branco;
+- os botões finais de download e compartilhamento deixaram de ser inativos e encaminham o cliente autenticado para a entrega real do pedido; na demonstração, explicam a limitação sem fingir um arquivo disponível;
+- nova verificação automatizada percorre os arquivos da aplicação, recusa links vazios ou placeholders, confere rotas internas literais, destinos de rolagem, correspondência entre menu e conteúdo administrativo, logout real e ações da entrega.
+
+Validação local: auditoria estrutural completa aprovada, TypeScript sem erros, lint sem erros e build Next.js de produção concluído com 15 páginas estáticas e todas as rotas dinâmicas esperadas.

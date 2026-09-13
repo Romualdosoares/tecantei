@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Activity, Bot, CircleDollarSign, CreditCard, Gauge, History, LayoutDashboard,
   LoaderCircle, LogOut, Music2, Plus, RefreshCw, Search, Settings2, ShieldCheck,
@@ -20,12 +19,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type UserRow = { id: string; email: string; displayName: string; role: "user" | "support" | "admin"; status: "active" | "suspended" | "deleted"; createdAt: string; lastSignInAt: string | null };
 type GenerationRow = { id: string; order_id: string; provider: string; model: string; status: string; error_code: string | null; reserved_credits_millis: number; created_at: string; completed_at: string | null; recipientName: string; ownerEmail: string };
 type SaleRow = { id: string; order_id: string; provider: string; amount_cents: number; currency: string; status: string; created_at: string; updated_at: string; recipientName: string };
 type Settings = { lyricsMode: "mock" | "openai"; lyricsModel: "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gpt-6-astra"; lyricsReasoningEffort: "none" | "low" | "medium" | "high"; musicMode: "mock" | "live"; musicModel: string };
 type PeriodRange = "today" | "yesterday" | "7d" | "15d" | "30d" | "custom";
+type AdminTab = "overview" | "users" | "generations" | "sales" | "integrations" | "audit";
 type DashboardData = {
   generatedAt: string;
   period: { range: PeriodRange; from: string; to: string; label: string };
@@ -42,6 +43,14 @@ type DashboardData = {
 
 type UserForm = { email: string; password: string; displayName: string; role: "user" | "support" | "admin"; status: "active" | "suspended"; reason: string };
 const emptyUser: UserForm = { email: "", password: "", displayName: "", role: "user", status: "active", reason: "" };
+const adminNavigation: Array<{ value: AdminTab; label: string; icon: typeof LayoutDashboard }> = [
+  { value: "overview", label: "Resumo", icon: LayoutDashboard },
+  { value: "users", label: "Usuários", icon: Users },
+  { value: "generations", label: "Gerações", icon: Music2 },
+  { value: "sales", label: "Vendas", icon: CreditCard },
+  { value: "integrations", label: "Integrações", icon: Bot },
+  { value: "audit", label: "Auditoria", icon: History },
+];
 
 export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -62,6 +71,8 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [customFrom, setCustomFrom] = useState(() => relativeDate(29));
   const [customTo, setCustomTo] = useState(() => relativeDate(0));
   const [periodBusy, setPeriodBusy] = useState(false);
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [signingOut, setSigningOut] = useState(false);
 
   const load = async (range: PeriodRange = periodRange, from = customFrom, to = customTo, initial = false) => {
     if (initial) setLoading(true);
@@ -179,19 +190,44 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setMessage(`${result?.message ?? "Integração conectada."}${typeof result?.credits === "number" ? ` Saldo: ${result.credits} créditos.` : ""}`);
   };
 
+  const signOut = async () => {
+    setSigningOut(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const result = supabase ? await supabase.auth.signOut() : { error: null };
+    if (result.error) {
+      setSigningOut(false);
+      setError("Não foi possível encerrar a sessão. Tente novamente.");
+      return;
+    }
+    window.location.replace("/");
+  };
+
   return (
     <main className="min-h-screen bg-[#f6f3f4] text-[#2a1720]">
       <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f6f3f4]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl bg-[#7e2148] text-white"><Music2 className="size-5" /></div><div><p className="font-display text-xl font-bold leading-none">Te Cantei</p><p className="mt-1 text-xs text-muted-foreground">Central administrativa</p></div></div>
-          <div className="flex items-center gap-2"><Badge variant="outline" className="hidden rounded-full px-3 sm:flex"><ShieldCheck /> {adminEmail}</Badge><Button asChild variant="ghost" size="sm" className="rounded-full"><Link href="/"><LogOut /> Sair do painel</Link></Button></div>
+          <div className="flex items-center gap-2"><Badge variant="outline" className="hidden rounded-full px-3 sm:flex"><ShieldCheck /> {adminEmail}</Badge><Button type="button" variant="ghost" size="sm" className="rounded-full" disabled={signingOut} onClick={() => void signOut()}>{signingOut ? <LoaderCircle className="animate-spin" /> : <LogOut />} {signingOut ? "Saindo" : "Sair do painel"}</Button></div>
         </div>
       </header>
 
       <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[230px_minmax(0,1fr)]">
         <aside className="hidden h-fit rounded-[24px] bg-[#321421] p-4 text-white shadow-xl shadow-[#321421]/10 lg:block">
           <p className="px-3 pb-3 text-xs font-bold uppercase tracking-[0.18em] text-white/45">Visão da operação</p>
-          {[ [LayoutDashboard,"Resumo"], [Users,"Usuários"], [Music2,"Gerações"], [CreditCard,"Vendas"], [Bot,"Integrações"], [History,"Auditoria"] ].map(([Icon,label]) => <div key={String(label)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/75 first:bg-white/10 first:text-white"><Icon className="size-4" />{String(label)}</div>)}
+          <nav aria-label="Seções do painel administrativo" className="space-y-1">
+            {adminNavigation.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                type="button"
+                aria-current={activeTab === value ? "page" : undefined}
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${activeTab === value ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"}`}
+                onClick={() => setActiveTab(value)}
+              >
+                <Icon className="size-4" />{label}
+              </button>
+            ))}
+          </nav>
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4"><p className="text-xs font-bold text-white/50">SEGURANÇA</p><p className="mt-2 text-sm leading-6 text-white/75">Chaves não aparecem no painel. Toda ação sensível exige motivo e fica registrada.</p></div>
         </aside>
 
@@ -204,7 +240,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           {error && <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-800">{error}</div>}
           {message && <div role="status" className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-900">{message}</div>}
           {loading || !data || !settings ? <DashboardSkeleton /> : (
-            <Tabs defaultValue="overview" className="gap-6">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AdminTab)} className="gap-6">
               <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl border bg-white p-1.5 sm:w-fit">
                 <Tab value="overview" icon={LayoutDashboard} label="Resumo" /><Tab value="users" icon={Users} label="Usuários" /><Tab value="generations" icon={Music2} label="Gerações" /><Tab value="sales" icon={CreditCard} label="Vendas" /><Tab value="integrations" icon={Bot} label="Integrações" /><Tab value="audit" icon={History} label="Auditoria" />
               </TabsList>
@@ -240,13 +276,13 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                 <Card className="rounded-[24px] border-black/5 shadow-none"><CardContent className="px-4 sm:px-6"><div className="mb-4 flex items-center gap-2 rounded-xl border bg-white px-3"><Search className="size-4 text-muted-foreground"/><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome ou e-mail" className="border-0 shadow-none focus-visible:ring-0" /></div><Table><TableHeader><TableRow><TableHead>Usuário</TableHead><TableHead>Perfil</TableHead><TableHead>Status</TableHead><TableHead>Último acesso</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredUsers.map((user) => <TableRow key={user.id}><TableCell><p className="font-semibold">{user.displayName || "Sem nome"}</p><p className="text-xs text-muted-foreground">{user.email}</p></TableCell><TableCell><StatusBadge value={user.role} /></TableCell><TableCell><StatusBadge value={user.status} /></TableCell><TableCell>{user.lastSignInAt ? dateTime(user.lastSignInAt) : "Nunca"}</TableCell><TableCell><div className="flex justify-end gap-2"><Button size="sm" variant="outline" className="rounded-full" onClick={() => openEdit(user)}><UserCog /> Editar</Button><Button size="icon-sm" variant="ghost" className="rounded-full text-destructive" disabled={user.id === data.currentAdminId} onClick={() => { setDeleteUser(user); setDeleteReason(""); }} aria-label={`Excluir ${user.displayName || user.email}`}><Trash2 /></Button></div></TableCell></TableRow>)}</TableBody></Table>{filteredUsers.length === 0 && <Empty label="Nenhum usuário encontrado." />}</CardContent></Card>
               </TabsContent>
 
-              <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai, o modelo usado, consumo reservado e falhas." /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em"]}>{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p></TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+              <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai, o modelo usado, consumo reservado e falhas." /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em"]} empty={data.generations.length === 0} emptyLabel="Nenhuma geração registrada neste período.">{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p></TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
 
-              <TabsContent value="sales" className="space-y-5"><SectionTitle title="Vendas e pagamentos" description="Receita confirmada, cobranças pendentes, falhas e reembolsos por provedor." /><div className="grid gap-4 sm:grid-cols-3"><MiniStat label="Receita confirmada" value={money(data.metrics.revenueCents)} detail={`${data.metrics.paidOrders} pagamentos`} /><MiniStat label="Pendente" value={money(data.metrics.pendingRevenueCents)} detail="ainda não libera entrega" /><MiniStat label="Conversão estimada" value={`${data.metrics.conversionRate}%`} detail="venda por visitante" /></div><DataTable headers={["Presente","Provedor","Valor","Status","Criado","Atualizado"]}>{data.sales.map((row) => <TableRow key={row.id}><TableCell className="font-semibold">{row.recipientName}</TableCell><TableCell>{providerLabel(row.provider)}</TableCell><TableCell>{money(row.amount_cents)}</TableCell><TableCell><StatusBadge value={row.status}/></TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell>{dateTime(row.updated_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+              <TabsContent value="sales" className="space-y-5"><SectionTitle title="Vendas e pagamentos" description="Receita confirmada, cobranças pendentes, falhas e reembolsos por provedor." /><div className="grid gap-4 sm:grid-cols-3"><MiniStat label="Receita confirmada" value={money(data.metrics.revenueCents)} detail={`${data.metrics.paidOrders} pagamentos`} /><MiniStat label="Pendente" value={money(data.metrics.pendingRevenueCents)} detail="ainda não libera entrega" /><MiniStat label="Conversão estimada" value={`${data.metrics.conversionRate}%`} detail="venda por visitante" /></div><DataTable headers={["Presente","Provedor","Valor","Status","Criado","Atualizado"]} empty={data.sales.length === 0} emptyLabel="Nenhuma venda registrada neste período.">{data.sales.map((row) => <TableRow key={row.id}><TableCell className="font-semibold">{row.recipientName}</TableCell><TableCell>{providerLabel(row.provider)}</TableCell><TableCell>{money(row.amount_cents)}</TableCell><TableCell><StatusBadge value={row.status}/></TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell>{dateTime(row.updated_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
 
               <TabsContent value="integrations" className="space-y-5"><SectionTitle title="APIs e modelos de geração" description="Escolha os modelos usados no produto. As chaves continuam protegidas nas variáveis do servidor." /><div className="grid gap-5 xl:grid-cols-2"><IntegrationCard icon={WandSparkles} title="Letra da música" provider="OpenAI Responses API" ready={data.readiness.openaiKeyConfigured} gate={data.readiness.openaiLiveGateEnabled} onTest={() => void testIntegration("openai")} testing={testing === "openai"}><Field label="Modo"><NativeSelect className="h-11 w-full" value={settings.lyricsMode} onChange={(event) => setSettings({ ...settings, lyricsMode: event.target.value as Settings["lyricsMode"] })}><NativeSelectOption value="mock">Simulação local</NativeSelectOption><NativeSelectOption value="openai">OpenAI ao vivo</NativeSelectOption></NativeSelect></Field><Field label="Modelo"><NativeSelect className="h-11 w-full" value={settings.lyricsModel} onChange={(event) => setSettings({ ...settings, lyricsModel: event.target.value as Settings["lyricsModel"] })}><NativeSelectOption value="gpt-5.6-luna">GPT-5.6 Luna · econômico</NativeSelectOption><NativeSelectOption value="gpt-5.6-terra">GPT-5.6 Terra · equilibrado</NativeSelectOption><NativeSelectOption value="gpt-5.6-sol">GPT-5.6 Sol · premium</NativeSelectOption><NativeSelectOption value="gpt-6-astra">GPT-6 Astra · máxima qualidade</NativeSelectOption></NativeSelect></Field><Field label="Raciocínio"><NativeSelect className="h-11 w-full" value={settings.lyricsReasoningEffort} onChange={(event) => setSettings({ ...settings, lyricsReasoningEffort: event.target.value as Settings["lyricsReasoningEffort"] })}><NativeSelectOption value="none">Nenhum</NativeSelectOption><NativeSelectOption value="low">Baixo · recomendado</NativeSelectOption><NativeSelectOption value="medium">Médio</NativeSelectOption><NativeSelectOption value="high">Alto</NativeSelectOption></NativeSelect></Field></IntegrationCard><IntegrationCard icon={Music2} title="Música completa" provider="Suno através da Kie.ai" ready={data.readiness.kieKeyConfigured} gate={data.readiness.kieLiveGateEnabled} onTest={() => void testIntegration("kie")} testing={testing === "kie"}><Field label="Modo"><NativeSelect className="h-11 w-full" value={settings.musicMode} onChange={(event) => setSettings({ ...settings, musicMode: event.target.value as Settings["musicMode"] })}><NativeSelectOption value="mock">Simulação local</NativeSelectOption><NativeSelectOption value="live">Kie.ai ao vivo</NativeSelectOption></NativeSelect></Field><Field label="Modelo Suno"><NativeSelect className="h-11 w-full" value={settings.musicModel} onChange={(event) => setSettings({ ...settings, musicModel: event.target.value })}><NativeSelectOption value="V6">Suno V6 · recomendado</NativeSelectOption><NativeSelectOption value="V6_MINI">Suno V6 Mini</NativeSelectOption><NativeSelectOption value="V6_WILD">Suno V6 Wild</NativeSelectOption><NativeSelectOption value="V5_5">Suno V5.5 · legado</NativeSelectOption><NativeSelectOption value="V5">Suno V5 · legado</NativeSelectOption></NativeSelect></Field><div className="rounded-xl bg-[#f6f3f4] p-4 text-sm leading-6 text-muted-foreground">A voz masculina ou feminina escolhida pelo cliente é enviada como parâmetro vocal, junto com o estilo musical e a letra aprovada.</div></IntegrationCard></div><Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="font-display text-xl">Confirmar alteração operacional</CardTitle><CardDescription>O motivo protege a operação e aparece na trilha de auditoria.</CardDescription></CardHeader><CardContent className="space-y-4"><Textarea value={settingsReason} onChange={(event) => setSettingsReason(event.target.value)} minLength={8} maxLength={300} placeholder="Ex.: usar GPT-5.6 Terra para equilibrar qualidade e custo no piloto" /><div className="flex justify-end"><Button className="rounded-full bg-[#7e2148]" disabled={busy || settingsReason.trim().length < 8} onClick={() => void saveSettings()}>{busy ? <LoaderCircle className="animate-spin"/> : <Settings2 />} Salvar configurações</Button></div></CardContent></Card></TabsContent>
 
-              <TabsContent value="audit" className="space-y-5"><SectionTitle title="Trilha de auditoria" description="Últimas ações sensíveis realizadas por administradores." /><DataTable headers={["Ação","Destino","Motivo","Data"]}>{data.audit.map((row) => <TableRow key={row.id}><TableCell><Badge variant="outline">{humanAction(row.action)}</Badge></TableCell><TableCell><p>{row.target_type}</p><p className="max-w-44 truncate font-mono text-xs text-muted-foreground">{row.target_id ?? "—"}</p></TableCell><TableCell className="max-w-md whitespace-normal leading-6">{row.reason}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+              <TabsContent value="audit" className="space-y-5"><SectionTitle title="Trilha de auditoria" description="Últimas ações sensíveis realizadas por administradores." /><DataTable headers={["Ação","Destino","Motivo","Data"]} empty={data.audit.length === 0} emptyLabel="Nenhuma ação administrativa registrada.">{data.audit.map((row) => <TableRow key={row.id}><TableCell><Badge variant="outline">{humanAction(row.action)}</Badge></TableCell><TableCell><p>{row.target_type}</p><p className="max-w-44 truncate font-mono text-xs text-muted-foreground">{row.target_id ?? "—"}</p></TableCell><TableCell className="max-w-md whitespace-normal leading-6">{row.reason}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
             </Tabs>
           )}
         </section>
@@ -318,12 +354,12 @@ function PeriodFilter({ range, from, to, maxDate, label, busy, onSelect, onFromC
   );
 }
 
-function Tab({ value, icon: Icon, label }: { value: string; icon: typeof LayoutDashboard; label: string }) { return <TabsTrigger value={value} className="rounded-xl px-3 py-2"><Icon /> {label}</TabsTrigger>; }
+function Tab({ value, icon: Icon, label }: { value: AdminTab; icon: typeof LayoutDashboard; label: string }) { return <TabsTrigger value={value} className="rounded-xl px-3 py-2"><Icon /> {label}</TabsTrigger>; }
 function Metric({ icon: Icon, label, value, detail, accent = false }: { icon: typeof Activity; label: string; value: string; detail: string; accent?: boolean }) { return <Card className={`rounded-[22px] border-black/5 shadow-none ${accent ? "bg-[#351521] text-white" : "bg-white"}`}><CardContent className="px-5"><div className={`grid size-10 place-items-center rounded-xl ${accent ? "bg-white/10" : "bg-[#f7e7ed] text-[#8f2854]"}`}><Icon className="size-5" /></div><p className={`mt-5 text-sm font-semibold ${accent ? "text-white/60" : "text-muted-foreground"}`}>{label}</p><p className="mt-1 font-display text-3xl font-bold">{value}</p><p className={`mt-1 text-xs ${accent ? "text-white/50" : "text-muted-foreground"}`}>{detail}</p></CardContent></Card>; }
 function MiniStat({ label, value, detail }: { label: string; value: string; detail: string }) { return <div className="rounded-[20px] border border-black/5 bg-white p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 font-display text-2xl font-bold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>; }
 function SectionTitle({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) { return <div className="flex flex-wrap items-end justify-between gap-4"><div><h2 className="font-display text-2xl font-bold">{title}</h2><p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p></div>{action}</div>; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block space-y-2 text-sm font-semibold"><span>{label}</span>{children}</label>; }
-function DataTable({ headers, children }: { headers: string[]; children: React.ReactNode }) { return <Card className="rounded-[24px] border-black/5 shadow-none"><CardContent className="px-4 sm:px-6"><Table><TableHeader><TableRow>{headers.map((header) => <TableHead key={header}>{header}</TableHead>)}</TableRow></TableHeader><TableBody>{children}</TableBody></Table></CardContent></Card>; }
+function DataTable({ headers, children, empty = false, emptyLabel = "Nenhum registro encontrado." }: { headers: string[]; children: React.ReactNode; empty?: boolean; emptyLabel?: string }) { return <Card className="rounded-[24px] border-black/5 shadow-none"><CardContent className="px-4 sm:px-6"><Table><TableHeader><TableRow>{headers.map((header) => <TableHead key={header}>{header}</TableHead>)}</TableRow></TableHeader><TableBody>{empty ? <TableRow><TableCell colSpan={headers.length} className="h-28 text-center text-muted-foreground">{emptyLabel}</TableCell></TableRow> : children}</TableBody></Table></CardContent></Card>; }
 function IntegrationCard({ icon: Icon, title, provider, ready, gate, testing, onTest, children }: { icon: typeof Bot; title: string; provider: string; ready: boolean; gate: boolean; testing: boolean; onTest: () => void; children: React.ReactNode }) { return <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><div className="flex items-start justify-between gap-4"><div className="flex gap-3"><div className="grid size-11 place-items-center rounded-xl bg-[#f7e7ed] text-[#8f2854]"><Icon className="size-5"/></div><div><CardTitle className="font-display text-xl">{title}</CardTitle><CardDescription className="mt-1">{provider}</CardDescription></div></div><StatusBadge value={ready && gate ? "ready" : ready ? "configured" : "missing"} /></div></CardHeader><CardContent className="space-y-4">{children}<div className="flex items-center justify-between gap-3 border-t pt-4"><p className="text-xs leading-5 text-muted-foreground">{!ready ? "Adicione a chave no ambiente do servidor." : !gate ? "Chave presente; modo ao vivo bloqueado pelo ambiente." : "Credencial e trava de produção ativas."}</p><Button variant="outline" size="sm" className="shrink-0 rounded-full" disabled={testing} onClick={onTest}>{testing ? <LoaderCircle className="animate-spin"/> : <RefreshCw/>} Testar</Button></div></CardContent></Card>; }
 function StatusBadge({ value }: { value: string }) { const good = ["active","admin","support","confirmed","succeeded","ready","configured"].includes(value); const bad = ["deleted","failed","cancelled","refunded","missing"].includes(value); return <Badge variant={bad ? "destructive" : good ? "default" : "secondary"} className={good ? "bg-emerald-100 text-emerald-900 hover:bg-emerald-100" : ""}>{statusLabel(value)}</Badge>; }
 function Empty({ label }: { label: string }) { return <div className="py-12 text-center text-sm text-muted-foreground">{label}</div>; }
