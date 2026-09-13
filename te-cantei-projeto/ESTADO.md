@@ -789,3 +789,17 @@ Preparação realizada:
 - varredura prévia sem chaves reais; somente placeholders documentais permaneceram em `.env.example`.
 
 Validação anterior preservada: TypeScript, lint, suíte estrutural/comportamental e build Next.js de produção aprovados antes do envio.
+
+## Continuação de 13/09/2026 — conexão com Vercel
+
+Pedido: conectar o projeto GitHub ao Vercel usando o domínio `https://tecantei.vercel.app/`.
+
+Estado observado:
+
+- a integração GitHub/Vercel já criou uma implantação de produção bem-sucedida para o commit `3137582`;
+- a URL única da implantação está protegida pelo login do Vercel;
+- o domínio `tecantei.vercel.app` ainda responde `404 NOT_FOUND`, portanto não está apontando para uma implantação pública utilizável;
+- a CLI oficial do Vercel foi disponibilizada localmente, mas a conta ainda está desconectada;
+- a tentativa de autenticação pelo GitHub expirou sem a confirmação do login no navegador.
+
+Dependência externa: o titular precisa concluir uma vez `vercel login --github`. Depois disso, vincular o diretório `site` ao projeto existente, configurar as variáveis do servidor, promover a implantação e validar o domínio.
