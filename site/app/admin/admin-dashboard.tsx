@@ -1,0 +1,339 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  Activity, Bot, CircleDollarSign, CreditCard, Gauge, History, LayoutDashboard,
+  LoaderCircle, LogOut, Music2, Plus, RefreshCw, Search, Settings2, ShieldCheck,
+  Sparkles, Trash2, UserCog, Users, WandSparkles,
+} from "lucide-react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+
+type UserRow = { id: string; email: string; displayName: string; role: "user" | "support" | "admin"; status: "active" | "suspended" | "deleted"; createdAt: string; lastSignInAt: string | null };
+type GenerationRow = { id: string; order_id: string; provider: string; model: string; status: string; error_code: string | null; reserved_credits_millis: number; created_at: string; completed_at: string | null; recipientName: string; ownerEmail: string };
+type SaleRow = { id: string; order_id: string; provider: string; amount_cents: number; currency: string; status: string; created_at: string; updated_at: string; recipientName: string };
+type Settings = { lyricsMode: "mock" | "openai"; lyricsModel: "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gpt-6-astra"; lyricsReasoningEffort: "none" | "low" | "medium" | "high"; musicMode: "mock" | "live"; musicModel: string };
+type PeriodRange = "today" | "yesterday" | "7d" | "15d" | "30d" | "custom";
+type DashboardData = {
+  generatedAt: string;
+  period: { range: PeriodRange; from: string; to: string; label: string };
+  currentAdminId: string;
+  metrics: { users: number; activeUsers: number; visitors: number; pageViews: number; orders: number; paidOrders: number; revenueCents: number; pendingRevenueCents: number; conversionRate: number; generationSuccessRate: number; creditsUsed: number };
+  series: Array<{ date: string; visits: number; visitors: number; sales: number; revenueCents: number }>;
+  users: UserRow[];
+  generations: GenerationRow[];
+  sales: SaleRow[];
+  settings: Settings;
+  readiness: { openaiKeyConfigured: boolean; openaiLiveGateEnabled: boolean; kieKeyConfigured: boolean; kieLiveGateEnabled: boolean };
+  audit: Array<{ id: string; action: string; target_type: string; target_id: string | null; reason: string; created_at: string }>;
+};
+
+type UserForm = { email: string; password: string; displayName: string; role: "user" | "support" | "admin"; status: "active" | "suspended"; reason: string };
+const emptyUser: UserForm = { email: "", password: "", displayName: "", role: "user", status: "active", reason: "" };
+
+export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [userDialog, setUserDialog] = useState<"create" | "edit" | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
+  const [userForm, setUserForm] = useState<UserForm>(emptyUser);
+  const [deleteUser, setDeleteUser] = useState<UserRow | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [settingsReason, setSettingsReason] = useState("");
+  const [testing, setTesting] = useState<"openai" | "kie" | null>(null);
+  const [periodRange, setPeriodRange] = useState<PeriodRange>("30d");
+  const [customFrom, setCustomFrom] = useState(() => relativeDate(29));
+  const [customTo, setCustomTo] = useState(() => relativeDate(0));
+  const [periodBusy, setPeriodBusy] = useState(false);
+
+  const load = async (range: PeriodRange = periodRange, from = customFrom, to = customTo, initial = false) => {
+    if (initial) setLoading(true);
+    else setPeriodBusy(true);
+    setError("");
+    const response = await fetch(dashboardUrl(range, from, to), { headers: { Accept: "application/json" } }).catch(() => null);
+    if (!response?.ok) {
+      setError(response?.status === 400 ? "Selecione um período válido de até 366 dias." : "Não foi possível carregar os dados administrativos.");
+      setLoading(false);
+      setPeriodBusy(false);
+      return;
+    }
+    const next = await response.json() as DashboardData;
+    setData(next);
+    setSettings(next.settings);
+    setPeriodRange(next.period.range);
+    setLoading(false);
+    setPeriodBusy(false);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/admin/dashboard?range=30d", {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    }).then(async (response) => {
+      if (!response.ok) throw new Error("admin_unavailable");
+      const next = await response.json() as DashboardData;
+      setData(next);
+      setSettings(next.settings);
+      setLoading(false);
+    }).catch((requestError: unknown) => {
+      if (requestError instanceof DOMException && requestError.name === "AbortError") return;
+      setError("Não foi possível carregar os dados administrativos.");
+      setLoading(false);
+    });
+    return () => controller.abort();
+  }, []);
+
+  const selectPeriod = (range: PeriodRange) => {
+    setPeriodRange(range);
+    setError("");
+    if (range !== "custom") void load(range, customFrom, customTo);
+  };
+
+  const applyCustomPeriod = () => {
+    if (!customFrom || !customTo || customFrom > customTo) {
+      setError("Informe uma data inicial anterior ou igual à data final.");
+      return;
+    }
+    void load("custom", customFrom, customTo);
+  };
+
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase("pt-BR");
+    if (!query) return data?.users ?? [];
+    return (data?.users ?? []).filter((user) => `${user.displayName} ${user.email} ${user.role}`.toLocaleLowerCase("pt-BR").includes(query));
+  }, [data?.users, search]);
+
+  const openCreate = () => { setUserForm(emptyUser); setSelectedUser(null); setUserDialog("create"); setMessage(""); setError(""); };
+  const openEdit = (user: UserRow) => {
+    setSelectedUser(user);
+    setUserForm({ email: user.email, password: "", displayName: user.displayName || "Cliente Te Cantei", role: user.role, status: user.status === "suspended" ? "suspended" : "active", reason: "" });
+    setUserDialog("edit"); setMessage(""); setError("");
+  };
+
+  const saveUser = async (event: FormEvent) => {
+    event.preventDefault(); setBusy(true); setError("");
+    const editing = userDialog === "edit" && selectedUser;
+    const response = await fetch(editing ? `/api/admin/users/${selectedUser.id}` : "/api/admin/users", {
+      method: editing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userForm),
+    }).catch(() => null);
+    setBusy(false);
+    if (!response?.ok) {
+      const payload = response ? await response.json().catch(() => null) as { error?: string } | null : null;
+      setError(payload?.error === "cannot_lock_current_admin" ? "Você não pode remover o próprio acesso administrativo." : "Não foi possível salvar este usuário.");
+      return;
+    }
+    setUserDialog(null); setMessage(editing ? "Usuário atualizado e ação auditada." : "Usuário criado com sucesso."); await load();
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteUser) return;
+    setBusy(true); setError("");
+    const response = await fetch(`/api/admin/users/${deleteUser.id}`, {
+      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: deleteReason }),
+    }).catch(() => null);
+    setBusy(false);
+    if (!response?.ok) { setError("Não foi possível excluir a conta. Nenhum histórico foi apagado."); return; }
+    setDeleteUser(null); setDeleteReason(""); setMessage("Conta excluída. Pedidos, pagamentos e gerações foram preservados para auditoria."); await load();
+  };
+
+  const saveSettings = async () => {
+    if (!settings) return;
+    setBusy(true); setError("");
+    const response = await fetch("/api/admin/settings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...settings, reason: settingsReason }),
+    }).catch(() => null);
+    setBusy(false);
+    if (!response?.ok) { setError("Não foi possível salvar as configurações. Confira o motivo da alteração."); return; }
+    setMessage("Configurações de IA atualizadas e registradas na auditoria."); setSettingsReason(""); await load();
+  };
+
+  const testIntegration = async (provider: "openai" | "kie") => {
+    const reason = settingsReason.trim() || `Teste manual da integração ${provider}`;
+    setTesting(provider); setError(""); setMessage("");
+    const response = await fetch("/api/admin/integrations/test", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider, reason }),
+    }).catch(() => null);
+    const result = response ? await response.json().catch(() => null) as { message?: string; credits?: number } | null : null;
+    setTesting(null);
+    if (!response?.ok) { setError(result?.message ?? "A integração não respondeu ao teste."); return; }
+    setMessage(`${result?.message ?? "Integração conectada."}${typeof result?.credits === "number" ? ` Saldo: ${result.credits} créditos.` : ""}`);
+  };
+
+  return (
+    <main className="min-h-screen bg-[#f6f3f4] text-[#2a1720]">
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f6f3f4]/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl bg-[#7e2148] text-white"><Music2 className="size-5" /></div><div><p className="font-display text-xl font-bold leading-none">Te Cantei</p><p className="mt-1 text-xs text-muted-foreground">Central administrativa</p></div></div>
+          <div className="flex items-center gap-2"><Badge variant="outline" className="hidden rounded-full px-3 sm:flex"><ShieldCheck /> {adminEmail}</Badge><Button asChild variant="ghost" size="sm" className="rounded-full"><Link href="/"><LogOut /> Sair do painel</Link></Button></div>
+        </div>
+      </header>
+
+      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[230px_minmax(0,1fr)]">
+        <aside className="hidden h-fit rounded-[24px] bg-[#321421] p-4 text-white shadow-xl shadow-[#321421]/10 lg:block">
+          <p className="px-3 pb-3 text-xs font-bold uppercase tracking-[0.18em] text-white/45">Visão da operação</p>
+          {[ [LayoutDashboard,"Resumo"], [Users,"Usuários"], [Music2,"Gerações"], [CreditCard,"Vendas"], [Bot,"Integrações"], [History,"Auditoria"] ].map(([Icon,label]) => <div key={String(label)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/75 first:bg-white/10 first:text-white"><Icon className="size-4" />{String(label)}</div>)}
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4"><p className="text-xs font-bold text-white/50">SEGURANÇA</p><p className="mt-2 text-sm leading-6 text-white/75">Chaves não aparecem no painel. Toda ação sensível exige motivo e fica registrada.</p></div>
+        </aside>
+
+        <section className="min-w-0">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div><p className="text-sm font-bold text-[#9a315d]">Operação em tempo real</p><h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">Tudo o que move o Te Cantei.</h1><p className="mt-2 text-sm text-muted-foreground">Acessos, conversão, vendas, gerações, usuários e fornecedores em um só lugar.</p></div>
+            <Button variant="outline" className="rounded-full bg-white" disabled={loading || periodBusy} onClick={() => void load()}><RefreshCw className={loading || periodBusy ? "animate-spin" : ""} /> Atualizar</Button>
+          </div>
+
+          {error && <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-800">{error}</div>}
+          {message && <div role="status" className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-900">{message}</div>}
+          {loading || !data || !settings ? <DashboardSkeleton /> : (
+            <Tabs defaultValue="overview" className="gap-6">
+              <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl border bg-white p-1.5 sm:w-fit">
+                <Tab value="overview" icon={LayoutDashboard} label="Resumo" /><Tab value="users" icon={Users} label="Usuários" /><Tab value="generations" icon={Music2} label="Gerações" /><Tab value="sales" icon={CreditCard} label="Vendas" /><Tab value="integrations" icon={Bot} label="Integrações" /><Tab value="audit" icon={History} label="Auditoria" />
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-6">
+                <PeriodFilter
+                  range={periodRange}
+                  from={customFrom}
+                  to={customTo}
+                  maxDate={relativeDate(0)}
+                  label={data.period.label}
+                  busy={periodBusy}
+                  onSelect={selectPeriod}
+                  onFromChange={setCustomFrom}
+                  onToChange={setCustomTo}
+                  onApply={applyCustomPeriod}
+                />
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <Metric icon={CircleDollarSign} label="Receita confirmada" value={money(data.metrics.revenueCents)} detail={`${data.metrics.paidOrders} vendas`} accent />
+                  <Metric icon={Activity} label="Visitantes no período" value={number(data.metrics.visitors)} detail={`${number(data.metrics.pageViews)} visualizações`} />
+                  <Metric icon={Gauge} label="Conversão estimada" value={`${data.metrics.conversionRate}%`} detail="vendas ÷ visitantes" />
+                  <Metric icon={Sparkles} label="Gerações concluídas" value={`${data.metrics.generationSuccessRate}%`} detail={`${data.metrics.creditsUsed.toLocaleString("pt-BR")} créditos registrados`} />
+                </div>
+                <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
+                  <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="font-display text-xl">Acessos · {data.period.label}</CardTitle><CardDescription>Visitantes únicos por sessão e visualizações de páginas.</CardDescription></CardHeader><CardContent><ChartContainer className="h-[280px] w-full aspect-auto" config={{ visits: { label: "Visualizações", color: "#9f3561" }, visitors: { label: "Visitantes", color: "#e4a1b9" } }}><AreaChart data={data.series}><defs><linearGradient id="visitsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#9f3561" stopOpacity={0.35}/><stop offset="95%" stopColor="#9f3561" stopOpacity={0.02}/></linearGradient></defs><CartesianGrid vertical={false} /><XAxis dataKey="date" tickFormatter={shortDate} minTickGap={28}/><YAxis allowDecimals={false} width={28}/><ChartTooltip content={<ChartTooltipContent />} /><Area dataKey="visits" type="monotone" stroke="#9f3561" fill="url(#visitsFill)" strokeWidth={2}/><Area dataKey="visitors" type="monotone" stroke="#d78ba8" fill="transparent" strokeWidth={2}/></AreaChart></ChartContainer></CardContent></Card>
+                  <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="font-display text-xl">Vendas · {data.period.label}</CardTitle><CardDescription>Receita confirmada com base na atualização do pagamento.</CardDescription></CardHeader><CardContent><ChartContainer className="h-[280px] w-full aspect-auto" config={{ revenueCents: { label: "Receita", color: "#351521" } }}><BarChart data={data.series}><CartesianGrid vertical={false}/><XAxis dataKey="date" tickFormatter={shortDate} minTickGap={28}/><YAxis tickFormatter={(value) => `R$${Number(value)/100}`} width={52}/><ChartTooltip content={<ChartTooltipContent formatter={(value) => money(Number(value))} />} /><Bar dataKey="revenueCents" fill="#351521" radius={[6,6,0,0]}/></BarChart></ChartContainer></CardContent></Card>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3"><MiniStat label="Usuários cadastrados" value={number(data.metrics.users)} detail={`${number(data.metrics.activeUsers)} ativos`} /><MiniStat label="Pedidos criados" value={number(data.metrics.orders)} detail="últimos 500 no painel" /><MiniStat label="Receita pendente" value={money(data.metrics.pendingRevenueCents)} detail="aguardando confirmação" /></div>
+              </TabsContent>
+
+              <TabsContent value="users" className="space-y-5">
+                <SectionTitle title="Usuários" description="Crie contas, ajuste permissões, suspenda acessos ou exclua sem apagar o histórico financeiro." action={<Button className="rounded-full bg-[#7e2148]" onClick={openCreate}><Plus /> Novo usuário</Button>} />
+                <Card className="rounded-[24px] border-black/5 shadow-none"><CardContent className="px-4 sm:px-6"><div className="mb-4 flex items-center gap-2 rounded-xl border bg-white px-3"><Search className="size-4 text-muted-foreground"/><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome ou e-mail" className="border-0 shadow-none focus-visible:ring-0" /></div><Table><TableHeader><TableRow><TableHead>Usuário</TableHead><TableHead>Perfil</TableHead><TableHead>Status</TableHead><TableHead>Último acesso</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredUsers.map((user) => <TableRow key={user.id}><TableCell><p className="font-semibold">{user.displayName || "Sem nome"}</p><p className="text-xs text-muted-foreground">{user.email}</p></TableCell><TableCell><StatusBadge value={user.role} /></TableCell><TableCell><StatusBadge value={user.status} /></TableCell><TableCell>{user.lastSignInAt ? dateTime(user.lastSignInAt) : "Nunca"}</TableCell><TableCell><div className="flex justify-end gap-2"><Button size="sm" variant="outline" className="rounded-full" onClick={() => openEdit(user)}><UserCog /> Editar</Button><Button size="icon-sm" variant="ghost" className="rounded-full text-destructive" disabled={user.id === data.currentAdminId} onClick={() => { setDeleteUser(user); setDeleteReason(""); }} aria-label={`Excluir ${user.displayName || user.email}`}><Trash2 /></Button></div></TableCell></TableRow>)}</TableBody></Table>{filteredUsers.length === 0 && <Empty label="Nenhum usuário encontrado." />}</CardContent></Card>
+              </TabsContent>
+
+              <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai, o modelo usado, consumo reservado e falhas." /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em"]}>{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p></TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+
+              <TabsContent value="sales" className="space-y-5"><SectionTitle title="Vendas e pagamentos" description="Receita confirmada, cobranças pendentes, falhas e reembolsos por provedor." /><div className="grid gap-4 sm:grid-cols-3"><MiniStat label="Receita confirmada" value={money(data.metrics.revenueCents)} detail={`${data.metrics.paidOrders} pagamentos`} /><MiniStat label="Pendente" value={money(data.metrics.pendingRevenueCents)} detail="ainda não libera entrega" /><MiniStat label="Conversão estimada" value={`${data.metrics.conversionRate}%`} detail="venda por visitante" /></div><DataTable headers={["Presente","Provedor","Valor","Status","Criado","Atualizado"]}>{data.sales.map((row) => <TableRow key={row.id}><TableCell className="font-semibold">{row.recipientName}</TableCell><TableCell>{providerLabel(row.provider)}</TableCell><TableCell>{money(row.amount_cents)}</TableCell><TableCell><StatusBadge value={row.status}/></TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell>{dateTime(row.updated_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+
+              <TabsContent value="integrations" className="space-y-5"><SectionTitle title="APIs e modelos de geração" description="Escolha os modelos usados no produto. As chaves continuam protegidas nas variáveis do servidor." /><div className="grid gap-5 xl:grid-cols-2"><IntegrationCard icon={WandSparkles} title="Letra da música" provider="OpenAI Responses API" ready={data.readiness.openaiKeyConfigured} gate={data.readiness.openaiLiveGateEnabled} onTest={() => void testIntegration("openai")} testing={testing === "openai"}><Field label="Modo"><NativeSelect className="h-11 w-full" value={settings.lyricsMode} onChange={(event) => setSettings({ ...settings, lyricsMode: event.target.value as Settings["lyricsMode"] })}><NativeSelectOption value="mock">Simulação local</NativeSelectOption><NativeSelectOption value="openai">OpenAI ao vivo</NativeSelectOption></NativeSelect></Field><Field label="Modelo"><NativeSelect className="h-11 w-full" value={settings.lyricsModel} onChange={(event) => setSettings({ ...settings, lyricsModel: event.target.value as Settings["lyricsModel"] })}><NativeSelectOption value="gpt-5.6-luna">GPT-5.6 Luna · econômico</NativeSelectOption><NativeSelectOption value="gpt-5.6-terra">GPT-5.6 Terra · equilibrado</NativeSelectOption><NativeSelectOption value="gpt-5.6-sol">GPT-5.6 Sol · premium</NativeSelectOption><NativeSelectOption value="gpt-6-astra">GPT-6 Astra · máxima qualidade</NativeSelectOption></NativeSelect></Field><Field label="Raciocínio"><NativeSelect className="h-11 w-full" value={settings.lyricsReasoningEffort} onChange={(event) => setSettings({ ...settings, lyricsReasoningEffort: event.target.value as Settings["lyricsReasoningEffort"] })}><NativeSelectOption value="none">Nenhum</NativeSelectOption><NativeSelectOption value="low">Baixo · recomendado</NativeSelectOption><NativeSelectOption value="medium">Médio</NativeSelectOption><NativeSelectOption value="high">Alto</NativeSelectOption></NativeSelect></Field></IntegrationCard><IntegrationCard icon={Music2} title="Música completa" provider="Suno através da Kie.ai" ready={data.readiness.kieKeyConfigured} gate={data.readiness.kieLiveGateEnabled} onTest={() => void testIntegration("kie")} testing={testing === "kie"}><Field label="Modo"><NativeSelect className="h-11 w-full" value={settings.musicMode} onChange={(event) => setSettings({ ...settings, musicMode: event.target.value as Settings["musicMode"] })}><NativeSelectOption value="mock">Simulação local</NativeSelectOption><NativeSelectOption value="live">Kie.ai ao vivo</NativeSelectOption></NativeSelect></Field><Field label="Modelo Suno"><NativeSelect className="h-11 w-full" value={settings.musicModel} onChange={(event) => setSettings({ ...settings, musicModel: event.target.value })}><NativeSelectOption value="V6">Suno V6 · recomendado</NativeSelectOption><NativeSelectOption value="V6_MINI">Suno V6 Mini</NativeSelectOption><NativeSelectOption value="V6_WILD">Suno V6 Wild</NativeSelectOption><NativeSelectOption value="V5_5">Suno V5.5 · legado</NativeSelectOption><NativeSelectOption value="V5">Suno V5 · legado</NativeSelectOption></NativeSelect></Field><div className="rounded-xl bg-[#f6f3f4] p-4 text-sm leading-6 text-muted-foreground">A voz masculina ou feminina escolhida pelo cliente é enviada como parâmetro vocal, junto com o estilo musical e a letra aprovada.</div></IntegrationCard></div><Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="font-display text-xl">Confirmar alteração operacional</CardTitle><CardDescription>O motivo protege a operação e aparece na trilha de auditoria.</CardDescription></CardHeader><CardContent className="space-y-4"><Textarea value={settingsReason} onChange={(event) => setSettingsReason(event.target.value)} minLength={8} maxLength={300} placeholder="Ex.: usar GPT-5.6 Terra para equilibrar qualidade e custo no piloto" /><div className="flex justify-end"><Button className="rounded-full bg-[#7e2148]" disabled={busy || settingsReason.trim().length < 8} onClick={() => void saveSettings()}>{busy ? <LoaderCircle className="animate-spin"/> : <Settings2 />} Salvar configurações</Button></div></CardContent></Card></TabsContent>
+
+              <TabsContent value="audit" className="space-y-5"><SectionTitle title="Trilha de auditoria" description="Últimas ações sensíveis realizadas por administradores." /><DataTable headers={["Ação","Destino","Motivo","Data"]}>{data.audit.map((row) => <TableRow key={row.id}><TableCell><Badge variant="outline">{humanAction(row.action)}</Badge></TableCell><TableCell><p>{row.target_type}</p><p className="max-w-44 truncate font-mono text-xs text-muted-foreground">{row.target_id ?? "—"}</p></TableCell><TableCell className="max-w-md whitespace-normal leading-6">{row.reason}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+            </Tabs>
+          )}
+        </section>
+      </div>
+
+      <Dialog open={Boolean(userDialog)} onOpenChange={(open) => !open && setUserDialog(null)}><DialogContent className="rounded-[24px] sm:max-w-xl"><form onSubmit={(event) => void saveUser(event)}><DialogHeader><DialogTitle className="font-display text-2xl">{userDialog === "create" ? "Criar usuário" : "Editar usuário"}</DialogTitle><DialogDescription>Permissões administrativas e de suporte só podem ser alteradas aqui por outro administrador.</DialogDescription></DialogHeader><div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Nome"><Input value={userForm.displayName} onChange={(event) => setUserForm({ ...userForm, displayName: event.target.value })} required /></Field><Field label="E-mail"><Input type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} required /></Field><Field label={userDialog === "create" ? "Senha provisória" : "Nova senha (opcional)"}><Input type="password" minLength={8} value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} required={userDialog === "create"} /></Field><Field label="Perfil"><NativeSelect className="w-full" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value as typeof userForm.role })}><NativeSelectOption value="user">Cliente</NativeSelectOption><NativeSelectOption value="support">Suporte</NativeSelectOption><NativeSelectOption value="admin">Administrador</NativeSelectOption></NativeSelect></Field>{userDialog === "edit" && <Field label="Status"><NativeSelect className="w-full" value={userForm.status} onChange={(event) => setUserForm({ ...userForm, status: event.target.value as typeof userForm.status })}><NativeSelectOption value="active">Ativo</NativeSelectOption><NativeSelectOption value="suspended">Suspenso</NativeSelectOption></NativeSelect></Field>}<div className="sm:col-span-2"><Field label="Motivo da ação"><Textarea minLength={8} maxLength={300} value={userForm.reason} onChange={(event) => setUserForm({ ...userForm, reason: event.target.value })} placeholder="Ex.: cadastro solicitado pelo atendimento" required /></Field></div></div><DialogFooter className="mt-6"><Button type="button" variant="outline" onClick={() => setUserDialog(null)}>Cancelar</Button><Button type="submit" className="bg-[#7e2148]" disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>} Salvar usuário</Button></DialogFooter></form></DialogContent></Dialog>
+
+      <AlertDialog open={Boolean(deleteUser)} onOpenChange={(open) => !open && setDeleteUser(null)}><AlertDialogContent className="rounded-[24px]"><AlertDialogHeader><AlertDialogTitle>Excluir a conta de {deleteUser?.displayName || deleteUser?.email}?</AlertDialogTitle><AlertDialogDescription>O login será invalidado e os dados pessoais da autenticação serão removidos. Pedidos, pagamentos e gerações permanecerão no histórico operacional.</AlertDialogDescription></AlertDialogHeader><Textarea value={deleteReason} onChange={(event) => setDeleteReason(event.target.value)} minLength={12} maxLength={300} placeholder="Informe o motivo da exclusão" /><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={busy || deleteReason.trim().length < 12} onClick={() => void confirmDelete()}>{busy ? <LoaderCircle className="animate-spin"/> : <Trash2 />} Excluir conta</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    </main>
+  );
+}
+
+const periodOptions: Array<{ value: PeriodRange; label: string }> = [
+  { value: "today", label: "Hoje" },
+  { value: "yesterday", label: "Ontem" },
+  { value: "7d", label: "7 dias" },
+  { value: "15d", label: "15 dias" },
+  { value: "30d", label: "30 dias" },
+  { value: "custom", label: "Personalizado" },
+];
+
+function PeriodFilter({ range, from, to, maxDate, label, busy, onSelect, onFromChange, onToChange, onApply }: {
+  range: PeriodRange;
+  from: string;
+  to: string;
+  maxDate: string;
+  label: string;
+  busy: boolean;
+  onSelect: (range: PeriodRange) => void;
+  onFromChange: (value: string) => void;
+  onToChange: (value: string) => void;
+  onApply: () => void;
+}) {
+  return (
+    <Card className="rounded-[22px] border-black/5 bg-white shadow-none">
+      <CardContent className="flex flex-col gap-4 px-5 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-bold">Período dos indicadores</p>
+            <p className="mt-1 text-xs text-muted-foreground">Exibindo: {label}</p>
+          </div>
+          {busy && <span className="inline-flex items-center gap-2 text-xs font-semibold text-[#8f2854]"><LoaderCircle className="size-4 animate-spin" /> Atualizando dados</span>}
+        </div>
+        <div role="group" aria-label="Selecionar período dos gráficos" className="flex flex-wrap gap-2">
+          {periodOptions.map((option) => (
+            <Button
+              key={option.value}
+              type="button"
+              size="sm"
+              variant={range === option.value ? "default" : "outline"}
+              aria-pressed={range === option.value}
+              className={range === option.value ? "rounded-full bg-[#7e2148] hover:bg-[#681a3b]" : "rounded-full"}
+              disabled={busy}
+              onClick={() => onSelect(option.value)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+        {range === "custom" && (
+          <div className="grid gap-3 rounded-2xl border border-[#ead9df] bg-[#fbf8f9] p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <Field label="Data inicial"><Input type="date" value={from} max={to || maxDate} onChange={(event) => onFromChange(event.target.value)} /></Field>
+            <Field label="Data final"><Input type="date" value={to} min={from} max={maxDate} onChange={(event) => onToChange(event.target.value)} /></Field>
+            <Button type="button" className="bg-[#7e2148] sm:h-9" disabled={busy || !from || !to || from > to} onClick={onApply}>{busy ? <LoaderCircle className="animate-spin" /> : <RefreshCw />} Aplicar</Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Tab({ value, icon: Icon, label }: { value: string; icon: typeof LayoutDashboard; label: string }) { return <TabsTrigger value={value} className="rounded-xl px-3 py-2"><Icon /> {label}</TabsTrigger>; }
+function Metric({ icon: Icon, label, value, detail, accent = false }: { icon: typeof Activity; label: string; value: string; detail: string; accent?: boolean }) { return <Card className={`rounded-[22px] border-black/5 shadow-none ${accent ? "bg-[#351521] text-white" : "bg-white"}`}><CardContent className="px-5"><div className={`grid size-10 place-items-center rounded-xl ${accent ? "bg-white/10" : "bg-[#f7e7ed] text-[#8f2854]"}`}><Icon className="size-5" /></div><p className={`mt-5 text-sm font-semibold ${accent ? "text-white/60" : "text-muted-foreground"}`}>{label}</p><p className="mt-1 font-display text-3xl font-bold">{value}</p><p className={`mt-1 text-xs ${accent ? "text-white/50" : "text-muted-foreground"}`}>{detail}</p></CardContent></Card>; }
+function MiniStat({ label, value, detail }: { label: string; value: string; detail: string }) { return <div className="rounded-[20px] border border-black/5 bg-white p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 font-display text-2xl font-bold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>; }
+function SectionTitle({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) { return <div className="flex flex-wrap items-end justify-between gap-4"><div><h2 className="font-display text-2xl font-bold">{title}</h2><p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p></div>{action}</div>; }
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block space-y-2 text-sm font-semibold"><span>{label}</span>{children}</label>; }
+function DataTable({ headers, children }: { headers: string[]; children: React.ReactNode }) { return <Card className="rounded-[24px] border-black/5 shadow-none"><CardContent className="px-4 sm:px-6"><Table><TableHeader><TableRow>{headers.map((header) => <TableHead key={header}>{header}</TableHead>)}</TableRow></TableHeader><TableBody>{children}</TableBody></Table></CardContent></Card>; }
+function IntegrationCard({ icon: Icon, title, provider, ready, gate, testing, onTest, children }: { icon: typeof Bot; title: string; provider: string; ready: boolean; gate: boolean; testing: boolean; onTest: () => void; children: React.ReactNode }) { return <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><div className="flex items-start justify-between gap-4"><div className="flex gap-3"><div className="grid size-11 place-items-center rounded-xl bg-[#f7e7ed] text-[#8f2854]"><Icon className="size-5"/></div><div><CardTitle className="font-display text-xl">{title}</CardTitle><CardDescription className="mt-1">{provider}</CardDescription></div></div><StatusBadge value={ready && gate ? "ready" : ready ? "configured" : "missing"} /></div></CardHeader><CardContent className="space-y-4">{children}<div className="flex items-center justify-between gap-3 border-t pt-4"><p className="text-xs leading-5 text-muted-foreground">{!ready ? "Adicione a chave no ambiente do servidor." : !gate ? "Chave presente; modo ao vivo bloqueado pelo ambiente." : "Credencial e trava de produção ativas."}</p><Button variant="outline" size="sm" className="shrink-0 rounded-full" disabled={testing} onClick={onTest}>{testing ? <LoaderCircle className="animate-spin"/> : <RefreshCw/>} Testar</Button></div></CardContent></Card>; }
+function StatusBadge({ value }: { value: string }) { const good = ["active","admin","support","confirmed","succeeded","ready","configured"].includes(value); const bad = ["deleted","failed","cancelled","refunded","missing"].includes(value); return <Badge variant={bad ? "destructive" : good ? "default" : "secondary"} className={good ? "bg-emerald-100 text-emerald-900 hover:bg-emerald-100" : ""}>{statusLabel(value)}</Badge>; }
+function Empty({ label }: { label: string }) { return <div className="py-12 text-center text-sm text-muted-foreground">{label}</div>; }
+function DashboardSkeleton() { return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-44 rounded-[22px]" />)}</div><div className="grid gap-5 xl:grid-cols-2"><Skeleton className="h-[380px] rounded-[24px]"/><Skeleton className="h-[380px] rounded-[24px]"/></div></div>; }
+function money(cents: number) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100); }
+function number(value: number) { return new Intl.NumberFormat("pt-BR").format(value); }
+function dateTime(value: string) { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function shortDate(value: string) { const [, month, day] = value.split("-"); return `${day}/${month}`; }
+function relativeDate(daysAgo: number) { const date = new Date(); date.setHours(12, 0, 0, 0); date.setDate(date.getDate() - daysAgo); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
+function dashboardUrl(range: PeriodRange, from: string, to: string) { const query = new URLSearchParams({ range }); if (range === "custom") { query.set("from", from); query.set("to", to); } return `/api/admin/dashboard?${query.toString()}`; }
+function providerLabel(value: string) { return value === "mercado_pago" ? "Mercado Pago" : value === "efi" ? "Efí Bank" : value; }
+function statusLabel(value: string) { return ({ user: "Cliente", support: "Suporte", admin: "Administrador", active: "Ativo", suspended: "Suspenso", deleted: "Excluído", created: "Criada", submitted: "Enviada", processing: "Processando", reconciling: "Conciliação", succeeded: "Concluída", failed: "Falhou", pending: "Pendente", confirmed: "Confirmado", cancelled: "Cancelado", refunded: "Reembolsado", ready: "Conectada", configured: "Configurada", missing: "Sem chave", live: "Ao vivo", mock: "Simulação" } as Record<string,string>)[value] ?? value; }
+function humanAction(value: string) { return ({ create_user: "Criou usuário", update_user_requested: "Alterou usuário", soft_delete_user_requested: "Excluiu usuário", update_ai_settings_requested: "Alterou modelos", test_integration: "Testou integração" } as Record<string,string>)[value] ?? value; }

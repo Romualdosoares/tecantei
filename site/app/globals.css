@@ -1,0 +1,142 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+:root {
+  --background: #fffaf6;
+  --foreground: #2b1722;
+  --card: #ffffff;
+  --card-foreground: #2b1722;
+  --popover: #ffffff;
+  --popover-foreground: #2b1722;
+  --primary: #8b2450;
+  --primary-foreground: #ffffff;
+  --secondary: #f8e9ea;
+  --secondary-foreground: #5f1d3a;
+  --muted: #f5eeea;
+  --muted-foreground: #71626a;
+  --accent: #f7dfe3;
+  --accent-foreground: #6d1f40;
+  --destructive: #b42318;
+  --border: #eadfdc;
+  --input: #ded0cd;
+  --ring: #b94970;
+  --radius: 0.8rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-sans: var(--font-sans), "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% -10%, rgb(254 205 211 / 28%), transparent),
+    radial-gradient(circle at 90% 20%, rgb(255 228 230 / 30%), transparent 35rem),
+    radial-gradient(circle at 10% 80%, rgb(253 232 238 / 30%), transparent 40rem),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Plus Jakarta Sans", -apple-system, sans-serif;
+}
+
+button,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-display {
+  font-family: var(--font-display), "Playfair Display", Georgia, serif;
+}
+
+/* Glass & Luxury Effects */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.glass-dark {
+  background: rgba(43, 17, 34, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glow-card {
+  box-shadow: 0 12px 40px -10px rgba(139, 36, 80, 0.12), 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.glow-card-hover {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glow-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 60px -12px rgba(139, 36, 80, 0.22);
+}
+
+/* Vinyl Spin */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
+}
+
+/* Soundwave animations */
+@keyframes wave-bar {
+  0%, 100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.wave-animated {
+  animation: wave-bar 1.2s ease-in-out infinite alternate;
+}

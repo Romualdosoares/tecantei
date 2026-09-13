@@ -1,0 +1,15 @@
+await import("./verify-domain.mjs");
+await import("./verify-lyrics.mjs");
+await import("./verify-lyrics-draft.mjs");
+await import("./verify-kie-contract.mjs");
+await import("./verify-generation-budget.mjs");
+await import("./verify-generation-storage.mjs");
+await import("./verify-preview.mjs");
+await import("./verify-supabase-foundation.mjs");
+await import("./verify-admin-dashboard.mjs");
+await import("./verify-delivery.mjs");
+await import("./verify-payment-providers.mjs");
+await import("./verify-live-payment-flow.mjs");
+await import("./verify-payment-reconciliation.mjs");
+await import("./verify-pilot-readiness.mjs");
+await import("./verify-preflight.mjs");

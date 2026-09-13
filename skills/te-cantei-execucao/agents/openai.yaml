@@ -1,0 +1,5 @@
+interface:
+  display_name: "Te Cantei — execução do projeto"
+  short_description: "Execute etapas e retome o projeto Te Cantei"
+  default_prompt: "Use $te-cantei-execucao para consultar o estado do projeto e executar a próxima etapa autorizada, registrando entregas e validações."
+

@@ -1,0 +1,28 @@
+# Dependências e artefatos gerados
+site/node_modules/
+site/.next/
+site/dist/
+site/.vinext/
+site/.wrangler/
+site/.sites-runtime/
+site/build/
+site/tsconfig.tsbuildinfo
+
+# Credenciais locais
+.env
+.env.*
+!.env.example
+site/.env
+site/.env.*
+!site/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Pacotes locais e arquivos do sistema
+*.zip
+*.rar
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,71 @@
+import { NextResponse } from "next/server";
+import { assertLivePaymentConfiguration, getPaymentProvider } from "@/lib/payment/env";
+import { applyVerifiedProviderCharge } from "@/lib/payment/provider-persistence";
+import { createConfiguredPixProvider } from "@/lib/payment/providers/configured-provider";
+import { parseEfiPixWebhook, verifyEfiWebhookToken } from "@/lib/payment/providers/efi-webhook";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const runtime = "nodejs";
+
+const MAX_WEBHOOK_BYTES = 65_536;
+
+export async function POST(request: Request) {
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(contentLength) && contentLength > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
+  }
+
+  try {
+    assertLivePaymentConfiguration();
+    if (getPaymentProvider() !== "efi") {
+      return NextResponse.json({ error: "provider_disabled" }, { status: 404 });
+    }
+    const expectedGatewaySecret = requiredEnv("EFI_WEBHOOK_MTLS_GATEWAY_SECRET");
+    if (process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() !== "gateway" ||
+        !verifyEfiWebhookToken(request.headers.get("x-efi-mtls-gateway-secret"), expectedGatewaySecret)) {
+      return NextResponse.json({ error: "mtls_not_verified" }, { status: 403 });
+    }
+    const hmac = new URL(request.url).searchParams.get("hmac");
+    if (!verifyEfiWebhookToken(hmac, requiredEnv("EFI_WEBHOOK_TOKEN"))) {
+      return NextResponse.json({ error: "invalid_token" }, { status: 401 });
+    }
+
+    const rawBody = await request.text();
+    if (Buffer.byteLength(rawBody, "utf8") > MAX_WEBHOOK_BYTES) {
+      return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
+    }
+    if (rawBody.trim().length === 0) {
+      return new NextResponse("200", { status: 200, headers: { "Cache-Control": "no-store" } });
+    }
+
+    const notifications = parseEfiPixWebhook(JSON.parse(rawBody));
+    const provider = createConfiguredPixProvider();
+    const admin = createSupabaseAdminClient();
+    let shouldRetry = false;
+    for (const notification of notifications) {
+      const charge = await provider.getPixCharge(notification.txid);
+      const result = await applyVerifiedProviderCharge(
+        admin,
+        charge,
+        `pix:${notification.endToEndId}:${charge.status}`,
+        notification.occurredAt,
+      );
+      if (result.found && charge.status === "pending") shouldRetry = true;
+    }
+    if (shouldRetry) {
+      return NextResponse.json({ error: "payment_still_pending" }, { status: 503 });
+    }
+    return NextResponse.json({ received: true }, {
+      status: 200,
+      headers: { "Cache-Control": "no-store" },
+    });
+  } catch {
+    return NextResponse.json({ error: "webhook_unavailable" }, { status: 503 });
+  }
+}
+
+function requiredEnv(key: string) {
+  const value = process.env[key]?.trim();
+  if (!value) throw new Error(`${key} não configurada.`);
+  return value;
+}
