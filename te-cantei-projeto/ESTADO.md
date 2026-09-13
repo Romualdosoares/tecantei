@@ -870,3 +870,11 @@ Alterações:
 - nova verificação automatizada percorre os arquivos da aplicação, recusa links vazios ou placeholders, confere rotas internas literais, destinos de rolagem, correspondência entre menu e conteúdo administrativo, logout real e ações da entrega.
 
 Validação local: auditoria estrutural completa aprovada, TypeScript sem erros, lint sem erros e build Next.js de produção concluído com 15 páginas estáticas e todas as rotas dinâmicas esperadas.
+
+Auditoria de dependências:
+
+- Next.js atualizado de 16.2.6 para 16.3.5 para incorporar as correções de segurança indicadas pelo registro npm;
+- `npm audit --omit=dev` concluído com zero vulnerabilidades nas dependências usadas em produção;
+- permanecem avisos moderados restritos à cadeia de desenvolvimento do `drizzle-kit`; a correção automática exigiria um downgrade incompatível e não afeta o pacote implantado.
+
+Validação após a atualização: suíte completa, lint, TypeScript e build de produção novamente aprovados no Next.js 16.3.5.
