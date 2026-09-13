@@ -1,0 +1,8 @@
+project_id = "tecantei"
+
+[auth]
+site_url = "https://tecantei.vercel.app"
+additional_redirect_urls = [
+  "https://tecantei.vercel.app/auth/confirm",
+  "http://localhost:3000/auth/confirm",
+]

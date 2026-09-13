@@ -804,3 +804,28 @@ Estado concluído:
 - conteúdo confirmado pelo título “Te Cantei — Sua história virou música” e pela marca presente no HTML servido.
 
 Dependência externa restante: o projeto Vercel ainda não possui variáveis de ambiente da aplicação. A landing pública funciona, mas Supabase, OpenAI, Kie.ai e pagamentos reais continuam dependentes da configuração segura das respectivas credenciais no Vercel.
+
+## Continuação de 13/09/2026 — início da conexão com Supabase
+
+Pedido: conectar a aplicação ao projeto Supabase `ffbztuhxnvbvihqicmcc`.
+
+Preparação confirmada:
+
+- URL do projeto recebida e endpoint remoto acessível;
+- aplicação já preparada para `NEXT_PUBLIC_SUPABASE_URL`, chave pública moderna, chave secreta exclusiva do servidor e bucket privado `te-cantei-audio`;
+- dez migrações canônicas disponíveis para Auth, RLS, Storage, pedidos, gerações, pagamentos, entrega e painel administrativo;
+- Supabase CLI 2.117.0 validada localmente;
+- fluxo oficial de autenticação aberto em uma janela interativa, sem copiar ou revelar credenciais no chat.
+
+Estado concluído:
+
+- autenticação da CLI confirmada e projeto remoto `Tecantei` validado na conta autorizada;
+- repositório vinculado ao projeto `ffbztuhxnvbvihqicmcc`;
+- dez migrações aplicadas e confirmadas como sincronizadas entre o diretório local e o banco remoto;
+- Auth configurado com `https://tecantei.vercel.app` como Site URL e callbacks autorizados para produção e desenvolvimento local, preservando todas as demais propriedades remotas;
+- chave publicável moderna e chave secreta de servidor transferidas diretamente para as variáveis de produção da Vercel, sem impressão em logs, arquivo local ou commit;
+- bucket `te-cantei-audio` confirmado como privado, acesso administrativo ao banco confirmado e acesso anônimo às tabelas recusado conforme a política definida;
+- nova implantação de produção concluída e associada a `https://tecantei.vercel.app`;
+- página principal e recuperação de senha respondendo `HTTP 200`; endpoint Auth validado com cadastro por e-mail habilitado e confirmação obrigatória.
+
+Pendência posterior à conexão: criar a primeira conta pelo fluxo público e promover seu UUID confirmado para administrador antes de validar as operações protegidas de `/admin`. Credenciais de OpenAI, Kie.ai e pagamentos continuam separadas e não foram ativadas nesta etapa.

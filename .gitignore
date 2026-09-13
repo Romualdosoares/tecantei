@@ -5,7 +5,9 @@ site/dist/
 site/.vinext/
 site/.wrangler/
 site/.sites-runtime/
+site/supabase/.temp/
 site/build/
+.vercel/
 site/tsconfig.tsbuildinfo
 
 # Credenciais locais
@@ -26,3 +28,6 @@ site/.env.*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+.vercel
+.env*
