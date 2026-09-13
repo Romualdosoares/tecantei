@@ -878,3 +878,5 @@ Auditoria de dependências:
 - permanecem avisos moderados restritos à cadeia de desenvolvimento do `drizzle-kit`; a correção automática exigiria um downgrade incompatível e não afeta o pacote implantado.
 
 Validação após a atualização: suíte completa, lint, TypeScript e build de produção novamente aprovados no Next.js 16.3.5.
+
+Publicação concluída: correções e atualização de segurança enviadas à branch `main`; implantação de produção confirmada como `READY` e associada a `https://tecantei.vercel.app`. Testes HTTP confirmaram a landing e a recuperação de senha em `200`, redirecionamentos esperados nas áreas protegidas para visitantes sem sessão e respostas `404` controladas para identificadores inválidos.
