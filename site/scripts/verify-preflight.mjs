@@ -28,15 +28,14 @@ const production = await runPreflight({
     SUPABASE_AUDIO_BUCKET: "te-cantei-audio",
     NEXT_PUBLIC_SITE_URL: "https://te-cantei.invalid",
     CRON_SECRET: "segredo-de-teste-com-mais-de-24-caracteres",
-    OPENAI_LIVE_ENABLED: "true",
-    OPENAI_LYRICS_MODEL: "gpt-5.6-terra",
+    KIE_LIVE_LYRICS_ENABLED: "true",
+    KIE_LYRICS_MODEL: "gpt-5-6-terra",
     KIE_GENERATION_MODE: "live",
     KIE_LIVE_GENERATION_ENABLED: "true",
     KIE_GENERATION_CREDITS: "12",
     GENERATION_BUDGET_SCOPE: "production",
     GENERATION_ACCOUNT_24H_CREDITS: "24",
     GENERATION_ENVIRONMENT_24H_CREDITS: "120",
-    KIE_API_KEY: "chave-kie-de-teste",
     KIE_WEBHOOK_HMAC_KEY: "hmac-kie-de-teste-com-tamanho-suficiente",
     KIE_ALLOWED_AUDIO_HOSTS: "cdn.kie.ai",
     PAYMENT_MODE: "mock",
@@ -44,10 +43,10 @@ const production = await runPreflight({
   },
 });
 assert.equal(production.ready, false);
-assert.ok(production.checks.some((check) => check.message.includes("OPENAI_API_KEY") && check.level === "block"));
+assert.ok(production.checks.some((check) => check.message.includes("cadastrada no cofre pelo painel") && check.level === "warn"));
 assert.ok(production.checks.some((check) => check.message.includes("ambiente oficial do provedor") && check.level === "warn"));
 assert.ok(production.checks.some((check) => check.message.includes("MERCADO_PAGO_ACCESS_TOKEN") && check.level === "block"));
-assert.doesNotMatch(JSON.stringify(production.checks), /segredo-de-teste|chave-kie-de-teste|sb_secret_valor/);
+assert.doesNotMatch(JSON.stringify(production.checks), /segredo-de-teste|sb_secret_valor/);
 
 assert.deepEqual(parseEnv("A=1\nB='dois'\n# comentário\nC=três=partes\n"), { A: "1", B: "dois", C: "três=partes" });
 

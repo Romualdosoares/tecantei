@@ -14,7 +14,7 @@ Diretório raiz confirmado: `D:\Claude Projetos\Te Cantei`. Todos os arquivos e 
 | 1 — Oferta e regras | Concluída | OFERTA-E-REGRAS.md define entrega, limites, ajuste, falhas, compra e custos; preço de R$ 19,90, conta por e-mail/senha e prévia de 14 dias foram confirmados. |
 | 2 — Identidade e experiência | Concluída | Jornada navegável, entrada por e-mail/senha, área “Meus pedidos” e detalhe privado implementados. Oito estados passaram em 390 × 844 e o início em 1440 × 1000, sem overflow horizontal. |
 | 3 — Base do produto | Em andamento | Supabase escolhido; Auth, sessões, RLS, Storage privado, suporte e painel administrativo protegido implementados. CRUD de usuários, exclusão lógica, configurações de IA, métricas e mutações administrativas exigem papel ativo e auditoria. Falta aplicar e validar tudo em um Supabase de teste. |
-| 4 — História e letra | Em andamento | Rascunho local e integração OpenAI Responses API implementados, com seleção entre GPT-5.6 e GPT-6, dupla trava para uso real e revisão manual antes da aprovação. Falta teste real autorizado e avaliação editorial em português. |
+| 4 — História e letra | Em andamento | Rascunho local e integração GPT via Kie.ai implementados, com seleção entre GPT-5.6 e GPT-6, chave protegida no Vault, dupla trava para uso real e revisão manual antes da aprovação. Falta teste real autorizado e avaliação editorial em português. |
 | 5 — Integração Kie.ai | Em andamento | Contrato atualizado até Suno V6/V6 Mini/V6 Wild, com `V6` padrão, voz por parâmetro dedicado, seleção administrativa, reserva idempotente, orçamento transacional, callback HMAC e Storage privado. Falta observar custo e realizar teste real autorizado. |
 | 6 — Prévia e ajuste | Em andamento | Executor interno copia as saídas, cria a prévia e publica tudo transacionalmente. A solicitação do único ajuste reserva uma nova geração de forma atômica, preserva a original, devolve o direito em falha técnica e só o consome quando a nova prévia existe. Falta validar com sessão e áudio reais. |
 | 7 — Pagamento | Em andamento | Checkout mock/real, Efí e Mercado Pago estão conectados à reserva persistente, UI Pix e webhooks idempotentes. O suporte pode conciliar cobranças existentes com auditoria e consulta autenticada; devolução integral é reconhecida sem revogar a entrega automaticamente. Faltam homologação, política/execução de estorno e gateway mTLS da Efí. |
@@ -880,3 +880,21 @@ Auditoria de dependências:
 Validação após a atualização: suíte completa, lint, TypeScript e build de produção novamente aprovados no Next.js 16.3.5.
 
 Publicação concluída: correções e atualização de segurança enviadas à branch `main`; implantação de produção confirmada como `READY` e associada a `https://tecantei.vercel.app`. Testes HTTP confirmaram a landing e a recuperação de senha em `200`, redirecionamentos esperados nas áreas protegidas para visitantes sem sessão e respostas `404` controladas para identificadores inválidos.
+
+## Continuação de 13/09/2026 — GPT pela Kie.ai e chave gerenciável no painel
+
+Pedido: usar os modelos GPT da Kie.ai para criar a letra e disponibilizar no painel administrativo um local seguro para cadastrar a chave da integração.
+
+Alterações concluídas:
+
+- a criação real de letras deixou de chamar a OpenAI diretamente e passou a usar `POST https://api.kie.ai/codex/v1/responses`;
+- modelos administrativos migrados para os IDs oficiais `gpt-5-6-luna`, `gpt-5-6-terra`, `gpt-5-6-sol` e `gpt-6-astra`;
+- painel de Integrações recebeu um campo de senha write-only para inserir ou substituir a chave Kie.ai, motivo obrigatório, remoção confirmada e teste de saldo;
+- a mesma chave atende à criação de letras com GPT e à geração musical com Suno;
+- chave armazenada de forma criptografada no Supabase Vault e nunca devolvida ao navegador, exibida em logs ou salva no repositório;
+- operações de inclusão, substituição e remoção registradas na auditoria sem incluir o segredo;
+- funções do Vault restritas ao papel `service_role`, com fallback opcional para `KIE_API_KEY` no ambiente do servidor;
+- migração `202609130001_kie_lyrics_and_vault.sql` aplicada no projeto Supabase remoto;
+- produção da Vercel preparada com `KIE_LIVE_LYRICS_ENABLED=true` e modelo padrão `gpt-5-6-terra`.
+
+Validação local: todas as verificações de banco e segurança, lint, TypeScript e build Next.js 16.3.5 foram aprovados. Nenhuma chamada paga foi feita porque a chave deve ser cadastrada pelo proprietário diretamente no painel.

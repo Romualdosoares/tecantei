@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminIdentity } from "@/lib/admin/auth";
-import { ADMIN_KIE_MODELS, OPENAI_LYRIC_MODELS } from "@/lib/admin/settings";
+import { ADMIN_KIE_MODELS, KIE_LYRIC_MODELS } from "@/lib/admin/settings";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { writeAudit } from "../users/route";
 
 const schema = z.object({
-  lyricsMode: z.enum(["mock", "openai"]),
-  lyricsModel: z.enum(OPENAI_LYRIC_MODELS),
-  lyricsReasoningEffort: z.enum(["none", "low", "medium", "high"]),
+  lyricsMode: z.enum(["mock", "kie"]),
+  lyricsModel: z.enum(KIE_LYRIC_MODELS),
+  lyricsReasoningEffort: z.enum(["low", "medium", "high", "xhigh"]),
   musicMode: z.enum(["mock", "live"]),
   musicModel: z.enum(ADMIN_KIE_MODELS),
   reason: z.string().trim().min(8).max(300),

@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     const period = resolvePeriod(input.data);
     if (!period) return NextResponse.json({ error: "invalid_period" }, { status: 400, headers: NO_STORE });
 
-    const [authUsers, profiles, orders, tasks, payments, periodTasks, periodPayments, costs, events, settings, audits] = await Promise.all([
+    const [authUsers, profiles, orders, tasks, payments, periodTasks, periodPayments, costs, events, settings, readiness, audits] = await Promise.all([
       admin.auth.admin.listUsers({ page: 1, perPage: 200 }),
       admin.from("profiles").select("id, display_name, is_admin, is_support, account_status, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
       admin.from("orders").select("id, owner_id, recipient_name, status, style, created_at, updated_at").order("created_at", { ascending: false }).limit(500),
@@ -45,6 +45,7 @@ export async function GET(request: Request) {
       admin.from("cost_events").select("credits_millis, usd_micros, status, created_at").gte("created_at", period.fromInstant).lt("created_at", period.untilInstant).limit(10_000),
       admin.from("analytics_events").select("event_type, session_hash, path, created_at").gte("created_at", period.fromInstant).lt("created_at", period.untilInstant).limit(10_000),
       getApplicationSettings(admin),
+      integrationReadiness(admin),
       admin.from("admin_audit_log").select("id, actor_id, action, target_type, target_id, reason, created_at").order("created_at", { ascending: false }).limit(30),
     ]);
 
@@ -107,7 +108,7 @@ export async function GET(request: Request) {
         recipientName: orderById.get(payment.order_id)?.recipient_name ?? "—",
       })),
       settings,
-      readiness: integrationReadiness(),
+      readiness,
       audit: audits.data ?? [],
     }, { headers: NO_STORE });
   } catch {

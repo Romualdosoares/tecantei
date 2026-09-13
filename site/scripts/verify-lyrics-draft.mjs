@@ -25,16 +25,17 @@ const [route, home, envExample] = await Promise.all([
   readFile(new URL("../.env.example", import.meta.url), "utf8"),
 ]);
 assert.match(route, /MAX_BODY_BYTES = 8 \* 1_024/);
-assert.match(route, /effectiveLyricsMode\(settings\.lyricsMode\)/);
-assert.match(route, /createOpenAiLyricDraft/);
+assert.match(route, /effectiveLyricsMode\(settings\.lyricsMode, Boolean\(apiKey\)\)/);
+assert.match(route, /createKieLyricDraft/);
+assert.match(route, /getKieApiKey/);
 assert.match(route, /simulated: mode === "mock"/);
 assert.doesNotMatch(route, /KieMusicClient|SUPABASE_SECRET_KEY/);
 assert.doesNotMatch(home, /const demoLyrics/);
 assert.match(home, /\/api\/lyrics\/draft/);
 assert.match(home, /Rascunho simulado/);
 assert.match(envExample, /LYRICS_GENERATION_MODE=mock/);
-assert.match(envExample, /OPENAI_API_KEY=SUBSTITUA_NO_LIVE/);
-assert.match(envExample, /OPENAI_LIVE_ENABLED=false/);
+assert.match(envExample, /KIE_LIVE_LYRICS_ENABLED=false/);
+assert.match(envExample, /KIE_LYRICS_MODEL=gpt-5-6-terra/);
 
 console.log("PASS: rascunho local usa nome, história e ocasião sem chamar a geração musical");
-console.log("PASS: rota limita o corpo, alterna entre simulação e OpenAI e mantém a letra editável antes da aprovação");
+console.log("PASS: rota limita o corpo, alterna entre simulação e GPT via Kie.ai e mantém a letra editável antes da aprovação");

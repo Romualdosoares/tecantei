@@ -12,6 +12,7 @@ import {
   requireKieLiveConfig,
 } from "@/lib/music/kie-env";
 import { effectiveMusicMode, getApplicationSettings } from "@/lib/admin/settings";
+import { getKieApiKey } from "@/lib/admin/secrets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { musicStyleWithVoice, type VoicePreference } from "@/lib/order-options";
@@ -68,7 +69,8 @@ export async function POST(
     const model = settings.musicModel ?? getKieModel();
     const estimatedCreditsMillis = mode === "live" ? getKieEstimatedCreditsMillis() : 0;
     const budget = requireGenerationBudgetConfig(mode);
-    const liveConfig = mode === "live" ? requireKieLiveConfig(mode) : null;
+    const kieApiKey = mode === "live" ? await getKieApiKey(admin) : null;
+    const liveConfig = mode === "live" ? requireKieLiveConfig(mode, kieApiKey) : null;
     const { data: reservedData, error: reserveError } = await admin.rpc(
       "reserve_budgeted_original_generation",
       {

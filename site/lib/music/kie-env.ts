@@ -65,7 +65,7 @@ export function requireCronSecret() {
   return secret;
 }
 
-export function requireKieLiveConfig(mode: KieGenerationMode = getKieGenerationMode()) {
+export function requireKieLiveConfig(mode: KieGenerationMode = getKieGenerationMode(), storedApiKey?: string | null) {
   if (mode !== "live") {
     throw new Error("A geração Kie.ai não está em modo live.");
   }
@@ -73,10 +73,10 @@ export function requireKieLiveConfig(mode: KieGenerationMode = getKieGenerationM
     throw new Error("KIE_LIVE_GENERATION_ENABLED precisa ser true para consumir créditos.");
   }
 
-  const apiKey = value("KIE_API_KEY");
+  const apiKey = storedApiKey?.trim() || value("KIE_API_KEY");
   const siteUrl = value("NEXT_PUBLIC_SITE_URL");
   if (!apiKey || !siteUrl) {
-    throw new Error("KIE_API_KEY e NEXT_PUBLIC_SITE_URL são obrigatórios no modo live.");
+    throw new Error("A chave da Kie.ai e NEXT_PUBLIC_SITE_URL são obrigatórias no modo live.");
   }
 
   const callbackUrl = new URL("/api/kie/callback", siteUrl);

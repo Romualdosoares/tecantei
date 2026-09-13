@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createMockLyricDraft } from "@/lib/lyrics/draft-generator";
-import { createOpenAiLyricDraft } from "@/lib/lyrics/openai-client";
+import { createKieLyricDraft } from "@/lib/lyrics/kie-client";
 import { effectiveLyricsMode, getApplicationSettings } from "@/lib/admin/settings";
+import { getKieApiKey } from "@/lib/admin/secrets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
 
@@ -35,24 +36,26 @@ export async function POST(request: Request) {
     }
 
     const config = getSupabasePublicConfig();
-    const settings = config
-      ? await getApplicationSettings(createSupabaseAdminClient())
+    const admin = config ? createSupabaseAdminClient() : null;
+    const settings = admin
+      ? await getApplicationSettings(admin)
       : {
           lyricsMode: "mock" as const,
-          lyricsModel: "gpt-5.6-terra" as const,
+          lyricsModel: "gpt-5-6-terra" as const,
           lyricsReasoningEffort: "low" as const,
           musicMode: "mock" as const,
           musicModel: "V6" as const,
         };
-    const mode = effectiveLyricsMode(settings.lyricsMode);
-    const generated = mode === "openai"
-      ? await createOpenAiLyricDraft(payload.data, settings)
+    const apiKey = admin ? await getKieApiKey(admin) : null;
+    const mode = effectiveLyricsMode(settings.lyricsMode, Boolean(apiKey));
+    const generated = mode === "kie"
+      ? await createKieLyricDraft(payload.data, settings, apiKey!)
       : { lyrics: createMockLyricDraft(payload.data), responseId: null };
     return NextResponse.json(
       {
         lyrics: generated.lyrics,
         mode,
-        model: mode === "openai" ? settings.lyricsModel : "mock-local",
+        model: mode === "kie" ? settings.lyricsModel : "mock-local",
         simulated: mode === "mock",
       },
       { headers: NO_STORE },

@@ -19,7 +19,7 @@ Criar um site em português no qual uma pessoa transforma uma história pessoal 
 - A landing deve motivar pela preservação de memórias, exclusividade do presente, reação da pessoa amada, prova social e segurança de ouvir antes de comprar. Usar urgência emocional legítima — momentos e detalhes se perdem com o tempo — sem inventar contadores, vagas, estoque ou prazos.
 - Pagamento: integrar **Pix direto por Efí Bank e Mercado Pago**, mantendo uma interface comum e seleção por ambiente. O primeiro piloto pode priorizar Mercado Pago se a terminação mTLS exigida pelo webhook Efí não estiver comprovada na infraestrutura de publicação.
 - Arquitetura final confirmada: **GitHub** para o repositório, **Vercel** para hospedagem e **Supabase** para autenticação por e-mail/senha, PostgreSQL e arquivos privados.
-- A letra será criada pela **OpenAI**, com seleção administrativa entre GPT-5.6 e GPT-6; a música continuará sendo gerada pelos modelos **Suno através da Kie.ai**.
+- A letra será criada pelos modelos **GPT através da API da Kie.ai**, com seleção administrativa entre GPT-5.6 e GPT-6; a música continuará sendo gerada pelos modelos **Suno através da Kie.ai**.
 - O produto terá um painel administrativo protegido para usuários, integrações, gerações, acessos, vendas, custos e auditoria. Exclusões de usuários preservam o histórico operacional e financeiro.
 - A criação dos projetos externos, as verificações finais e a publicação no GitHub, Vercel e Supabase serão feitas somente quando a implementação local estiver pronta.
 - Desejo de monetização por música e/ou plano mensal.

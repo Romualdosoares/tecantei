@@ -1,6 +1,6 @@
 # Painel administrativo do Te Cantei
 
-Atualizado em 11/09/2026.
+Atualizado em 13/09/2026.
 
 ## O que está disponível
 
@@ -14,7 +14,8 @@ A rota protegida `/admin` reúne:
 - histórico de pagamentos por provedor e estado;
 - escolha do modelo de letra entre GPT-5.6 Luna, Terra, Sol e GPT-6 Astra;
 - escolha dos modelos Suno V6, V6 Mini e V6 Wild pela Kie.ai, mantendo V5/V5.5 como legado;
-- teste de conexão da OpenAI pela consulta do modelo e da Kie.ai pela consulta de saldo, sem gerar conteúdo pago;
+- cadastro protegido da chave da Kie.ai, compartilhada pelo GPT de letras e pelo Suno;
+- teste de conexão da Kie.ai pela consulta de saldo, sem gerar conteúdo pago;
 - trilha das ações administrativas sensíveis.
 
 As métricas próprias usam um identificador aleatório por sessão, guardado no navegador somente durante a sessão e transformado em SHA-256 no servidor. O endereço IP não é persistido.
@@ -25,11 +26,11 @@ Todas as rotas conferem a sessão no servidor, `profiles.is_admin = true` e `acc
 
 Excluir um usuário usa a exclusão lógica do Supabase Auth e marca o perfil como excluído. Pedidos, pagamentos, tarefas e custos são mantidos para conciliação e auditoria. O administrador não pode excluir nem bloquear a própria conta pelo painel.
 
-Chaves da OpenAI, Kie.ai, pagamentos e Supabase não são armazenadas em `application_settings`. O painel mostra somente se uma chave/trava existe, nunca seu valor.
+A chave da Kie.ai cadastrada no painel é enviada somente ao backend e guardada com criptografia autenticada no Supabase Vault. O painel mostra apenas se ela está configurada, nunca seu valor. As demais chaves continuam exclusivamente em variáveis do servidor e nenhuma credencial é armazenada em `application_settings`.
 
 ## Ativação no Supabase de teste
 
-1. Aplicar as migrações até `202609110010_admin_dashboard.sql` no ambiente correto.
+1. Aplicar as migrações até `202609130001_kie_lyrics_and_vault.sql` no ambiente correto.
 2. Criar a primeira conta normalmente e confirmar seu UUID.
 3. Fazer o bootstrap manual da primeira conta administrativa, substituindo apenas um UUID confirmado:
 
@@ -46,8 +47,8 @@ O bootstrap não deve ser automatizado por domínio de e-mail. Depois dele, novo
 
 ## Travas para integrações reais
 
-- OpenAI: `OPENAI_API_KEY`, `OPENAI_LIVE_ENABLED=true` e modo ao vivo no painel.
-- Kie.ai: `KIE_API_KEY`, `KIE_GENERATION_MODE=live`, `KIE_LIVE_GENERATION_ENABLED=true`, orçamento de 24 horas e modo ao vivo no painel.
+- Letras Kie.ai: chave cadastrada no painel, `KIE_LIVE_LYRICS_ENABLED=true` e modo “Kie.ai GPT ao vivo”.
+- Música Kie.ai: a mesma chave, `KIE_GENERATION_MODE=live`, `KIE_LIVE_GENERATION_ENABLED=true`, orçamento de 24 horas e modo ao vivo no painel.
 - O teste de conexão é uma ação auditada. O teste Kie.ai usa `GET /api/v1/chat/credit`; não consome uma geração musical.
 
 Ainda faltam aplicar a migração e executar testes com contas e credenciais reais no ambiente de preview. Nenhum usuário, projeto externo, cobrança ou geração real foi criado nesta entrega.

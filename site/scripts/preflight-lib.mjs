@@ -23,6 +23,7 @@ const REQUIRED_MIGRATIONS = [
   "202609110008_live_pix_payments.sql",
   "202609110009_music_style_and_voice.sql",
   "202609110010_admin_dashboard.sql",
+  "202609130001_kie_lyrics_and_vault.sql",
 ];
 
 const REQUIRED_ENV_KEYS = [
@@ -30,10 +31,9 @@ const REQUIRED_ENV_KEYS = [
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SECRET_KEY",
   "SUPABASE_AUDIO_BUCKET",
-  "OPENAI_API_KEY",
-  "OPENAI_LIVE_ENABLED",
-  "OPENAI_LYRICS_MODEL",
   "KIE_API_KEY",
+  "KIE_LIVE_LYRICS_ENABLED",
+  "KIE_LYRICS_MODEL",
   "KIE_WEBHOOK_HMAC_KEY",
   "KIE_ALLOWED_AUDIO_HOSTS",
   "KIE_MODEL",
@@ -63,8 +63,8 @@ const REQUIRED_ENV_KEYS = [
 ];
 
 const SAFE_DEFAULTS = {
-  OPENAI_LIVE_ENABLED: "false",
-  OPENAI_LYRICS_MODEL: "gpt-5.6-terra",
+  KIE_LIVE_LYRICS_ENABLED: "false",
+  KIE_LYRICS_MODEL: "gpt-5-6-terra",
   KIE_MODEL: "V6",
   KIE_GENERATION_MODE: "mock",
   KIE_LIVE_GENERATION_ENABLED: "false",
@@ -86,7 +86,7 @@ const ALLOWED_PUBLIC_KEYS = new Set([
   "NEXT_PUBLIC_SITE_URL",
 ]);
 const KIE_MODELS = new Set(["V3_5", "V4", "V4_5", "V4_5PLUS", "V4_5ALL", "V5", "V5_5", "V6", "V6_MINI", "V6_WILD"]);
-const OPENAI_MODELS = new Set(["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-6-astra"]);
+const KIE_LYRIC_MODELS = new Set(["gpt-5-6-sol", "gpt-5-6-terra", "gpt-5-6-luna", "gpt-6-astra"]);
 
 export function parseEnv(source) {
   const result = {};
@@ -215,7 +215,7 @@ async function checkMigrations(rootDir, add) {
 }
 
 function checkModes(target, value, add) {
-  add(OPENAI_MODELS.has(value("OPENAI_LYRICS_MODEL")) ? "pass" : "block", "letra", OPENAI_MODELS.has(value("OPENAI_LYRICS_MODEL")) ? "modelo de letra é suportado" : "OPENAI_LYRICS_MODEL não é suportado");
+  add(KIE_LYRIC_MODELS.has(value("KIE_LYRICS_MODEL")) ? "pass" : "block", "letra", KIE_LYRIC_MODELS.has(value("KIE_LYRICS_MODEL")) ? "modelo GPT da Kie.ai é suportado" : "KIE_LYRICS_MODEL não é suportado");
 
   if (["mock", "live"].includes(value("KIE_GENERATION_MODE"))) {
     add("pass", "Kie.ai", "modo de geração musical é reconhecido");
@@ -247,8 +247,8 @@ function checkModes(target, value, add) {
   if (target !== "production" && value("KIE_LIVE_GENERATION_ENABLED") === "true") {
     add("block", "Kie.ai", "trava de consumo real não pode estar ativa fora de production");
   }
-  if (target !== "production" && value("OPENAI_LIVE_ENABLED") === "true") {
-    add("block", "letra", "trava de uso real da OpenAI não pode estar ativa fora de production");
+  if (target !== "production" && value("KIE_LIVE_LYRICS_ENABLED") === "true") {
+    add("block", "letra", "trava de uso real do GPT pela Kie.ai não pode estar ativa fora de production");
   }
   if (target !== "production" && value("PAYMENT_LIVE_ENABLED") === "true") {
     add("block", "pagamento", "trava de cobrança real não pode estar ativa fora de production");
@@ -256,7 +256,7 @@ function checkModes(target, value, add) {
 }
 
 function checkLocal(value, add) {
-  add(value("OPENAI_LIVE_ENABLED") !== "true" ? "pass" : "block", "letra", value("OPENAI_LIVE_ENABLED") !== "true" ? "ambiente local não chama a OpenAI" : "ambiente local deve manter a OpenAI desligada");
+  add(value("KIE_LIVE_LYRICS_ENABLED") !== "true" ? "pass" : "block", "letra", value("KIE_LIVE_LYRICS_ENABLED") !== "true" ? "ambiente local não chama o GPT da Kie.ai" : "ambiente local deve manter a letra real desligada");
   if (value("KIE_GENERATION_MODE") === "mock" && value("KIE_LIVE_GENERATION_ENABLED") !== "true") {
     add("pass", "Kie.ai", "ambiente local não pode consumir créditos");
   } else {
@@ -290,7 +290,7 @@ function checkExternalBase(value, configured, add) {
 }
 
 function checkPreview(value, add) {
-  add(value("OPENAI_LIVE_ENABLED") !== "true" ? "pass" : "block", "letra", value("OPENAI_LIVE_ENABLED") !== "true" ? "preview mantém a letra em simulação" : "preview deve manter a OpenAI real desligada");
+  add(value("KIE_LIVE_LYRICS_ENABLED") !== "true" ? "pass" : "block", "letra", value("KIE_LIVE_LYRICS_ENABLED") !== "true" ? "preview mantém a letra em simulação" : "preview deve manter o GPT real desligado");
   add(value("KIE_GENERATION_MODE") === "mock" ? "pass" : "block", "Kie.ai", value("KIE_GENERATION_MODE") === "mock" ? "preview mantém geração musical simulada" : "preview deve manter KIE_GENERATION_MODE=mock");
   add(value("PAYMENT_MODE") === "mock" ? "pass" : "block", "pagamento", value("PAYMENT_MODE") === "mock" ? "preview mantém pagamento simulado" : "preview deve manter PAYMENT_MODE=mock");
   add(value("GENERATION_BUDGET_SCOPE") === "preview" ? "pass" : "block", "orçamento", value("GENERATION_BUDGET_SCOPE") === "preview" ? "orçamento está isolado no escopo de preview" : "preview exige GENERATION_BUDGET_SCOPE=preview");
@@ -301,11 +301,10 @@ function checkPreview(value, add) {
 }
 
 function checkProduction(value, configured, add) {
-  add(value("OPENAI_LIVE_ENABLED") === "true" ? "pass" : "block", "letra", value("OPENAI_LIVE_ENABLED") === "true" ? "trava live da OpenAI está ativa" : "production exige OPENAI_LIVE_ENABLED=true");
-  add(configured("OPENAI_API_KEY") ? "pass" : "block", "letra", configured("OPENAI_API_KEY") ? "OPENAI_API_KEY configurada" : "OPENAI_API_KEY ausente ou com placeholder");
+  add(value("KIE_LIVE_LYRICS_ENABLED") === "true" ? "pass" : "block", "letra", value("KIE_LIVE_LYRICS_ENABLED") === "true" ? "trava live do GPT pela Kie.ai está ativa" : "production exige KIE_LIVE_LYRICS_ENABLED=true");
   add(value("KIE_GENERATION_MODE") === "live" ? "pass" : "block", "Kie.ai", value("KIE_GENERATION_MODE") === "live" ? "geração musical está em modo live" : "production exige KIE_GENERATION_MODE=live");
   add(value("KIE_LIVE_GENERATION_ENABLED") === "true" ? "pass" : "block", "Kie.ai", value("KIE_LIVE_GENERATION_ENABLED") === "true" ? "trava live da Kie.ai está ativa" : "production exige confirmação explícita da trava live");
-  add(configured("KIE_API_KEY") ? "pass" : "block", "Kie.ai", configured("KIE_API_KEY") ? "KIE_API_KEY configurada" : "KIE_API_KEY ausente ou com placeholder");
+  add(configured("KIE_API_KEY") ? "pass" : "warn", "Kie.ai", configured("KIE_API_KEY") ? "KIE_API_KEY configurada no ambiente" : "KIE_API_KEY não está no ambiente; confirme que foi cadastrada no cofre pelo painel");
   add(configured("KIE_WEBHOOK_HMAC_KEY") && value("KIE_WEBHOOK_HMAC_KEY").length >= 32 ? "pass" : "block", "Kie.ai", configured("KIE_WEBHOOK_HMAC_KEY") && value("KIE_WEBHOOK_HMAC_KEY").length >= 32 ? "KIE_WEBHOOK_HMAC_KEY atende ao tamanho mínimo" : "KIE_WEBHOOK_HMAC_KEY precisa ter ao menos 32 caracteres e não pode ser placeholder");
   const hosts = value("KIE_ALLOWED_AUDIO_HOSTS").split(",").map((host) => host.trim()).filter(Boolean);
   const validHosts = configured("KIE_ALLOWED_AUDIO_HOSTS") && hosts.length > 0 && hosts.every((host) => /^[a-z0-9.-]+$/i.test(host) && !host.includes(".."));
@@ -315,7 +314,7 @@ function checkProduction(value, configured, add) {
   const environmentBudget = Number(value("GENERATION_ENVIRONMENT_24H_CREDITS"));
   const validBudget = Number.isFinite(accountBudget) && accountBudget > 0 && Number.isFinite(environmentBudget) && environmentBudget >= accountBudget;
   add(validBudget ? "pass" : "block", "orçamento", validBudget ? "limites móveis de 24h estão configurados" : "limites de conta e ambiente devem ser positivos, e o ambiente não pode ser menor que uma conta");
-  add("warn", "letra", "confirme no painel que o modo OpenAI ao vivo está selecionado e valide qualidade/custo antes do lançamento");
+  add("warn", "letra", "confirme no painel que o modo Kie.ai GPT ao vivo está selecionado e valide qualidade/custo antes do lançamento");
   add(value("PAYMENT_MODE") === "live" ? "pass" : "block", "pagamento", value("PAYMENT_MODE") === "live" ? "pagamento está marcado como live" : "production exige PAYMENT_MODE=live");
   add(value("PAYMENT_LIVE_ENABLED") === "true" ? "pass" : "block", "pagamento", value("PAYMENT_LIVE_ENABLED") === "true" ? "trava de cobrança live está ativa" : "production exige confirmação explícita da trava de cobrança live");
   checkPaymentProvider(value, configured, add);
