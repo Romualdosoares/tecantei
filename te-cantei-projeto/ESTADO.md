@@ -897,4 +897,6 @@ Alterações concluídas:
 - migração `202609130001_kie_lyrics_and_vault.sql` aplicada no projeto Supabase remoto;
 - produção da Vercel preparada com `KIE_LIVE_LYRICS_ENABLED=true` e modelo padrão `gpt-5-6-terra`.
 
-Validação local: todas as verificações de banco e segurança, lint, TypeScript e build Next.js 16.3.5 foram aprovados. Nenhuma chamada paga foi feita porque a chave deve ser cadastrada pelo proprietário diretamente no painel.
+Validação local: todas as verificações de banco e segurança, lint, TypeScript e build Next.js 16.3.5 foram aprovados. `npm audit --omit=dev` também confirmou zero vulnerabilidades nas dependências de produção. Nenhuma chamada paga foi feita porque a chave deve ser cadastrada pelo proprietário diretamente no painel.
+
+Publicação: implementação enviada à branch `main`, implantação Vercel confirmada como `READY` e associada a `https://tecantei.vercel.app`. Testes HTTP confirmaram landing e tela de acesso administrativo em `200`, e a API administrativa recusando visitantes sem sessão com `404` e cabeçalho `private, no-store`.
