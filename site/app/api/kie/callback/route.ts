@@ -1,11 +1,14 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { getKieWebhookHmacKey } from "@/lib/admin/secrets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { processGenerationOutputBatch } from "@/lib/music/generation-output-worker";
 import { parseKieGenerationCallback } from "@/lib/music/kie-callback";
-import { requireKieWebhookHmacKey } from "@/lib/music/kie-env";
+import { hasKieAllowedAudioHostsConfigured } from "@/lib/music/kie-env";
 import { verifyKieWebhook } from "@/lib/music/kie-webhook";
 
 const MAX_CALLBACK_BYTES = 128 * 1_024;
 const NO_STORE = { "Cache-Control": "no-store" };
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {
@@ -27,16 +30,18 @@ export async function POST(request: Request) {
 
     const timestamp = request.headers.get("x-webhook-timestamp") ?? "";
     const signature = request.headers.get("x-webhook-signature") ?? "";
+    const admin = createSupabaseAdminClient();
+    const hmacKey = await getKieWebhookHmacKey(admin);
+    if (!hmacKey) return response({ error: "webhook_not_configured" }, 503);
     const verified = await verifyKieWebhook({
       taskId: parsed.data.data.task_id,
       timestamp,
       signature,
-      hmacKey: requireKieWebhookHmacKey(),
+      hmacKey,
     });
     if (!verified) return response({ error: "invalid_signature" }, 401);
 
     const callback = parsed.data;
-    const admin = createSupabaseAdminClient();
     const { data, error } = await admin.rpc("apply_generation_callback", {
       provider_task_id: callback.data.task_id,
       callback_type: callback.data.callbackType,
@@ -48,6 +53,16 @@ export async function POST(request: Request) {
     });
     if (error || !isCallbackResult(data) || !data.found) {
       return response({ error: "callback_not_applied" }, 503);
+    }
+
+    if (callback.data.callbackType === "complete" && hasKieAllowedAudioHostsConfigured()) {
+      after(async () => {
+        try {
+          await processGenerationOutputBatch(4);
+        } catch {
+          // A rotina diária protegida por CRON_SECRET recupera saídas pendentes.
+        }
+      });
     }
 
     return response({ ok: true, status: data.status }, 200);

@@ -66,6 +66,24 @@ export async function processNextGenerationOutput() {
   }
 }
 
+export async function processGenerationOutputBatch(maxItems = 4) {
+  const safeMaxItems = Math.max(1, Math.min(Math.trunc(maxItems), 10));
+  let processed = 0;
+
+  for (let index = 0; index < safeMaxItems; index += 1) {
+    const result = await processNextGenerationOutput();
+    if (result.status === "idle") {
+      return { status: processed > 0 ? "processed" as const : "idle" as const, processed };
+    }
+    if (result.status === "failed") {
+      return { status: "failed" as const, processed, code: result.code };
+    }
+    processed += 1;
+  }
+
+  return { status: "processed" as const, processed };
+}
+
 function isClaimedOutput(value: unknown): value is ClaimedOutput {
   if (!value || typeof value !== "object") return false;
   const output = value as Record<string, unknown>;

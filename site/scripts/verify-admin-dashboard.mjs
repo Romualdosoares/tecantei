@@ -2,18 +2,21 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
-const [migration, vaultMigration, auth, dashboardRoute, userCreate, userUpdate, settingsRoute, secretsRoute, testRoute, analyticsRoute, kieLyricsClient, adminPage, adminDashboard] = await Promise.all([
+const [migration, vaultMigration, webhookVaultMigration, auth, dashboardRoute, userCreate, userUpdate, settingsRoute, secretsRoute, webhookSecretsRoute, testRoute, analyticsRoute, kieLyricsClient, kieCallbackRoute, adminPage, adminDashboard] = await Promise.all([
   read("../supabase/migrations/202609110010_admin_dashboard.sql"),
   read("../supabase/migrations/202609130001_kie_lyrics_and_vault.sql"),
+  read("../supabase/migrations/202609130002_kie_webhook_secret.sql"),
   read("../lib/admin/auth.ts"),
   read("../app/api/admin/dashboard/route.ts"),
   read("../app/api/admin/users/route.ts"),
   read("../app/api/admin/users/[userId]/route.ts"),
   read("../app/api/admin/settings/route.ts"),
   read("../app/api/admin/secrets/route.ts"),
+  read("../app/api/admin/secrets/webhook/route.ts"),
   read("../app/api/admin/integrations/test/route.ts"),
   read("../app/api/analytics/route.ts"),
   read("../lib/lyrics/kie-client.ts"),
+  read("../app/api/kie/callback/route.ts"),
   read("../app/admin/page.tsx"),
   read("../app/admin/admin-dashboard.tsx"),
 ]);
@@ -21,7 +24,7 @@ const [migration, vaultMigration, auth, dashboardRoute, userCreate, userUpdate, 
 assert.match(auth, /await supabase\.auth\.getUser\(\)/);
 assert.match(auth, /is_admin, account_status/);
 assert.match(auth, /profile\.account_status !== "active"/);
-for (const route of [dashboardRoute, userCreate, userUpdate, settingsRoute, secretsRoute, testRoute]) {
+for (const route of [dashboardRoute, userCreate, userUpdate, settingsRoute, secretsRoute, webhookSecretsRoute, testRoute]) {
   assert.match(route, /getAdminIdentity\(\)/);
 }
 assert.match(userCreate, /auth\.admin\.createUser/);
@@ -44,9 +47,16 @@ assert.match(vaultMigration, /create extension if not exists supabase_vault with
 assert.match(vaultMigration, /vault\.create_secret/);
 assert.match(vaultMigration, /vault\.update_secret/);
 assert.match(vaultMigration, /revoke all on function public\.get_app_secret\(text\) from public, anon, authenticated/);
+assert.match(webhookVaultMigration, /kie_webhook_hmac_key/);
+assert.match(webhookVaultMigration, /length\(trim\(target_value\)\) < 32/);
 assert.match(secretsRoute, /putKieApiKey/);
 assert.match(secretsRoute, /deleteKieApiKey/);
 assert.doesNotMatch(secretsRoute, /apiKey[^\n]*NextResponse|console\./);
+assert.match(webhookSecretsRoute, /putKieWebhookHmacKey/);
+assert.match(webhookSecretsRoute, /deleteKieWebhookHmacKey/);
+assert.doesNotMatch(webhookSecretsRoute, /hmacKey[^\n]*NextResponse|console\./);
+assert.match(kieCallbackRoute, /await getKieWebhookHmacKey\(admin\)/);
+assert.doesNotMatch(kieCallbackRoute, /requireKieWebhookHmacKey/);
 assert.match(migration, /revoke all on public\.application_settings, public\.analytics_events, public\.admin_audit_log/);
 assert.match(adminPage, /getAdminIdentity\(\)/);
 assert.doesNotMatch(dashboardRoute, /story|pronunciation|lyrics|full_audio_object_key|share_token_hash/i);
@@ -64,6 +74,8 @@ assert.match(adminDashboard, /type="password"/);
 assert.match(adminDashboard, /selectedUser\?\.id === data\?\.currentAdminId/);
 assert.match(adminDashboard, /Sua sessão administrativa expirou/);
 assert.match(adminDashboard, /\/api\/admin\/secrets/);
+assert.match(adminDashboard, /\/api\/admin\/secrets\/webhook/);
+assert.match(adminDashboard, /HMAC dos callbacks da Kie\.ai/);
 assert.match(adminDashboard, /GPT através da Kie\.ai/);
 
 console.log("PASS: painel administrativo exige papel ativo, audita mutações e não expõe conteúdo privado");

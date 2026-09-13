@@ -37,14 +37,6 @@ export function requireGenerationBudgetConfig(mode: KieGenerationMode) {
   return getGenerationBudgetConfig(process.env, mode);
 }
 
-export function requireKieWebhookHmacKey() {
-  const key = process.env.KIE_WEBHOOK_HMAC_KEY?.trim();
-  if (!key) {
-    throw new Error("KIE_WEBHOOK_HMAC_KEY não configurada no servidor.");
-  }
-  return key;
-}
-
 export function requireKieAllowedAudioHosts() {
   const configured = value("KIE_ALLOWED_AUDIO_HOSTS");
   if (!configured) {
@@ -55,6 +47,10 @@ export function requireKieAllowedAudioHosts() {
     throw new Error("KIE_ALLOWED_AUDIO_HOSTS deve conter apenas nomes de host separados por vírgula.");
   }
   return new Set(hosts);
+}
+
+export function hasKieAllowedAudioHostsConfigured() {
+  return Boolean(value("KIE_ALLOWED_AUDIO_HOSTS"));
 }
 
 export function requireCronSecret() {

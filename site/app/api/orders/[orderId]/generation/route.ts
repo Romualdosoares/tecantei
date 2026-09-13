@@ -12,7 +12,7 @@ import {
   requireKieLiveConfig,
 } from "@/lib/music/kie-env";
 import { effectiveMusicMode, getApplicationSettings } from "@/lib/admin/settings";
-import { getKieApiKey } from "@/lib/admin/secrets";
+import { getKieApiKey, getKieWebhookHmacKey } from "@/lib/admin/secrets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { musicStyleWithVoice, type VoicePreference } from "@/lib/order-options";
@@ -69,7 +69,12 @@ export async function POST(
     const model = settings.musicModel ?? getKieModel();
     const estimatedCreditsMillis = mode === "live" ? getKieEstimatedCreditsMillis() : 0;
     const budget = requireGenerationBudgetConfig(mode);
-    const kieApiKey = mode === "live" ? await getKieApiKey(admin) : null;
+    const [kieApiKey, webhookHmacKey] = mode === "live"
+      ? await Promise.all([getKieApiKey(admin), getKieWebhookHmacKey(admin)])
+      : [null, null];
+    if (mode === "live" && !webhookHmacKey) {
+      return NextResponse.json({ error: "generation_security_not_configured" }, { status: 503 });
+    }
     const liveConfig = mode === "live" ? requireKieLiveConfig(mode, kieApiKey) : null;
     const { data: reservedData, error: reserveError } = await admin.rpc(
       "reserve_budgeted_original_generation",

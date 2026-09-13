@@ -15,6 +15,7 @@ A rota protegida `/admin` reúne:
 - escolha do modelo de letra entre GPT-5.6 Luna, Terra, Sol e GPT-6 Astra;
 - escolha dos modelos Suno V6, V6 Mini e V6 Wild pela Kie.ai, mantendo V5/V5.5 como legado;
 - cadastro protegido da chave da Kie.ai, compartilhada pelo GPT de letras e pelo Suno;
+- cadastro separado e write-only do `webhookHmacKey` oficial da Kie.ai para autenticar callbacks musicais;
 - teste de conexão da Kie.ai pela consulta de saldo, sem gerar conteúdo pago;
 - trilha das ações administrativas sensíveis.
 
@@ -26,11 +27,11 @@ Todas as rotas conferem a sessão no servidor, `profiles.is_admin = true` e `acc
 
 Excluir um usuário usa a exclusão lógica do Supabase Auth e marca o perfil como excluído. Pedidos, pagamentos, tarefas e custos são mantidos para conciliação e auditoria. O administrador não pode excluir nem bloquear a própria conta pelo painel.
 
-A chave da Kie.ai cadastrada no painel é enviada somente ao backend e guardada com criptografia autenticada no Supabase Vault. O painel mostra apenas se ela está configurada, nunca seu valor. As demais chaves continuam exclusivamente em variáveis do servidor e nenhuma credencial é armazenada em `application_settings`.
+A chave da Kie.ai e o HMAC dos callbacks cadastrados no painel são enviados somente ao backend e guardados com criptografia autenticada no Supabase Vault. O painel mostra apenas se cada segredo está configurado, nunca seu valor. As demais chaves continuam exclusivamente em variáveis do servidor e nenhuma credencial é armazenada em `application_settings`.
 
 ## Ativação no Supabase de teste
 
-1. Aplicar as migrações até `202609130001_kie_lyrics_and_vault.sql` no ambiente correto.
+1. Aplicar as migrações até `202609130003_prepare_single_music_pilot.sql` no ambiente correto.
 2. Criar a primeira conta normalmente e confirmar seu UUID.
 3. Fazer o bootstrap manual da primeira conta administrativa, substituindo apenas um UUID confirmado:
 
@@ -48,7 +49,9 @@ O bootstrap não deve ser automatizado por domínio de e-mail. Depois dele, novo
 ## Travas para integrações reais
 
 - Letras Kie.ai: chave cadastrada no painel, `KIE_LIVE_LYRICS_ENABLED=true` e modo “Kie.ai GPT ao vivo”.
-- Música Kie.ai: a mesma chave, `KIE_GENERATION_MODE=live`, `KIE_LIVE_GENERATION_ENABLED=true`, orçamento de 24 horas e modo ao vivo no painel.
+- Música Kie.ai: a mesma chave, o `webhookHmacKey` oficial no Vault, `KIE_GENERATION_MODE=live`, `KIE_LIVE_GENERATION_ENABLED=true`, orçamento de 24 horas e modo ao vivo no painel.
+- Piloto fechado: `GENERATION_ACCOUNT_24H_CREDITS=12` e `GENERATION_ENVIRONMENT_24H_CREDITS=12` permitem somente uma reserva estimada de 12 créditos por 24 horas em produção.
+- Áudio: o callback assinado persiste as saídas; o download só começa quando o hostname real observado estiver em `KIE_ALLOWED_AUDIO_HOSTS`. Uma rotina diária protegida por `CRON_SECRET` recupera saídas pendentes.
 - O teste de conexão é uma ação auditada. O teste Kie.ai usa `GET /api/v1/chat/credit`; não consome uma geração musical.
 
 Ainda faltam aplicar a migração e executar testes com contas e credenciais reais no ambiente de preview. Nenhum usuário, projeto externo, cobrança ou geração real foi criado nesta entrega.

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireCronSecret } from "@/lib/music/kie-env";
-import { processNextGenerationOutput } from "@/lib/music/generation-output-worker";
+import { processGenerationOutputBatch } from "@/lib/music/generation-output-worker";
 
 const NO_STORE = { "Cache-Control": "no-store" };
+export const maxDuration = 300;
 
 export async function GET(request: Request) {
   return run(request);
@@ -20,7 +21,7 @@ async function run(request: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: NO_STORE });
     }
 
-    const result = await processNextGenerationOutput();
+    const result = await processGenerationOutputBatch(10);
     return NextResponse.json(result, { headers: NO_STORE });
   } catch {
     return NextResponse.json(

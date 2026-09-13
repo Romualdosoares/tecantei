@@ -921,3 +921,24 @@ Evidências reais, sem dados pessoais:
 - integração musical continua compatível com os endpoints oficiais atuais de criação e consulta do Suno, mas não houve chamada musical paga nesta verificação.
 
 Conclusão: criação real de letras está operacional. O produto completo ainda não está liberado para vendas reais porque faltam as travas e segredos de geração musical, limites de crédito, validação real do callback e configuração/validação do pagamento. A resposta sintética também não confirmou os marcadores exatos de todas as seções, portanto a revisão humana da letra deve continuar obrigatória antes da geração musical.
+
+## Continuação de 13/09/2026 — preparação segura de uma música piloto
+
+Pedido: configurar segurança, orçamento e modo musical real; depois executar exatamente uma música piloto ponta a ponta antes de abrir vendas e entregas completas.
+
+Configuração concluída até a trava humana:
+
+- `webhookHmacKey` passou a ter campo write-only no painel e armazenamento criptografado no Supabase Vault;
+- callbacks musicais sem HMAC configurado ou com assinatura inválida são recusados antes de qualquer alteração de estado;
+- geração original e ajuste recusam o modo real se o HMAC não estiver disponível, antes de reservar créditos;
+- modo selecionado no painel foi preparado como `live`, modelo `V6`, mas a trava externa continua fechada com `KIE_LIVE_GENERATION_ENABLED=false`;
+- orçamento de produção limitado a 12 créditos por conta e 12 créditos para todo o ambiente em 24 horas, equivalente a exatamente uma reserva estimada;
+- `CRON_SECRET` aleatório foi criado sem exposição e a recuperação de saídas roda uma vez ao dia, dentro do limite do plano atual da Vercel;
+- callback completo agenda o armazenamento privado e a criação da prévia de 50 segundos somente depois de existir uma origem de áudio explicitamente permitida;
+- migrações `202609130002_kie_webhook_secret.sql` e `202609130003_prepare_single_music_pilot.sql` aplicadas no Supabase remoto.
+
+Validação local: suíte completa de banco, segurança, callbacks, orçamento e jornada aprovada; lint, TypeScript e build Next.js 16.3.5 concluídos sem erros.
+
+Trava atual: falta o proprietário gerar ou consultar o `webhookHmacKey` nas configurações oficiais da Kie.ai e salvá-lo em Admin → Integrações. O valor não deve ser enviado pelo chat. Depois disso, será aberta a trava real apenas para executar uma música piloto; o hostname das saídas será observado, permitido explicitamente e o áudio será copiado para o Storage privado antes de validar prévia, edição, compra e entrega.
+
+Venda e entrega de músicas completas permanecem fechadas. O pagamento real continua sendo uma etapa separada e só será habilitado após o piloto musical completo e a homologação do gateway.

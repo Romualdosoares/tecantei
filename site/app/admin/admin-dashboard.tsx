@@ -37,7 +37,7 @@ type DashboardData = {
   generations: GenerationRow[];
   sales: SaleRow[];
   settings: Settings;
-  readiness: { kieKeyConfigured: boolean; kieLyricsLiveGateEnabled: boolean; kieLiveGateEnabled: boolean };
+  readiness: { kieKeyConfigured: boolean; kieWebhookHmacConfigured: boolean; kieLyricsLiveGateEnabled: boolean; kieLiveGateEnabled: boolean };
   audit: Array<{ id: string; action: string; target_type: string; target_id: string | null; reason: string; created_at: string }>;
 };
 
@@ -77,6 +77,10 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [secretReason, setSecretReason] = useState("");
   const [secretBusy, setSecretBusy] = useState(false);
   const [removeSecretOpen, setRemoveSecretOpen] = useState(false);
+  const [webhookHmacKey, setWebhookHmacKey] = useState("");
+  const [webhookReason, setWebhookReason] = useState("");
+  const [webhookBusy, setWebhookBusy] = useState(false);
+  const [removeWebhookOpen, setRemoveWebhookOpen] = useState(false);
 
   const load = async (range: PeriodRange = periodRange, from = customFrom, to = customTo, initial = false) => {
     if (initial) setLoading(true);
@@ -228,6 +232,30 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setRemoveSecretOpen(false); setKieApiKey(""); setSecretReason(""); setMessage("Chave cadastrada pelo painel removida do cofre. Uma chave definida no ambiente do servidor, se existir, continua ativa."); await load();
   };
 
+  const saveWebhookSecret = async () => {
+    setWebhookBusy(true); setError(""); setMessage("");
+    const response = await fetch("/api/admin/secrets/webhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider: "kie", hmacKey: webhookHmacKey, reason: webhookReason }),
+    }).catch(() => null);
+    setWebhookBusy(false);
+    if (!response?.ok) { setError("Não foi possível guardar o HMAC da Kie.ai com segurança."); return; }
+    setWebhookHmacKey(""); setWebhookReason(""); setMessage("HMAC dos callbacks salvo no cofre e pronto para validação."); await load();
+  };
+
+  const removeWebhookSecret = async () => {
+    setWebhookBusy(true); setError(""); setMessage("");
+    const response = await fetch("/api/admin/secrets/webhook", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider: "kie", reason: webhookReason }),
+    }).catch(() => null);
+    setWebhookBusy(false);
+    if (!response?.ok) { setError("Não foi possível remover o HMAC da Kie.ai."); return; }
+    setRemoveWebhookOpen(false); setWebhookHmacKey(""); setWebhookReason(""); setMessage("HMAC cadastrado pelo painel removido do cofre."); await load();
+  };
+
   const signOut = async () => {
     setSigningOut(true);
     setError("");
@@ -340,6 +368,14 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4"><p className="max-w-2xl text-xs leading-5 text-muted-foreground">A chave é enviada apenas ao servidor, guardada no Supabase Vault com criptografia autenticada e nunca é exibida novamente.</p><div className="flex gap-2">{data.readiness.kieKeyConfigured && <Button type="button" variant="outline" className="rounded-full text-destructive" disabled={secretBusy || secretReason.trim().length < 8} onClick={() => setRemoveSecretOpen(true)}>Remover chave</Button>}<Button type="button" className="rounded-full bg-[#7e2148]" disabled={secretBusy || kieApiKey.trim().length < 16 || secretReason.trim().length < 8} onClick={() => void saveKieSecret()}>{secretBusy ? <LoaderCircle className="animate-spin" /> : <KeyRound />} Salvar chave</Button></div></div>
                   </CardContent>
                 </Card>
+                <Card className="rounded-[24px] border-black/5 shadow-none">
+                  <CardHeader><div className="flex items-start justify-between gap-4"><div><CardTitle className="flex items-center gap-2 font-display text-xl"><ShieldCheck className="size-5 text-[#8f2854]" /> HMAC dos callbacks da Kie.ai</CardTitle><CardDescription className="mt-2">Protege o recebimento das músicas contra callbacks falsos. Gere o webhookHmacKey nas configurações oficiais da Kie.ai.</CardDescription></div><StatusBadge value={data.readiness.kieWebhookHmacConfigured ? "configured" : "missing"} /></div></CardHeader>
+                  <CardContent className="space-y-4">
+                    <Field label={data.readiness.kieWebhookHmacConfigured ? "Substituir HMAC atual" : "Inserir webhookHmacKey"}><Input type="password" autoComplete="new-password" value={webhookHmacKey} onChange={(event) => setWebhookHmacKey(event.target.value)} maxLength={512} placeholder="Cole o webhookHmacKey gerado nas configurações da Kie.ai" /></Field>
+                    <Field label="Motivo da alteração"><Textarea value={webhookReason} onChange={(event) => setWebhookReason(event.target.value)} minLength={8} maxLength={300} placeholder="Ex.: proteger os callbacks da geração musical em produção" /></Field>
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4"><p className="max-w-2xl text-xs leading-5 text-muted-foreground">O HMAC fica criptografado no Supabase Vault, nunca é exibido novamente e precisa ser o mesmo configurado pela Kie.ai.</p><div className="flex gap-2">{data.readiness.kieWebhookHmacConfigured && <Button type="button" variant="outline" className="rounded-full text-destructive" disabled={webhookBusy || webhookReason.trim().length < 8} onClick={() => setRemoveWebhookOpen(true)}>Remover HMAC</Button>}<Button type="button" className="rounded-full bg-[#7e2148]" disabled={webhookBusy || webhookHmacKey.trim().length < 32 || webhookReason.trim().length < 8} onClick={() => void saveWebhookSecret()}>{webhookBusy ? <LoaderCircle className="animate-spin" /> : <ShieldCheck />} Salvar HMAC</Button></div></div>
+                  </CardContent>
+                </Card>
                 <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="font-display text-xl">Confirmar alteração operacional</CardTitle><CardDescription>O motivo protege a operação e aparece na trilha de auditoria.</CardDescription></CardHeader><CardContent className="space-y-4"><Textarea value={settingsReason} onChange={(event) => setSettingsReason(event.target.value)} minLength={8} maxLength={300} placeholder="Ex.: usar GPT-5.6 Terra para equilibrar qualidade e custo no piloto" /><div className="flex justify-end"><Button className="rounded-full bg-[#7e2148]" disabled={busy || settingsReason.trim().length < 8} onClick={() => void saveSettings()}>{busy ? <LoaderCircle className="animate-spin"/> : <Settings2 />} Salvar configurações</Button></div></CardContent></Card>
               </TabsContent>
 
@@ -353,6 +389,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
 
       <AlertDialog open={Boolean(deleteUser)} onOpenChange={(open) => !open && setDeleteUser(null)}><AlertDialogContent className="rounded-[24px]"><AlertDialogHeader><AlertDialogTitle>Excluir a conta de {deleteUser?.displayName || deleteUser?.email}?</AlertDialogTitle><AlertDialogDescription>O login será invalidado e os dados pessoais da autenticação serão removidos. Pedidos, pagamentos e gerações permanecerão no histórico operacional.</AlertDialogDescription></AlertDialogHeader><Textarea value={deleteReason} onChange={(event) => setDeleteReason(event.target.value)} minLength={12} maxLength={300} placeholder="Informe o motivo da exclusão" /><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={busy || deleteReason.trim().length < 12} onClick={() => void confirmDelete()}>{busy ? <LoaderCircle className="animate-spin"/> : <Trash2 />} Excluir conta</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={removeSecretOpen} onOpenChange={setRemoveSecretOpen}><AlertDialogContent className="rounded-[24px]"><AlertDialogHeader><AlertDialogTitle>Remover a chave da Kie.ai?</AlertDialogTitle><AlertDialogDescription>A criação real de letras e músicas ficará indisponível até que outra chave seja cadastrada. A simulação local continuará funcionando.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={secretBusy || secretReason.trim().length < 8} onClick={() => void removeKieSecret()}>{secretBusy ? <LoaderCircle className="animate-spin" /> : <Trash2 />} Remover chave</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+      <AlertDialog open={removeWebhookOpen} onOpenChange={setRemoveWebhookOpen}><AlertDialogContent className="rounded-[24px]"><AlertDialogHeader><AlertDialogTitle>Remover o HMAC da Kie.ai?</AlertDialogTitle><AlertDialogDescription>Callbacks reais serão bloqueados até que o webhookHmacKey correto seja cadastrado novamente.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={webhookBusy || webhookReason.trim().length < 8} onClick={() => void removeWebhookSecret()}>{webhookBusy ? <LoaderCircle className="animate-spin" /> : <Trash2 />} Remover HMAC</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </main>
   );
 }

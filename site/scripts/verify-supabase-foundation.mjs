@@ -256,7 +256,7 @@ assert.match(kieCallbackRoute, /MAX_CALLBACK_BYTES/);
 assert.match(kieCallbackRoute, /"Cache-Control": "no-store"/);
 assert.match(generationWorkerRoute, /authorization/);
 assert.match(generationWorkerRoute, /constantTimeEqual/);
-assert.match(generationWorkerRoute, /processNextGenerationOutput/);
+assert.match(generationWorkerRoute, /processGenerationOutputBatch/);
 assert.match(generationWorker, /claim_generation_output/);
 assert.match(generationWorker, /copyFullAudioToPrivateStorage/);
 assert.match(generationWorker, /createAndStoreMp3Preview/);

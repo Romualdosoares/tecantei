@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getKieGenerationMode, getKieModel, type KieGenerationMode } from "@/lib/music/kie-env";
 import type { KieModel } from "@/lib/music/kie-client";
-import { getKieApiKey } from "@/lib/admin/secrets";
+import { getKieApiKey, getKieWebhookHmacKey } from "@/lib/admin/secrets";
 
 export const KIE_LYRIC_MODELS = [
   "gpt-5-6-sol",
@@ -40,7 +40,9 @@ export async function getApplicationSettings(
     lyricsReasoningEffort: isReasoningEffort(data?.lyrics_reasoning_effort)
       ? data.lyrics_reasoning_effort
       : "low",
-    musicMode: data?.music_mode === "live" ? "live" : getKieGenerationMode(),
+    musicMode: data?.music_mode === "live" || data?.music_mode === "mock"
+      ? data.music_mode
+      : getKieGenerationMode(),
     musicModel: data?.music_model ? data.music_model as KieModel : getKieModel(),
   };
 }
@@ -60,12 +62,16 @@ export function effectiveMusicMode(selected: KieGenerationMode) {
 }
 
 export async function integrationReadiness(admin: SupabaseClient) {
-  const kieApiKey = await getKieApiKey(admin);
+  const [kieApiKey, kieWebhookHmacKey] = await Promise.all([
+    getKieApiKey(admin),
+    getKieWebhookHmacKey(admin),
+  ]);
   return {
     kieKeyConfigured: Boolean(kieApiKey),
+    kieWebhookHmacConfigured: Boolean(kieWebhookHmacKey),
     kieLyricsLiveGateEnabled: process.env.KIE_LIVE_LYRICS_ENABLED?.trim() === "true",
     kieLiveGateEnabled: process.env.KIE_LIVE_GENERATION_ENABLED?.trim() === "true" &&
-      getKieGenerationMode() === "live",
+      getKieGenerationMode() === "live" && Boolean(kieWebhookHmacKey),
   };
 }
 

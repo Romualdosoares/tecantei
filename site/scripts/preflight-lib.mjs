@@ -24,6 +24,8 @@ const REQUIRED_MIGRATIONS = [
   "202609110009_music_style_and_voice.sql",
   "202609110010_admin_dashboard.sql",
   "202609130001_kie_lyrics_and_vault.sql",
+  "202609130002_kie_webhook_secret.sql",
+  "202609130003_prepare_single_music_pilot.sql",
 ];
 
 const REQUIRED_ENV_KEYS = [

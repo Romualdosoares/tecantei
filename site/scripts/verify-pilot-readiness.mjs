@@ -18,6 +18,9 @@ const [
   generationRoute,
   adjustmentRoute,
   callbackRoute,
+  outputWorkerRoute,
+  outputWorker,
+  vercelConfig,
   checkoutRoute,
   fullAudioRoute,
   presentPage,
@@ -31,6 +34,9 @@ const [
   readProjectFile("../app/api/orders/[orderId]/generation/route.ts"),
   readProjectFile("../app/api/orders/[orderId]/adjustment/route.ts"),
   readProjectFile("../app/api/kie/callback/route.ts"),
+  readProjectFile("../app/api/jobs/generation-outputs/route.ts"),
+  readProjectFile("../lib/music/generation-output-worker.ts"),
+  readProjectFile("../vercel.json"),
   readProjectFile("../app/api/orders/[orderId]/checkout/route.ts"),
   readProjectFile("../app/api/orders/[orderId]/audio/route.ts"),
   readProjectFile("../app/presente/[token]/page.tsx"),
@@ -50,6 +56,8 @@ const scenarios = [
       assert.match(migration, /request_key text not null unique/);
       assert.match(migration, /logical_key := 'original:'[\s\S]*?where request_key = logical_key/);
       assert.match(generationRoute, /claim_generation_submission/);
+      assert.match(generationRoute, /generation_security_not_configured/);
+      assert.match(adjustmentRoute, /generation_security_not_configured/);
     },
   },
   {
@@ -86,6 +94,11 @@ const scenarios = [
       assert.match(migration, /on conflict \(generation_task_id, provider_audio_id\) do update/);
       assert.match(kieContractTest, /advanceGenerationState\("succeeded", "processing"\), "succeeded"/);
       assert.match(callbackRoute, /verifyKieWebhook/);
+      assert.match(callbackRoute, /after\(async \(\) =>/);
+      assert.match(callbackRoute, /hasKieAllowedAudioHostsConfigured/);
+      assert.match(outputWorker, /processGenerationOutputBatch/);
+      assert.match(outputWorkerRoute, /processGenerationOutputBatch\(10\)/);
+      assert.match(vercelConfig, /\/api\/jobs\/generation-outputs/);
     },
   },
   {
