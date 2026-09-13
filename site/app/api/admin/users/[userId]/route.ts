@@ -23,21 +23,27 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   try {
     const identity = await getAdminIdentity();
     if (!identity) return NextResponse.json({ error: "not_found" }, { status: 404, headers: NO_STORE });
-    if (identity.id === userId.data && (input.data.role !== "admin" || input.data.status !== "active")) {
+    const isCurrentAdmin = identity.id === userId.data;
+    if (isCurrentAdmin && (input.data.role !== "admin" || input.data.status !== "active")) {
       return NextResponse.json({ error: "cannot_lock_current_admin" }, { status: 409, headers: NO_STORE });
+    }
+    if (isCurrentAdmin && (input.data.password || input.data.email.toLowerCase() !== identity.email?.toLowerCase())) {
+      return NextResponse.json({ error: "cannot_change_current_admin_credentials" }, { status: 409, headers: NO_STORE });
     }
     const admin = createSupabaseAdminClient();
     await writeAudit(admin, identity.id, "update_user_requested", "user", userId.data, input.data.reason, {
       role: input.data.role,
       status: input.data.status,
     });
-    const authUpdate = await admin.auth.admin.updateUserById(userId.data, {
-      email: input.data.email,
-      ...(input.data.password ? { password: input.data.password } : {}),
-      ban_duration: input.data.status === "suspended" ? "876000h" : "none",
-      user_metadata: { display_name: input.data.displayName },
-    });
-    if (authUpdate.error) throw authUpdate.error;
+    if (!isCurrentAdmin) {
+      const authUpdate = await admin.auth.admin.updateUserById(userId.data, {
+        email: input.data.email,
+        ...(input.data.password ? { password: input.data.password } : {}),
+        ban_duration: input.data.status === "suspended" ? "876000h" : "none",
+        user_metadata: { display_name: input.data.displayName },
+      });
+      if (authUpdate.error) throw authUpdate.error;
+    }
     const role = roleFlags(input.data.role);
     const { error } = await admin.from("profiles").update({
       display_name: input.data.displayName,
@@ -71,4 +77,3 @@ export async function DELETE(request: Request, context: { params: Promise<{ user
     return NextResponse.json({ error: "user_delete_failed" }, { status: 503, headers: NO_STORE });
   }
 }
-

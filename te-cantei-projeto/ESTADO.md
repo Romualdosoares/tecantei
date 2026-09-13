@@ -900,3 +900,11 @@ Alterações concluídas:
 Validação local: todas as verificações de banco e segurança, lint, TypeScript e build Next.js 16.3.5 foram aprovados. `npm audit --omit=dev` também confirmou zero vulnerabilidades nas dependências de produção. Nenhuma chamada paga foi feita porque a chave deve ser cadastrada pelo proprietário diretamente no painel.
 
 Publicação: implementação enviada à branch `main`, implantação Vercel confirmada como `READY` e associada a `https://tecantei.vercel.app`. Testes HTTP confirmaram landing e tela de acesso administrativo em `200`, e a API administrativa recusando visitantes sem sessão com `404` e cabeçalho `private, no-store`.
+
+## Continuação de 13/09/2026 — sessão invalidada ao editar o próprio administrador
+
+Falha observada: a edição era salva, mas a recarga seguinte exibia erro ao carregar os dados administrativos. Os registros da Vercel confirmaram que o `PATCH` foi concluído e que as requisições imediatamente posteriores ao dashboard receberam `404`, indicando perda da sessão administrativa, não falha de persistência.
+
+Correção: a edição da própria conta agora pode atualizar o nome sem chamar `auth.admin.updateUserById`; e-mail, senha, perfil e status ficam bloqueados nessa tela. A API também recusa tentativas diretas de alterar essas credenciais, e o painel passa a informar claramente quando a sessão expirou.
+
+Validação: teste estrutural de regressão, TypeScript, lint e build de produção aprovados no Next.js 16.3.5. A sessão que já havia sido invalidada precisa de uma nova entrada única; as próximas edições do nome não devem desconectar o administrador.

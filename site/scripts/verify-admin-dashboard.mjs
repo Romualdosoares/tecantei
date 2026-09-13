@@ -28,6 +28,8 @@ assert.match(userCreate, /auth\.admin\.createUser/);
 assert.match(userUpdate, /auth\.admin\.updateUserById/);
 assert.match(userUpdate, /deleteUser\(userId\.data, true\)/);
 assert.match(userUpdate, /cannot_delete_current_admin/);
+assert.match(userUpdate, /cannot_change_current_admin_credentials/);
+assert.match(userUpdate, /if \(!isCurrentAdmin\) \{[\s\S]*auth\.admin\.updateUserById/);
 assert.match(userUpdate, /writeAudit/);
 assert.match(settingsRoute, /KIE_LYRIC_MODELS/);
 assert.match(settingsRoute, /ADMIN_KIE_MODELS/);
@@ -59,6 +61,8 @@ assert.match(adminDashboard, /onClick=\{\(\) => setActiveTab\(value\)\}/);
 assert.match(adminDashboard, /<Tabs value=\{activeTab\} onValueChange=/);
 assert.match(adminDashboard, /supabase\.auth\.signOut\(\)/);
 assert.match(adminDashboard, /type="password"/);
+assert.match(adminDashboard, /selectedUser\?\.id === data\?\.currentAdminId/);
+assert.match(adminDashboard, /Sua sessão administrativa expirou/);
 assert.match(adminDashboard, /\/api\/admin\/secrets/);
 assert.match(adminDashboard, /GPT através da Kie\.ai/);
 
