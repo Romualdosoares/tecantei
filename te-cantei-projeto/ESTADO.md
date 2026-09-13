@@ -794,12 +794,13 @@ Validação anterior preservada: TypeScript, lint, suíte estrutural/comportamen
 
 Pedido: conectar o projeto GitHub ao Vercel usando o domínio `https://tecantei.vercel.app/`.
 
-Estado observado:
+Estado concluído:
 
-- a integração GitHub/Vercel já criou uma implantação de produção bem-sucedida para o commit `3137582`;
-- a URL única da implantação está protegida pelo login do Vercel;
-- o domínio `tecantei.vercel.app` ainda responde `404 NOT_FOUND`, portanto não está apontando para uma implantação pública utilizável;
-- a CLI oficial do Vercel foi disponibilizada localmente, mas a conta ainda está desconectada;
-- a tentativa de autenticação pelo GitHub expirou sem a confirmação do login no navegador.
+- autenticação da conta Vercel confirmada e diretório local vinculado ao projeto existente `tecanteistudio-5895/tecantei`;
+- causa do primeiro `404` identificada: o projeto estava com framework “Other” e raiz do repositório;
+- configuração do projeto corrigida para framework Next.js e Root Directory `site`, preservando a integração automática com a branch `main` do GitHub;
+- implantação de produção refeita após a alteração das configurações;
+- domínio `https://tecantei.vercel.app/` associado à nova implantação e respondendo `HTTP 200`;
+- conteúdo confirmado pelo título “Te Cantei — Sua história virou música” e pela marca presente no HTML servido.
 
-Dependência externa: o titular precisa concluir uma vez `vercel login --github`. Depois disso, vincular o diretório `site` ao projeto existente, configurar as variáveis do servidor, promover a implantação e validar o domínio.
+Dependência externa restante: o projeto Vercel ainda não possui variáveis de ambiente da aplicação. A landing pública funciona, mas Supabase, OpenAI, Kie.ai e pagamentos reais continuam dependentes da configuração segura das respectivas credenciais no Vercel.
