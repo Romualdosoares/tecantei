@@ -829,3 +829,17 @@ Estado concluído:
 - página principal e recuperação de senha respondendo `HTTP 200`; endpoint Auth validado com cadastro por e-mail habilitado e confirmação obrigatória.
 
 Pendência posterior à conexão: criar a primeira conta pelo fluxo público e promover seu UUID confirmado para administrador antes de validar as operações protegidas de `/admin`. Credenciais de OpenAI, Kie.ai e pagamentos continuam separadas e não foram ativadas nesta etapa.
+
+## Continuação de 13/09/2026 — bootstrap da primeira conta administrativa
+
+Pedido: promover a conta criada e confirmada pelo proprietário para acessar o painel administrativo.
+
+Estado concluído:
+
+- conta localizada de forma unívoca no Supabase e confirmação de e-mail validada;
+- perfil mantido como ativo e promovido com `is_admin = true`;
+- papel de suporte não concedido, preservando o princípio de menor privilégio;
+- operação registrada em `admin_audit_log` como `bootstrap_admin`;
+- nenhum e-mail, UUID, senha, token ou chave foi registrado no repositório.
+
+Próxima validação operacional: entrar novamente se necessário e abrir `/admin`; depois conectar as credenciais de OpenAI e Kie.ai em modo controlado antes de qualquer geração real.
