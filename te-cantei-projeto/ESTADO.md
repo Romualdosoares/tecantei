@@ -908,3 +908,16 @@ Falha observada: a edição era salva, mas a recarga seguinte exibia erro ao car
 Correção: a edição da própria conta agora pode atualizar o nome sem chamar `auth.admin.updateUserById`; e-mail, senha, perfil e status ficam bloqueados nessa tela. A API também recusa tentativas diretas de alterar essas credenciais, e o painel passa a informar claramente quando a sessão expirou.
 
 Validação: teste estrutural de regressão, TypeScript, lint e build de produção aprovados no Next.js 16.3.5. A sessão que já havia sido invalidada precisa de uma nova entrada única; as próximas edições do nome não devem desconectar o administrador.
+
+## Continuação de 13/09/2026 — verificação real da Kie.ai em produção
+
+Pedido: confirmar se a API Kie.ai está funcionando e se o produto já pode iniciar a operação em produção.
+
+Evidências reais, sem dados pessoais:
+
+- cadastro da chave no painel concluído e três testes administrativos de conexão/saldo responderam `HTTP 200`, sem respostas 409, 502 ou 503;
+- uma única geração sintética de letra foi executada pelo domínio oficial e respondeu `HTTP 200` em 14,7 segundos;
+- resposta confirmou `mode=kie`, `model=gpt-6-astra`, `simulated=false` e 1.534 caracteres;
+- integração musical continua compatível com os endpoints oficiais atuais de criação e consulta do Suno, mas não houve chamada musical paga nesta verificação.
+
+Conclusão: criação real de letras está operacional. O produto completo ainda não está liberado para vendas reais porque faltam as travas e segredos de geração musical, limites de crédito, validação real do callback e configuração/validação do pagamento. A resposta sintética também não confirmou os marcadores exatos de todas as seções, portanto a revisão humana da letra deve continuar obrigatória antes da geração musical.
