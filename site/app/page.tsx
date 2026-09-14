@@ -482,11 +482,19 @@ export default function Home() {
       setOrderError(
         data?.error === "generation_limit_reached"
           ? "O limite temporário de criações foi atingido. Tente novamente mais tarde; nenhum crédito foi consumido."
+          : data?.error === "generation_not_open"
+            ? "A geração real da amostra ainda não está disponível. Tente novamente em alguns minutos; nenhum crédito foi consumido."
+            : data?.error === "generation_security_not_configured"
+              ? "A geração está temporariamente indisponível por uma verificação de segurança. Nenhum crédito foi consumido."
           : "Não foi possível reservar a geração. Nenhum reenvio automático foi feito."
       );
       return false;
     }
-    setGenerationMode(data?.mode === "live" ? "live" : "mock");
+    if (data?.mode !== "live") {
+      setOrderError("A prévia real não foi iniciada. Nenhum áudio de demonstração será exibido no lugar da sua música.");
+      return false;
+    }
+    setGenerationMode("live");
     return true;
   };
 
