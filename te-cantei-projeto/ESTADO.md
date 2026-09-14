@@ -982,3 +982,18 @@ Alterações:
 - página marcada para não ser indexada por mecanismos de busca e respostas de verificação protegidas com `private, no-store`.
 
 Validação local: suíte estrutural e comportamental completa, lint, TypeScript e build de produção aprovados. O build confirmou as novas rotas dinâmicas `/admin/login` e `/api/admin/session`.
+
+## Continuação de 13/09/2026 — player da prévia na área do pedido
+
+Falha observada: o pedido e as versões estavam identificados como prontos, mas a página mostrava somente as áreas de ajuste e pagamento. Nenhum componente solicitava nem renderizava a prévia privada já produzida.
+
+Correção:
+
+- nova seção “Ouça sua música” antes do ajuste e do pagamento;
+- um player real para cada versão pronta retornada pela geração;
+- carregamento exclusivo da rota autenticada de prévia, que valida proprietário, versão, prazo e chave esperada antes de criar o acesso temporário;
+- nenhuma chave do áudio completo é consultada ou enviada ao player;
+- estados visíveis de carregamento, sessão expirada, prévia expirada, arquivo ausente e falha temporária, com ação para recarregar;
+- mensagem operacional corrigida para informar que a prévia está pronta quando já existem versões disponíveis.
+
+Validação local: teste estrutural específico do player aprovado, lint sem erros, TypeScript e build Next.js de produção concluídos. A suíte também verifica que cada versão pronta usa somente `/versions/{versionId}/preview` e que o áudio completo permanece fora do componente.

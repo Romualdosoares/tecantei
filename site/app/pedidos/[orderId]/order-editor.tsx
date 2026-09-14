@@ -3,12 +3,13 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Ban, CheckCircle2, Copy, Download, Gift, LoaderCircle, Music2, Save, Share2, Sparkles, WandSparkles } from "lucide-react";
+import { Ban, CheckCircle2, Copy, Download, Gift, LoaderCircle, Music2, Play, Save, Share2, Sparkles, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MUSIC_STYLE_OPTIONS, VOICE_OPTIONS, type VoicePreference } from "@/lib/order-options";
+import { MusicPreviewPlayer } from "./music-preview-player";
 
 const recipientOptions = [
   "Esposo(a)",
@@ -437,7 +438,26 @@ export function OrderEditor({
       </section>
 
       {(message || error) && <div className={`rounded-2xl p-4 text-sm lg:col-span-2 ${error ? "bg-destructive/10 text-destructive" : "bg-emerald-100 text-emerald-900"}`} role={error ? "alert" : "status"}>{error || message}</div>}
-      {!editable && <div className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground lg:col-span-2"><p>A história e a letra ficam somente para consulta depois que a geração musical começa.</p>{generationTask && <p className="mt-2 font-semibold text-foreground">{generationTask.status === "reconciling" ? "Estamos conferindo se o fornecedor recebeu o pedido; nenhum novo envio será feito agora." : generationTask.status === "failed" ? "A tentativa falhou e ficou registrada para uma retomada segura." : generationTask.status === "succeeded" ? "O áudio chegou e está sendo preparado para a prévia." : "A criação musical está na fila ou em processamento."}</p>}</div>}
+      {!editable && <div className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground lg:col-span-2"><p>A história e a letra ficam somente para consulta depois que a geração musical começa.</p>{generationTask && <p className="mt-2 font-semibold text-foreground">{generationTask.status === "reconciling" ? "Estamos conferindo se o fornecedor recebeu o pedido; nenhum novo envio será feito agora." : generationTask.status === "failed" ? "A tentativa falhou e ficou registrada para uma retomada segura." : generationTask.status === "succeeded" && readyVersions.length > 0 ? "Sua prévia está pronta para ouvir abaixo." : generationTask.status === "succeeded" ? "O áudio chegou e está sendo preparado para a prévia." : "A criação musical está na fila ou em processamento."}</p>}</div>}
+
+      {readyVersions.length > 0 && ["preview_ready", "payment_pending", "paid", "delivered"].includes(status) && (
+        <section className="rounded-[26px] border border-rose-200/80 bg-card p-5 shadow-sm sm:p-7 lg:col-span-2">
+          <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10"><Play /> Prévia de 50 segundos</Badge>
+          <h2 className="mt-3 font-display text-3xl font-semibold">Ouça sua música</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Escute cada versão antes de escolher. Somente o trecho de prévia é carregado; o áudio completo continua protegido até a confirmação do pagamento.</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {readyVersions.map((version, index) => (
+              <MusicPreviewPlayer
+                key={version.id}
+                orderId={order.id}
+                versionId={version.id}
+                label={`${version.origin === "original" ? "Versão original" : "Versão ajustada"} · prévia ${index + 1}`}
+                title={version.title ?? `Música ${index + 1}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {status === "preview_ready" && readyVersions.length > 0 && (
         <section className="rounded-[26px] border bg-card p-5 shadow-sm sm:p-7 lg:col-span-2">
