@@ -182,7 +182,7 @@ export function AudioShowcase({ onStartCreating }: { onStartCreating?: (style: s
   }, []);
 
   return (
-    <section className="relative my-16 overflow-hidden rounded-[36px] border border-rose-200/60 bg-gradient-to-b from-white/95 via-[#fff8f5]/90 to-[#fdf2f4]/80 p-6 sm:p-10 lg:p-14 shadow-[0_20px_60px_-15px_rgba(139,36,80,0.08)]">
+    <section className="tc-premium-frame relative my-16 overflow-hidden rounded-[36px] border border-rose-200/60 bg-gradient-to-b from-white/95 via-[#fff8f5]/90 to-[#fdf2f4]/80 p-6 sm:p-10 lg:p-14 shadow-[0_20px_60px_-15px_rgba(139,36,80,0.08)]">
       {/* Glow aura */}
       <div className="pointer-events-none absolute -left-20 -top-20 size-72 rounded-full bg-rose-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -right-20 size-80 rounded-full bg-amber-200/20 blur-3xl" />
@@ -230,7 +230,7 @@ export function AudioShowcase({ onStartCreating }: { onStartCreating?: (style: s
         </div>
 
         {/* Interactive Audio Player Card */}
-        <div className="mt-8 overflow-hidden rounded-[28px] border border-rose-200/80 bg-white/90 p-6 sm:p-8 lg:p-10 shadow-xl shadow-rose-900/5 backdrop-blur-xl">
+        <div className="tc-premium-frame mt-8 overflow-hidden rounded-[28px] border border-rose-200/80 bg-white/90 p-6 sm:p-8 lg:p-10 shadow-xl shadow-rose-900/5 backdrop-blur-xl">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             {/* Left Column: Player controls & Waveform */}
             <div className="text-left">

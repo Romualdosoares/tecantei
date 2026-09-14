@@ -160,8 +160,7 @@ body::after {
   pointer-events: none;
   content: "";
   border-radius: 999px;
-  background: radial-gradient(circle, rgb(212 175 85 / 18%) 0%, rgb(140 106 42 / 7%) 42%, transparent 70%);
-  filter: blur(10px);
+  background: repeating-radial-gradient(circle, transparent 0 44px, rgb(212 175 85 / 10%) 45px 46px, transparent 47px 76px);
   animation: tc-ambient-drift 14s ease-in-out infinite alternate;
 }
 
@@ -205,21 +204,21 @@ h2.font-display {
 
 /* Glass & Luxury Effects */
 .glass-panel {
-  background: rgb(26 24 19 / 76%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--tc-charcoal);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgb(212 175 85 / 22%);
 }
 
 .glass-dark {
-  background: rgb(9 8 7 / 88%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--tc-onyx);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgb(212 175 85 / 24%);
 }
 
 .glow-card {
-  box-shadow: 0 18px 54px -18px rgb(212 175 85 / 18%), 0 10px 30px rgb(0 0 0 / 35%);
+  box-shadow: 0 0 0 1px rgb(212 175 85 / 18%), 7px 7px 0 rgb(140 106 42 / 7%);
 }
 
 .glow-card-hover {
@@ -227,7 +226,29 @@ h2.font-display {
 }
 .glow-card-hover:hover {
   transform: translateY(-3px);
-  box-shadow: 0 28px 70px -18px rgb(212 175 85 / 28%);
+  box-shadow: 0 0 0 1px rgb(245 215 126 / 32%), 9px 9px 0 rgb(140 106 42 / 9%);
+}
+
+/* O antigo desfoque decorativo vira linhas nítidas e discretas. */
+[class~="backdrop-blur"],
+[class~="backdrop-blur-sm"],
+[class~="backdrop-blur-md"],
+[class~="backdrop-blur-lg"],
+[class~="backdrop-blur-xl"],
+[class~="backdrop-blur-2xl"],
+[class~="backdrop-blur-3xl"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[class~="blur-2xl"],
+[class~="blur-3xl"],
+[class~="blur-[80px]"],
+[class~="blur-[100px]"] {
+  opacity: .34 !important;
+  filter: none !important;
+  background: transparent !important;
+  border: 1px solid rgb(212 175 85 / 24%);
 }
 
 /* Adaptador visual para componentes anteriores: toda a experiência herda preto e dourado. */
@@ -359,7 +380,7 @@ a[class*="bg-[#7e2148]"] {
   background-image: none !important;
   color: var(--tc-action-text) !important;
   border-color: rgb(245 215 126 / 55%) !important;
-  box-shadow: 0 12px 34px -10px rgb(212 175 85 / 48%) !important;
+  box-shadow: 0 0 0 1px rgb(245 215 126 / 48%) !important;
 }
 
 button.bg-white,
@@ -367,7 +388,7 @@ a.bg-white {
   background-color: var(--tc-action) !important;
   color: var(--tc-action-text) !important;
   border-color: rgb(245 215 126 / 55%) !important;
-  box-shadow: 0 12px 34px -10px rgb(212 175 85 / 42%) !important;
+  box-shadow: 0 0 0 1px rgb(245 215 126 / 44%) !important;
 }
 
 button.bg-gradient-to-r:hover,
@@ -376,7 +397,7 @@ button[class*="bg-[#8b2450]"]:hover,
 button[class*="bg-[#7e2148]"]:hover {
   filter: brightness(1.08);
   transform: translateY(-2px);
-  box-shadow: 0 16px 42px -10px rgb(245 215 126 / 58%) !important;
+  box-shadow: 0 0 0 2px rgb(245 215 126 / 34%) !important;
 }
 
 button.bg-white:hover,
@@ -384,12 +405,20 @@ a.bg-white:hover {
   background-color: var(--tc-action-hover) !important;
   color: var(--tc-action-text) !important;
   transform: translateY(-2px);
-  box-shadow: 0 16px 42px -10px rgb(245 215 126 / 55%) !important;
+  box-shadow: 0 0 0 2px rgb(245 215 126 / 32%) !important;
+}
+
+button {
+  box-shadow: none !important;
+}
+
+button[class*="rounded-"] {
+  box-shadow: 0 0 0 1px rgb(212 175 85 / 22%) !important;
 }
 
 main > header {
   border-color: rgb(212 175 85 / 18%) !important;
-  box-shadow: 0 10px 40px rgb(0 0 0 / 24%);
+  box-shadow: 0 1px 0 rgb(212 175 85 / 12%);
 }
 
 [class*="rounded-"][class*="border"] {
@@ -404,7 +433,41 @@ section [class*="rounded-"][class*="shadow-"] {
 article[class*="rounded-"]:hover,
 section [class*="rounded-"][class*="shadow-"]:hover {
   border-color: rgb(212 175 85 / 34%) !important;
-  box-shadow: 0 24px 70px -24px rgb(212 175 85 / 28%), 0 14px 40px rgb(0 0 0 / 35%);
+  box-shadow: 0 0 0 1px rgb(212 175 85 / 26%), 8px 8px 0 rgb(140 106 42 / 8%);
+}
+
+@property --tc-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+:where(.tc-premium-frame, [data-slot="card"], article[class*="rounded-"], figure[class*="rounded-"], section[class*="rounded-"]) {
+  position: relative;
+  isolation: isolate;
+}
+
+:where(.tc-premium-frame, [data-slot="card"], article[class*="rounded-"], figure[class*="rounded-"], section[class*="rounded-"])::after {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 1px;
+  pointer-events: none;
+  content: "";
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--tc-border-angle),
+    transparent 0 70%,
+    rgb(140 106 42 / 45%) 78%,
+    var(--tc-gold) 84%,
+    var(--tc-champagne) 88%,
+    var(--tc-gold) 92%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: tc-border-orbit 8s linear infinite;
 }
 
 .tc-logo-mark::after {
@@ -430,6 +493,10 @@ section [class*="rounded-"][class*="shadow-"]:hover {
 @keyframes tc-ambient-drift {
   from { transform: translate3d(-2rem, 1rem, 0) scale(.96); opacity: .62; }
   to { transform: translate3d(2rem, -2rem, 0) scale(1.08); opacity: 1; }
+}
+
+@keyframes tc-border-orbit {
+  to { --tc-border-angle: 360deg; }
 }
 
 main > section,

@@ -58,7 +58,7 @@ export function HowItWorks() {
             return (
               <div
                 key={item.step}
-                className={`relative flex flex-col justify-between overflow-hidden rounded-[28px] border bg-gradient-to-b ${item.gradient} p-7 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}
+                className={`tc-premium-frame relative flex flex-col justify-between overflow-hidden rounded-[28px] border bg-gradient-to-b ${item.gradient} p-7 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}
               >
                 <div>
                   <div className="flex items-center justify-between">

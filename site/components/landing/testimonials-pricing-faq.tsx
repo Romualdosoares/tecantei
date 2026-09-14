@@ -86,7 +86,7 @@ export function TestimonialsPricingFaq({ onStart }: { onStart?: () => void }) {
           {testimonials.map((t, idx) => (
             <div
               key={idx}
-              className="flex flex-col justify-between rounded-[28px] border border-rose-200/70 bg-white/90 p-7 shadow-sm transition hover:shadow-lg backdrop-blur-sm"
+              className="tc-premium-frame flex flex-col justify-between rounded-[28px] border border-rose-200/70 bg-white/90 p-7 shadow-sm transition hover:shadow-lg backdrop-blur-sm"
             >
               <div>
                 <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ export function TestimonialsPricingFaq({ onStart }: { onStart?: () => void }) {
 
       {/* Transparent Pricing Card */}
       <section className="mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-[36px] bg-gradient-to-br from-[#3b1228] via-[#541639] to-[#250a18] p-8 sm:p-12 text-white shadow-2xl shadow-rose-950/20">
+        <div className="tc-premium-frame relative overflow-hidden rounded-[36px] bg-gradient-to-br from-[#3b1228] via-[#541639] to-[#250a18] p-8 sm:p-12 text-white shadow-2xl shadow-rose-950/20">
           <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-rose-400/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-20 size-80 rounded-full bg-pink-500/10 blur-3xl" />
 

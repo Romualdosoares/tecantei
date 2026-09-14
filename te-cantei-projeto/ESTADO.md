@@ -1094,3 +1094,18 @@ Correções e refinamentos:
 - todos os novos movimentos continuam desativados quando o sistema solicita redução de animação.
 
 Validação local: a página completa foi renderizada novamente em 1440 px e os trechos antes escuros apareceram em branco/champanhe; suíte estrutural aprovada, lint sem erros e build de produção Next.js 16.3.5 concluído com sucesso.
+
+## Continuação de 14/09/2026 — superfícies nítidas e linhas metálicas
+
+Decisão visual: remover o aspecto desfocado de caixas e botões e substituir halos exagerados por linhas definidas e detalhes metálicos em movimento.
+
+Alterações:
+
+- `backdrop-filter` neutralizado nas antigas superfícies de vidro;
+- elementos decorativos com blur convertidos em círculos de contorno fino, sem desfoque;
+- sombras amplas de cards e CTAs substituídas por linhas de um pixel e deslocamentos sólidos discretos;
+- cards principais, depoimentos, etapas, players, pedidos e componentes administrativos receberam contorno `conic-gradient` animado;
+- a linha metálica percorre a borda sem cobrir o conteúdo e para automaticamente com `prefers-reduced-motion`;
+- marca do cabeçalho permanece sem moldura indevida, enquanto botões arredondados conservam um contorno preciso.
+
+Validação local: suíte estrutural aprovada, lint sem erros, build de produção aprovado e página completa renderizada em 1440 px. A inspeção confirmou superfícies sólidas, círculos lineares e contornos dourados sem halos borrados.

@@ -33,6 +33,11 @@ assert.match(styles, /button\.bg-gradient-to-r,[\s\S]*background-image: none !im
 assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(styles, /\.tc-logo-mark::after/);
 assert.match(styles, /@keyframes tc-ambient-drift/);
+assert.match(styles, /@keyframes tc-border-orbit/);
+assert.match(styles, /conic-gradient\([\s\S]*var\(--tc-border-angle\)/);
+assert.match(styles, /\[class~="backdrop-blur-xl"\][\s\S]*backdrop-filter: none !important/);
+assert.match(styles, /\[class~="blur-3xl"\][\s\S]*filter: none !important/);
+assert.doesNotMatch(styles, /filter:\s*blur\(/);
 assert.match(styles, /\[class~="text-rose-100"\] \{ color: var\(--tc-white\) !important; \}/);
 assert.match(styles, /button\.bg-white,[\s\S]*background-color: var\(--tc-action\) !important/);
 assert.match(logo, /tecantei-logodourada\.jpg/);
@@ -41,6 +46,8 @@ assert.match(layout, /icon: "\/tecantei-logodourada\.jpg"/);
 for (const source of [landing, admin, adminLogin, orders, order, support, present, reset]) {
   assert.match(source, /BrandLogo/, "Uma tela principal ainda não usa a identidade dourada");
 }
+
+assert.match(landing, /tc-premium-frame/);
 
 for (const source of [landing, admin, adminLogin, orders, order, support, present, reset, pricing]) {
   assert.doesNotMatch(source, /src="\/te-cantei-logo\.png"/, "Logo anterior ainda referenciada");
@@ -68,3 +75,4 @@ console.log("PASS: paleta premium preto e dourado aplicada aos tokens globais e 
 console.log("PASS: nova logo dourada aplicada às jornadas públicas, administrativas e de entrega");
 console.log("PASS: botões usam ouro sólido, gradiente fica decorativo e animações respeitam redução de movimento");
 console.log("PASS: combinações principais de texto, superfície e ação atendem contraste WCAG AA");
+console.log("PASS: caixas usam superfícies nítidas e contorno metálico animado sem blur");

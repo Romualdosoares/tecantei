@@ -69,7 +69,7 @@ export function LiveAlbumPreview({ recipient, occasion, style }: AlbumPreviewPro
 
   return (
     <aside className="lg:pt-2">
-      <div className="sticky top-28 overflow-hidden rounded-[32px] bg-[#270d1d] text-white shadow-[0_25px_70px_rgba(43,13,30,0.35)] border border-rose-900/30">
+      <div className="tc-premium-frame sticky top-28 overflow-hidden rounded-[32px] bg-[#270d1d] text-white shadow-[0_25px_70px_rgba(43,13,30,0.35)] border border-rose-900/30">
         {/* Glow backdrop */}
         <div className="pointer-events-none absolute -right-16 -top-20 size-60 rounded-full bg-rose-400/20 blur-3xl" />
 

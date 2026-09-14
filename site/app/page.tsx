@@ -820,7 +820,7 @@ export default function Home() {
           </section>
 
           <section className="px-4 pb-16 sm:px-8 sm:pb-20">
-            <div className="relative mx-auto grid max-w-6xl overflow-hidden rounded-[34px] bg-gradient-to-br from-[#351426] via-[#571a3b] to-[#250a18] p-7 text-white shadow-2xl sm:p-11 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-10">
+            <div className="tc-premium-frame relative mx-auto grid max-w-6xl overflow-hidden rounded-[34px] bg-gradient-to-br from-[#351426] via-[#571a3b] to-[#250a18] p-7 text-white shadow-2xl sm:p-11 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-10">
               <div className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full bg-rose-400/20 blur-3xl" />
               <div className="relative">
                 <Badge className="border-0 bg-white/10 text-rose-100 hover:bg-white/10">Uma lembrança que não expira</Badge>
@@ -857,7 +857,7 @@ export default function Home() {
             <Progress value={(step / 8) * 100} className="h-2.5 bg-rose-100" />
           </div>
 
-          <div className="rounded-[30px] border border-rose-200/80 bg-white p-5 shadow-xl shadow-rose-900/5 sm:p-9">
+          <div className="tc-premium-frame rounded-[30px] border border-rose-200/80 bg-white p-5 shadow-xl shadow-rose-900/5 sm:p-9">
             {step === 1 && (
               <div>
                 <Badge className="border-0 bg-rose-100 text-rose-900 hover:bg-rose-100">Etapa 1</Badge>
