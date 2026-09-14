@@ -510,14 +510,10 @@ main > div > section:nth-of-type(2) { animation-delay: 70ms; }
 main > section:nth-of-type(3),
 main > div > section:nth-of-type(3) { animation-delay: 120ms; }
 
-/* Vinyl Spin */
+/* Mantido para capas decorativas fora da experiência de produção. */
 @keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-spin-slow {
@@ -543,9 +539,15 @@ main > div > section:nth-of-type(3) { animation-delay: 120ms; }
   to { transform: translateX(260%) skewX(-20deg); }
 }
 
-@keyframes generation-vinyl-glow {
-  0%, 100% { opacity: 0.45; transform: scale(0.96); }
-  50% { opacity: 0.9; transform: scale(1.06); }
+@keyframes generation-spectrum {
+  0%, 100% { transform: scaleY(.38); opacity: .58; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes generation-signal-ring {
+  0% { transform: scale(.72); opacity: .16; }
+  65% { opacity: .62; }
+  100% { transform: scale(1.28); opacity: 0; }
 }
 
 @keyframes generation-live-dot {
@@ -558,8 +560,27 @@ main > div > section:nth-of-type(3) { animation-delay: 120ms; }
   animation: generation-progress-shine 1.8s ease-in-out infinite;
 }
 
-.generation-vinyl-glow {
-  animation: generation-vinyl-glow 2.8s ease-in-out infinite;
+.generation-studio-grid {
+  opacity: .34;
+  background-image:
+    linear-gradient(rgb(212 175 85 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(212 175 85 / 5%) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(120deg, black, transparent 82%);
+}
+
+.generation-spectrum-bar {
+  background: linear-gradient(180deg, #f5d77e 0%, #d4af55 48%, #8c6a2a 100%);
+  transform-origin: center;
+  animation: generation-spectrum 1.35s ease-in-out infinite;
+}
+
+.generation-signal-ring {
+  animation: generation-signal-ring 2.8s ease-out infinite;
+}
+
+.generation-signal-ring-delayed {
+  animation-delay: 1.15s;
 }
 
 .generation-live-dot {
@@ -665,7 +686,8 @@ main > div > section:nth-of-type(3) { animation-delay: 120ms; }
   }
 
   .generation-progress-shine,
-  .generation-vinyl-glow,
+  .generation-spectrum-bar,
+  .generation-signal-ring,
   .generation-live-dot {
     animation: none;
   }

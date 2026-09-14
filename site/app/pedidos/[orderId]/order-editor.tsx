@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Ban, CheckCircle2, Copy, Download, Gift, LoaderCircle, LockKeyhole, Music2, Play, Save, Share2, Sparkles, WandSparkles } from "lucide-react";
+import { ArrowRight, Ban, CheckCircle2, Copy, Download, Gift, LoaderCircle, LockKeyhole, Music2, Play, Save, Share2, ShieldCheck, Sparkles, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -459,11 +459,11 @@ export function OrderEditor({
       {!editable && <div className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground lg:col-span-2"><p>A história e a letra ficam somente para consulta depois que a geração musical começa.</p>{generationTask && <p className="mt-2 font-semibold text-foreground">{generationTask.status === "reconciling" ? "Estamos conferindo se o fornecedor recebeu o pedido; nenhum novo envio será feito agora." : generationTask.status === "failed" ? "A tentativa falhou e ficou registrada para uma retomada segura." : generationTask.status === "succeeded" && readyVersions.length > 0 ? "Sua prévia está pronta para ouvir abaixo." : generationTask.status === "succeeded" ? "O áudio chegou e está sendo preparado para a prévia." : "A criação musical está na fila ou em processamento."}</p>}</div>}
 
       {readyVersions.length > 0 && ["preview_ready", "payment_pending", "paid", "delivered"].includes(status) && (
-        <section id="amostras" className="relative scroll-mt-24 overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-br from-[#260b19] via-[#521631] to-[#7e2148] p-5 text-white shadow-[0_28px_90px_rgba(63,15,39,.24)] sm:p-9 lg:col-span-2">
-          <div className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full border-[42px] border-white/[.05]" />
-          <div className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-rose-300/10 blur-3xl" />
+        <section id="amostras" className="relative scroll-mt-24 overflow-hidden rounded-[34px] border border-[#d4af55]/30 bg-[#090807] p-5 text-white shadow-[9px_9px_0_rgba(140,106,42,.08)] sm:p-9 lg:col-span-2">
+          <div className="generation-studio-grid pointer-events-none absolute inset-0" />
+          <div className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full border-[42px] border-[#d4af55]/[.07]" />
           <div className="relative">
-            <Badge className="rounded-full border border-white/15 bg-white/10 text-rose-100 hover:bg-white/10"><Play /> Sua amostra exclusiva chegou</Badge>
+            <Badge className="rounded-full border border-[#d4af55]/30 bg-[#1a1813] text-[#f5d77e] hover:bg-[#1a1813]"><Play /> Sua amostra exclusiva chegou</Badge>
             <h2 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-tight sm:text-5xl">Agora é só dar o play e sentir a história ganhar vida.</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">Escute cada versão com calma antes de escolher. Somente a prévia privada de até 50 segundos é carregada; a música completa continua protegida até a confirmação do pagamento.</p>
           </div>
@@ -477,6 +477,28 @@ export function OrderEditor({
                 title={version.title ?? `Música ${index + 1}`}
               />
             ))}
+          </div>
+          <div className="relative mx-auto mt-7 max-w-2xl rounded-[26px] border border-[#d4af55]/30 bg-[#1a1813] p-5 text-center sm:p-6">
+            <p className="font-display text-2xl font-semibold text-white">Quer viver a emoção até o último verso?</p>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#b8ae99]">Receba a música completa em MP3 e uma página premium para presentear e compartilhar.</p>
+            <Button
+              type="button"
+              size="lg"
+              className="mt-5 h-14 w-full rounded-full bg-[#d4af55] px-7 text-base font-extrabold text-[#090807] hover:bg-[#f5d77e] sm:w-auto"
+              disabled={paymentBusy || adjustmentStatus === "reserved"}
+              onClick={() => {
+                if (status === "paid" || status === "delivered" || paymentStatus === "confirmed") {
+                  router.push(`/pedidos/${order.id}/entrega`);
+                  return;
+                }
+                void prepareCheckout();
+              }}
+            >
+              {paymentBusy ? <LoaderCircle className="animate-spin" /> : <Sparkles />}
+              Quero minha música inteira
+              {!paymentBusy && <ArrowRight />}
+            </Button>
+            <p className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-[#f5d77e]"><ShieldCheck className="size-3.5" /> Pagamento único e liberação após confirmação segura</p>
           </div>
           <div className="relative mt-6 flex flex-wrap gap-3 text-xs font-semibold text-white/65">
             <span className="rounded-full border border-white/12 bg-white/[.07] px-3 py-2">🔒 Áudio privado</span>

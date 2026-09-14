@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { LoaderCircle, Music2, Play, RefreshCw } from "lucide-react";
+import { AudioWaveform, LoaderCircle, Play, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type PreviewResponse = {
@@ -72,20 +72,21 @@ export function MusicPreviewPlayer({
   };
 
   return (
-    <article className="rounded-2xl border border-rose-200/80 bg-[#fffaf8] p-4 shadow-sm sm:p-5">
+    <article className="relative overflow-hidden rounded-[26px] border border-[#d4af55]/30 bg-[#12110e] p-4 shadow-[6px_6px_0_rgba(140,106,42,.08)] sm:p-5">
+      <div className="pointer-events-none absolute right-0 top-0 size-28 border-b border-l border-[#d4af55]/10 bg-[repeating-linear-gradient(135deg,transparent_0_9px,rgba(212,175,85,.06)_10px_11px)]" />
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8b2450]">{label}</p>
-          <h3 className="mt-1 font-display text-xl font-semibold text-[#2b1722]">{title}</h3>
+        <div className="relative">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#d4af55]">{label}</p>
+          <h3 className="mt-1 font-display text-xl font-semibold text-white">{title}</h3>
         </div>
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-rose-100 text-[#8b2450]">
-          <Music2 className="size-5" />
+        <span className="relative grid size-11 shrink-0 place-items-center rounded-2xl border border-[#d4af55]/35 bg-[#090807] text-[#f5d77e]">
+          <AudioWaveform className="size-5" />
         </span>
       </div>
 
       {busy && (
-        <div className="mt-5 flex min-h-14 items-center gap-3 rounded-xl bg-white px-4 text-sm font-semibold text-muted-foreground" role="status">
-          <LoaderCircle className="size-4 animate-spin text-[#8b2450]" /> Preparando player seguro...
+        <div className="mt-5 flex min-h-14 items-center gap-3 rounded-xl border border-[#d4af55]/15 bg-[#090807] px-4 text-sm font-semibold text-[#b8ae99]" role="status">
+          <LoaderCircle className="size-4 animate-spin text-[#d4af55]" /> Preparando player seguro...
         </div>
       )}
 
@@ -97,7 +98,7 @@ export function MusicPreviewPlayer({
             preload="metadata"
             src={audioUrl}
             controlsList="nodownload noplaybackrate"
-            className="h-12 w-full"
+            className="h-12 w-full accent-[#d4af55]"
             onError={() => {
               setAudioUrl("");
               setError("O acesso temporário expirou. Recarregue a prévia para continuar.");
@@ -105,7 +106,7 @@ export function MusicPreviewPlayer({
           >
             Seu navegador não oferece suporte à reprodução de áudio.
           </audio>
-          <p className="mt-2 text-xs text-muted-foreground">Trecho privado de até 50 segundos.</p>
+          <p className="mt-2 text-xs text-[#b8ae99]">Trecho privado de até 50 segundos.</p>
         </div>
       )}
 

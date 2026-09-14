@@ -282,7 +282,7 @@ assert.match(shareToken, /getRandomValues\(new Uint8Array\(32\)\)/);
 assert.match(shareToken, /TOKEN_PATTERN = \/\^\[A-Za-z0-9_-\]\{43\}\$\//);
 assert.match(sharedAudioRoute, /admin\.rpc\(\s*"get_shared_present_audio"/);
 assert.match(sharedAudioRoute, /record_delivery_access/);
-assert.match(sharedAudioRoute, /createSignedUrl\(access\.object_key, SIGNED_URL_SECONDS\)/);
+assert.match(sharedAudioRoute, /createSignedUrl\(access\.object_key, SIGNED_URL_SECONDS, download \? \{ download: true \} : undefined\)/);
 assert.match(sharedAudioRoute, /"X-Robots-Tag": "noindex"/);
 assert.match(presentPage, /robots: \{ index: false, follow: false \}/);
 assert.match(presentPage, /get_shared_present/);
