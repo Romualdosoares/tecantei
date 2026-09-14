@@ -18,9 +18,10 @@ assert.match(adminPage, /if \(!identity\) redirect\("\/admin\/login"\)/);
 assert.match(sessionRoute, /await getAdminIdentity\(\)/);
 assert.match(sessionRoute, /status:\s*404/);
 assert.match(sessionRoute, /"Cache-Control":\s*"private, no-store"/);
-assert.match(footer, /href="\/admin\/login"/);
+assert.doesNotMatch(footer, /href=["']\/admin(?:\/login)?["']/);
 const activeLandingSource = landingPage.slice(0, landingPage.indexOf("{false && step === 0"));
 assert.match(activeLandingSource, /<LandingFooter \/>/);
+assert.doesNotMatch(activeLandingSource, /href=["']\/admin(?:\/login)?["']/);
 
 console.log("PASS: login administrativo autentica, valida o papel no servidor e encerra sessões sem permissão");
-console.log("PASS: /admin redireciona visitantes ao login e a landing oferece um acesso administrativo discreto");
+console.log("PASS: /admin redireciona visitantes ao login sem expor atalho administrativo na landing");

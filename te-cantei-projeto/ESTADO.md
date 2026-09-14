@@ -1109,3 +1109,9 @@ Alterações:
 - marca do cabeçalho permanece sem moldura indevida, enquanto botões arredondados conservam um contorno preciso.
 
 Validação local: suíte estrutural aprovada, lint sem erros, build de produção aprovado e página completa renderizada em 1440 px. A inspeção confirmou superfícies sólidas, círculos lineares e contornos dourados sem halos borrados.
+
+## Continuação de 14/09/2026 — acesso administrativo removido da página de vendas
+
+O atalho `Acesso administrativo` foi removido do rodapé da landing page para que a experiência pública permaneça focada na criação e compra da música. A rota protegida `/admin/login` continua disponível exclusivamente por acesso direto.
+
+Foi adicionada uma verificação automatizada para impedir que links para `/admin` ou `/admin/login` voltem a ser expostos na landing page.

@@ -27,9 +27,6 @@ export function LandingFooter() {
             <Link href="/suporte" className="hover:text-rose-800 transition">
               Suporte & Dúvidas
             </Link>
-            <Link href="/admin/login" className="hover:text-rose-800 transition">
-              Acesso administrativo
-            </Link>
             <span className="text-muted-foreground/40">|</span>
             <span className="flex items-center gap-1 text-emerald-800">
               <Shield className="size-3.5 text-emerald-600" />
