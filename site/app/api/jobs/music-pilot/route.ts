@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApplicationSettings } from "@/lib/admin/settings";
 import { getKieApiKey, getKieWebhookHmacKey } from "@/lib/admin/secrets";
+import { AudioStorageError, copyFullAudioToPrivateStorage } from "@/lib/music/audio-storage";
 import { processGenerationOutputBatch } from "@/lib/music/generation-output-worker";
 import {
   KieApiError,
@@ -15,10 +16,13 @@ import {
 } from "@/lib/music/kie-env";
 import { musicStyleWithVoice, type VoicePreference } from "@/lib/order-options";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseAudioBucket } from "@/lib/supabase/audio-bucket";
+import { createAndStoreMp3Preview, Mp3PreviewError } from "@/lib/music/mp3-preview";
 
 export const maxDuration = 300;
 const NO_STORE = { "Cache-Control": "private, no-store" };
 const PILOT_REQUEST_ID = "c2e3b19e-6002-4f5f-b10d-66e0a0a8c901";
+const PILOT_AUDIO_HOST = "tempfile.aiquickdraw.com";
 
 type PilotOrder = {
   order_id: string;
@@ -138,6 +142,9 @@ export async function GET(request: Request) {
   const admin = createSupabaseAdminClient();
 
   try {
+    if (new URL(request.url).searchParams.get("diagnose") === "audio") {
+      return response(await diagnosePilotAudio(admin), 200);
+    }
     const { data: order } = await admin
       .from("orders")
       .select("id, status, preview_expires_at")
@@ -261,6 +268,90 @@ export async function GET(request: Request) {
   } catch {
     return response({ error: "pilot_status_unavailable" }, 503);
   }
+}
+
+async function diagnosePilotAudio(admin: ReturnType<typeof createSupabaseAdminClient>) {
+  const { data: order } = await admin
+    .from("orders")
+    .select("id")
+    .eq("client_request_id", PILOT_REQUEST_ID)
+    .maybeSingle();
+  if (!order) return { diagnostic: "order_missing" };
+
+  const { data: task } = await admin
+    .from("generation_tasks")
+    .select("id")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!task) return { diagnostic: "task_missing" };
+
+  const { data: outputs, error } = await admin
+    .from("generation_outputs")
+    .select("version_id, provider_audio_id, source_audio_url")
+    .eq("generation_task_id", task.id)
+    .order("created_at");
+  if (error || !outputs?.length) return { diagnostic: "outputs_missing" };
+
+  const bucket = createSupabaseAudioBucket(admin);
+  const results = [];
+  for (const output of outputs) {
+    let source: URL;
+    try {
+      source = new URL(output.source_audio_url);
+    } catch {
+      results.push({ stage: "source", status: "failed", code: "invalid_url" });
+      continue;
+    }
+    if (source.protocol !== "https:" || source.hostname.toLowerCase() !== PILOT_AUDIO_HOST) {
+      results.push({ stage: "source", status: "failed", code: "unexpected_host" });
+      continue;
+    }
+
+    let full;
+    try {
+      full = await copyFullAudioToPrivateStorage({
+        bucket,
+        sourceUrl: output.source_audio_url,
+        allowedSourceHosts: new Set([PILOT_AUDIO_HOST]),
+        orderId: order.id,
+        versionId: output.version_id,
+        providerAudioId: output.provider_audio_id,
+      });
+    } catch (caught) {
+      results.push({ stage: "copy", status: "failed", code: diagnosticErrorCode(caught) });
+      continue;
+    }
+
+    try {
+      const preview = await createAndStoreMp3Preview({
+        bucket,
+        orderId: order.id,
+        versionId: output.version_id,
+        fullAudioObjectKey: full.objectKey,
+      });
+      results.push({
+        stage: "complete",
+        status: "ok",
+        fullBytes: full.size,
+        previewBytes: preview.size,
+        previewSeconds: Number(preview.durationSeconds.toFixed(3)),
+      });
+    } catch (caught) {
+      results.push({ stage: "preview", status: "failed", code: diagnosticErrorCode(caught) });
+    }
+  }
+
+  return { diagnostic: "audio_pipeline", results };
+}
+
+function diagnosticErrorCode(error: unknown) {
+  if (error instanceof AudioStorageError || error instanceof Mp3PreviewError) return error.code;
+  if (error instanceof Error && error.message.startsWith("Falha no Storage Supabase:")) {
+    return "storage_backend_failed";
+  }
+  return "unexpected_failure";
 }
 
 function authorized(request: Request) {
