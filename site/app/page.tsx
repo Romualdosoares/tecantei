@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -45,6 +44,7 @@ import { GenerationProgressStage } from "@/components/studio/generation-progress
 import { GenerationReadyStage } from "@/components/studio/generation-ready-stage";
 import { MUSIC_STYLE_OPTIONS, VOICE_OPTIONS, type VoicePreference } from "@/lib/order-options";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
+import { BrandLogo } from "@/components/brand-logo";
 
 const steps = ["Para quem", "História", "Memórias", "Estilo", "Mensagem", "Letra", "Prévia", "Entrega"];
 
@@ -649,19 +649,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-rose-200/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
           <button onClick={() => goTo(0)} className="flex shrink-0 items-center gap-2.5 text-left group" aria-label="Voltar ao início">
-            <div className="relative">
-              <Image
-                src="/te-cantei-logo.png"
-                alt="Te Cantei"
-                width={42}
-                height={42}
-                priority
-                className="h-10 w-10 object-contain transition group-hover:scale-105"
-              />
-              <span className="absolute -bottom-1 -right-1 grid size-4 place-items-center rounded-full bg-rose-500 text-[9px] text-white">
-                <Music2 className="size-2.5" />
-              </span>
-            </div>
+            <BrandLogo compact priority className="transition duration-500 group-hover:scale-105 group-hover:border-[#F5D77E]/70" />
             <div>
               <span className="font-display text-2xl font-bold tracking-tight text-[#2b1722] group-hover:text-rose-900 transition">
                 Te Cantei

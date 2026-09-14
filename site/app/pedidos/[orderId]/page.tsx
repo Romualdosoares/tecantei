@@ -8,6 +8,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { OrderEditor } from "./order-editor";
 import type { VoicePreference } from "@/lib/order-options";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +111,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
       <header className="border-b bg-background/95">
         <div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8">
           <Link href="/pedidos" className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Meus pedidos</Link>
-          <span className="font-display text-2xl font-semibold">Te Cantei</span>
+          <span className="flex items-center gap-3 font-display text-2xl font-semibold"><BrandLogo compact priority className="size-10 rounded-xl" />Te Cantei</span>
         </div>
       </header>
       <section className="mx-auto max-w-6xl px-5 py-9 sm:px-8 sm:py-12">

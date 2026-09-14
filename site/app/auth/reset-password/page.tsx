@@ -6,6 +6,7 @@ import { CheckCircle2, LoaderCircle, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -40,6 +41,7 @@ export default function ResetPasswordPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-background px-5 py-12">
       <section className="w-full max-w-md rounded-[28px] border bg-card p-7 shadow-[0_24px_70px_rgba(54,16,38,.08)] sm:p-9">
+        <BrandLogo compact priority className="mb-6" />
         <div className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
           {done ? <CheckCircle2 /> : <LockKeyhole />}
         </div>

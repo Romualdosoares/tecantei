@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { BrandLogo } from "@/components/brand-logo";
 
 const GENERIC_ACCESS_ERROR = "E-mail, senha ou permissão administrativa inválidos.";
 
@@ -99,7 +99,7 @@ export function AdminLoginForm() {
       <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col">
         <header className="flex items-center justify-between gap-4">
           <Link href="/" className="group flex items-center gap-3" aria-label="Voltar para a página inicial do Te Cantei">
-            <Image src="/te-cantei-logo.png" alt="Te Cantei" width={44} height={44} priority className="size-11 object-contain transition group-hover:scale-105" />
+            <BrandLogo compact priority className="transition duration-500 group-hover:scale-105" />
             <div>
               <p className="font-display text-2xl font-bold leading-none">Te Cantei</p>
               <p className="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#8b2450]">Central administrativa</p>

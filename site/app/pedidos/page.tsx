@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function OrdersPage() {
     <main className="min-h-screen bg-background text-foreground">
       <header className="border-b bg-background/95">
         <div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link href="/" className="font-display text-2xl font-semibold tracking-tight">Te Cantei</Link>
+          <Link href="/" className="flex items-center gap-3 font-display text-2xl font-semibold tracking-tight"><BrandLogo compact priority className="size-10 rounded-xl" /><span>Te Cantei</span></Link>
           <div className="flex items-center gap-2">
             {profile?.is_support && <Button asChild variant="ghost" className="rounded-full"><Link href="/suporte"><ShieldCheck /> Suporte</Link></Button>}
             <Button asChild className="rounded-full"><Link href="/"><Plus /> Nova música</Link></Button>

@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { LockKeyhole, Heart, Shield } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export function LandingFooter() {
   return (
@@ -12,16 +12,7 @@ export function LandingFooter() {
           {/* Brand & info */}
           <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
             <Link href="/" className="flex items-center gap-2.5">
-              <Image
-                src="/te-cantei-logo.png"
-                alt="Te Cantei"
-                width={40}
-                height={40}
-                className="h-9 w-9 object-contain"
-              />
-              <span className="font-display text-2xl font-bold tracking-tight text-[#2b1722]">
-                Te Cantei
-              </span>
+              <BrandLogo className="w-28 transition duration-500 hover:scale-[1.03]" />
             </Link>
             <p className="max-w-sm text-xs text-muted-foreground leading-5">
               Transformamos histórias de amor, memórias familiares e momentos únicos em canções inesquecíveis.

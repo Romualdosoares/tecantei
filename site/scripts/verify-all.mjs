@@ -1,4 +1,5 @@
 await import("./verify-domain.mjs");
+await import("./verify-premium-theme.mjs");
 await import("./verify-lyrics.mjs");
 await import("./verify-lyrics-draft.mjs");
 await import("./verify-kie-contract.mjs");

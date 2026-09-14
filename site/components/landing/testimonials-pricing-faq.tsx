@@ -172,7 +172,7 @@ export function TestimonialsPricingFaq({ onStart }: { onStart?: () => void }) {
                 <Button
                   size="lg"
                   onClick={onStart}
-                  className="w-full h-12 rounded-full bg-white text-[#3b1228] font-bold text-base hover:bg-rose-50 shadow-lg shadow-black/20 hover:scale-[1.02] active:scale-98 transition"
+                  className="w-full h-12 rounded-full bg-primary text-primary-foreground font-bold text-base hover:bg-[#F5D77E] shadow-lg shadow-black/20 hover:scale-[1.02] active:scale-98 transition"
                 >
                   <Gift className="size-5 mr-2 text-rose-700" />
                   Criar Minha Música Agora

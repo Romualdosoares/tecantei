@@ -1059,3 +1059,20 @@ Decisão do proprietário: o teto temporário de uma criação por conta e cinco
 Alteração: os limites móveis de conta e ambiente foram elevados ao máximo operacional aceito pelo serviço (`1.000.000` créditos em 24 horas), deixando de bloquear o uso normal. A proteção idempotente contra clique duplo, reenvio da mesma tarefa e cobranças duplicadas permanece ativa. Cada geração continua consumindo créditos reais da conta Kie.ai.
 
 Publicação: variáveis de produção atualizadas e aplicação recompilada pela Vercel; implantação `Ready` e domínio `https://tecantei.vercel.app` reassociado. A tentativa que havia retornado `generation_limit_reached` ocorreu antes da reserva, portanto não consumiu crédito e pode ser repetida pelo cliente.
+
+## Continuação de 14/09/2026 — identidade premium preta e dourada
+
+Decisão visual: toda a experiência pública e administrativa passa a usar uma identidade sofisticada baseada em ônix, carvão, ouro, champanhe, bronze, branco e areia, acompanhada pela nova logo dourada fornecida pelo proprietário.
+
+Alterações:
+
+- tokens globais normalizados com a nova paleta e componentes anteriores adaptados para superfícies escuras, textos de alto contraste e detalhes dourados;
+- botões de ação em ouro sólido com texto ônix; o gradiente metálico fica reservado para detalhes decorativos;
+- nova logo dourada aplicada à landing page, rodapé, pedidos, página individual do pedido, suporte, presente, recuperação de senha, login e painel administrativo;
+- gráficos administrativos atualizados para ouro e champanhe;
+- brilho discreto na marca, elevação suave das seções, foco acessível e interações com sombra e movimento moderados;
+- todas as animações respeitam `prefers-reduced-motion`;
+- favicon atualizado para a nova marca;
+- verificação estrutural dedicada criada para impedir regressões da paleta, logo, botões e acessibilidade de movimento.
+
+Validação local: inspeção visual automatizada da landing em 1440 px aprovada; suíte estrutural e comportamental completa aprovada; lint sem erros; TypeScript e build de produção Next.js 16.3.5 concluídos com sucesso.

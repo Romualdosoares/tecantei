@@ -22,8 +22,8 @@ export const metadata: Metadata = {
     "codex-preview": "development",
   },
   icons: {
-    icon: "/te-cantei-logo.png",
-    shortcut: "/te-cantei-logo.png",
+    icon: "/tecantei-logodourada.jpg",
+    shortcut: "/tecantei-logodourada.jpg",
   },
 };
 
@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${jakarta.variable} ${playfair.variable} scroll-smooth`}>
-      <body className="font-sans antialiased selection:bg-rose-500/20 selection:text-rose-900">
+      <body className="font-sans antialiased selection:bg-primary/30 selection:text-[#F5D77E]">
         <AnalyticsTracker />
         {children}
       </body>

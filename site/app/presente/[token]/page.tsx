@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Gift, Heart, LockKeyhole, Music2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BrandLogo } from "@/components/brand-logo";
 import { hashShareToken } from "@/lib/delivery/share-token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -35,7 +36,10 @@ export default async function PresentPage({ params }: { params: Promise<{ token:
       <article className="w-full max-w-2xl overflow-hidden rounded-[32px] bg-[#351426] text-white shadow-[0_30px_100px_rgba(53,20,38,.24)]">
         <div className="relative p-7 sm:p-11">
           <div className="absolute -right-16 -top-20 size-64 rounded-full bg-[#f6aeba]/20 blur-3xl" />
-          <Badge className="relative rounded-full bg-white/10 text-white hover:bg-white/10"><Gift /> Um presente Te Cantei</Badge>
+          <div className="relative flex items-center justify-between gap-4">
+            <Badge className="rounded-full bg-white/10 text-white hover:bg-white/10"><Gift /> Um presente Te Cantei</Badge>
+            <BrandLogo compact priority className="size-11 rounded-xl" />
+          </div>
           <Heart className="relative mt-12 size-10 fill-[#f6aeba] text-[#f6aeba]" />
           <p className="relative mt-6 text-sm uppercase tracking-[.18em] text-white/55">Para {data.recipient_name}</p>
           <h1 className="relative mt-2 font-display text-4xl font-semibold sm:text-5xl">{data.title}</h1>
