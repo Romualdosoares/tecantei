@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabaseAudioBucket } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hasConfirmedDeliveryPayment } from "@/lib/payment/confirmed-delivery";
 
 const idSchema = z.string().uuid();
 const SIGNED_URL_SECONDS = 60;
@@ -50,6 +51,9 @@ export async function GET(
     if (!delivery) return NextResponse.json({ error: "not_found" }, { status: 404 });
     if (delivery.version_id !== selection.version_id) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+    if (!(await hasConfirmedDeliveryPayment(admin, orderId, delivery.version_id))) {
+      return NextResponse.json({ error: "payment_not_confirmed" }, { status: 403 });
     }
 
     const expectedKey = `orders/${orderId}/versions/${delivery.version_id}/full.mp3`;

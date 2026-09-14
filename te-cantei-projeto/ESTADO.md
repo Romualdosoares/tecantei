@@ -1155,3 +1155,11 @@ A experiência de produção e audição da prévia foi modernizada em preto e d
 Logo abaixo dos players foi incluído o CTA `Quero minha música inteira`, acompanhado de copy sobre MP3 e página de presente. Antes do pagamento, ele reutiliza o checkout Pix autenticado e mantém a versão escolhida vinculada à cobrança; após confirmação, conduz à entrega. A música completa continua bloqueada até a confirmação consultada no servidor.
 
 Validação local: verificações específicas e suíte estrutural completa aprovadas, `git diff --check` sem erros, lint sem erros e build de produção Next.js 16.3.5 concluído com sucesso. A asserção do áudio compartilhado foi atualizada para também reconhecer o parâmetro seguro de download já utilizado pela rota, mantendo URL assinada por 60 segundos.
+
+## Continuação de 14/09/2026 — cadastro com contato e guarda reforçada da entrega
+
+O cadastro público passou a solicitar nome do usuário e WhatsApp com DDD. O telefone é normalizado para E.164 e, junto com o nome, fica no perfil privado do Supabase; ambos também podem ser consultados e corrigidos por administradores autorizados. Após autenticar, a landing exibe o primeiro nome e a área `Meus pedidos` recebe uma saudação personalizada. A migração `202609140002_customer_contact.sql` foi aplicada ao projeto Supabase conectado.
+
+Segurança de pagamento reforçada em profundidade: além de o checkout consultar diretamente o gateway antes de retornar `confirmed`, a página de entrega, a geração da URL temporária do MP3, a criação do compartilhamento, a página do presente e seu áudio agora revalidam no servidor uma intenção confirmada para o pedido e a versão exatos. Em `PAYMENT_MODE=live`, somente confirmações de `efi` ou `mercado_pago` são aceitas; registros `mock` permanecem válidos apenas no ambiente simulado. Estado do navegador, retorno de checkout, URL manual, pedido pendente ou pagamento reembolsado não liberam o arquivo.
+
+Validação: teste dedicado de cadastro e guarda de entrega, suíte estrutural completa, lint e build de produção aprovados.

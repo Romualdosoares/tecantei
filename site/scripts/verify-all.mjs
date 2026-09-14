@@ -8,6 +8,7 @@ await import("./verify-generation-storage.mjs");
 await import("./verify-generation-progress-ui.mjs");
 await import("./verify-preview.mjs");
 await import("./verify-order-preview-ui.mjs");
+await import("./verify-account-and-delivery-security.mjs");
 await import("./verify-supabase-foundation.mjs");
 await import("./verify-admin-dashboard.mjs");
 await import("./verify-admin-audio-assets.mjs");

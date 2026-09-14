@@ -45,7 +45,7 @@ export default async function OrdersPage() {
       .select("id, status, occasion, recipient_name, style, updated_at")
       .eq("owner_id", authData.user.id)
       .order("updated_at", { ascending: false }),
-    supabase.from("profiles").select("is_support").eq("id", authData.user.id).maybeSingle(),
+    supabase.from("profiles").select("display_name, is_support").eq("id", authData.user.id).maybeSingle(),
   ]);
   const orders = (data ?? []) as OrderSummary[];
 
@@ -62,7 +62,7 @@ export default async function OrdersPage() {
       </header>
       <section className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
         <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10"><LockKeyhole /> Área privada</Badge>
-        <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Meus pedidos</h1>
+        <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{profile?.display_name ? `Olá, ${profile.display_name.split(/\s+/)[0]}` : "Meus pedidos"}</h1>
         <p className="mt-3 max-w-2xl text-lg text-muted-foreground">Acompanhe suas letras, prévias, pagamentos e presentes sem expor a história na listagem.</p>
 
         {error ? (

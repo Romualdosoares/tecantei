@@ -9,6 +9,7 @@ const updateSchema = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(8).max(128).optional(),
   displayName: z.string().trim().min(2).max(100),
+  whatsapp: z.string().trim().max(20).refine((value) => value === "" || /^\+[1-9][0-9]{9,14}$/.test(value)),
   role: z.enum(["user", "support", "admin"]),
   status: z.enum(["active", "suspended"]),
   reason: z.string().trim().min(8).max(300),
@@ -40,13 +41,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
         email: input.data.email,
         ...(input.data.password ? { password: input.data.password } : {}),
         ban_duration: input.data.status === "suspended" ? "876000h" : "none",
-        user_metadata: { display_name: input.data.displayName },
+        user_metadata: { display_name: input.data.displayName, whatsapp: input.data.whatsapp || null },
       });
       if (authUpdate.error) throw authUpdate.error;
     }
     const role = roleFlags(input.data.role);
     const { error } = await admin.from("profiles").update({
       display_name: input.data.displayName,
+      whatsapp: input.data.whatsapp || null,
       is_admin: role.isAdmin,
       is_support: role.isSupport,
       account_status: input.data.status,

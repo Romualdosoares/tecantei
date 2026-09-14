@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { hashShareToken } from "@/lib/delivery/share-token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabaseAudioBucket } from "@/lib/supabase/env";
+import { hasConfirmedDeliveryPayment } from "@/lib/payment/confirmed-delivery";
 
 const SIGNED_URL_SECONDS = 60;
 
@@ -19,6 +20,9 @@ export async function GET(
       { target_token_hash: tokenHash },
     );
     if (accessError || !isAudioAccess(access) || !access.found) {
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+    if (!(await hasConfirmedDeliveryPayment(admin, access.order_id, access.version_id))) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
@@ -42,11 +46,15 @@ export async function GET(
 function isAudioAccess(value: unknown): value is {
   found: boolean;
   delivery_id: string;
+  order_id: string;
+  version_id: string;
   object_key: string;
 } {
   if (!value || typeof value !== "object") return false;
   const access = value as Record<string, unknown>;
   return typeof access.found === "boolean" &&
     typeof access.delivery_id === "string" &&
+    typeof access.order_id === "string" &&
+    typeof access.version_id === "string" &&
     typeof access.object_key === "string";
 }

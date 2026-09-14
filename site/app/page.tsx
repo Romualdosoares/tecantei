@@ -26,6 +26,8 @@ import {
   HeartHandshake,
   Baby,
   PenTool,
+  Phone,
+  UserRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -176,6 +178,8 @@ export default function Home() {
   const [paid, setPaid] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountWhatsapp, setAccountWhatsapp] = useState("");
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
   const [accountError, setAccountError] = useState("");
@@ -204,12 +208,18 @@ export default function Home() {
     void supabase.auth.getUser().then(({ data }) => {
       if (!data.user?.email) return;
       setAccountEmail(data.user.email);
+      setAccountName(userDisplayName(data.user.user_metadata));
+      setAccountWhatsapp(userWhatsapp(data.user.user_metadata));
       setSignedIn(true);
     });
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setSignedIn(Boolean(session?.user));
-      if (session?.user.email) setAccountEmail(session.user.email);
+      if (session?.user.email) {
+        setAccountEmail(session.user.email);
+        setAccountName(userDisplayName(session.user.user_metadata));
+        setAccountWhatsapp(userWhatsapp(session.user.user_metadata));
+      }
     });
     return () => data.subscription.unsubscribe();
   }, []);
@@ -521,6 +531,15 @@ export default function Home() {
       setAccountError("Informe um e-mail válido e uma senha com pelo menos 6 caracteres.");
       return;
     }
+    const normalizedWhatsapp = normalizeBrazilianWhatsapp(accountWhatsapp);
+    if (accountMode === "sign_up" && (accountName.trim().length < 2 || accountName.trim().length > 100)) {
+      setAccountError("Informe seu nome com pelo menos 2 caracteres.");
+      return;
+    }
+    if (accountMode === "sign_up" && !normalizedWhatsapp) {
+      setAccountError("Informe um WhatsApp válido com DDD.");
+      return;
+    }
 
     setAccountBusy(true);
     setAccountError("");
@@ -543,6 +562,10 @@ export default function Home() {
             password: accountPassword,
             options: {
               emailRedirectTo: `${window.location.origin}/auth/confirm`,
+              data: {
+                display_name: accountName.trim(),
+                whatsapp: normalizedWhatsapp,
+              },
             },
           })
         : await supabase.auth.signInWithPassword({
@@ -565,6 +588,8 @@ export default function Home() {
     }
 
     setSignedIn(true);
+    setAccountName(userDisplayName(result.data.user?.user_metadata) || accountName.trim());
+    setAccountWhatsapp(userWhatsapp(result.data.user?.user_metadata) || normalizedWhatsapp || "");
     setAccountOpen(false);
     const orderId = await persistApprovedDraft();
     if (!orderId || !(await beginGeneration(orderId))) return;
@@ -579,6 +604,8 @@ export default function Home() {
     const supabase = getSupabaseBrowserClient();
     if (supabase) await supabase.auth.signOut();
     setSignedIn(false);
+    setAccountName("");
+    setAccountWhatsapp("");
     setAccountPassword("");
   };
 
@@ -674,6 +701,7 @@ export default function Home() {
           <div className="flex items-center gap-2 sm:gap-3">
             {signedIn ? (
               <div className="flex items-center gap-1.5">
+                {accountName && <span className="hidden items-center gap-1.5 text-xs font-semibold text-[#f5d77e] md:flex"><UserRound className="size-3.5" /> Olá, {firstName(accountName)}</span>}
                 <Button asChild variant="ghost" className="rounded-full text-xs sm:text-sm font-semibold">
                   <Link href="/pedidos">Meus pedidos</Link>
                 </Button>
@@ -1891,6 +1919,43 @@ export default function Home() {
                 />
               </label>
 
+              {accountMode === "sign_up" && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block space-y-1.5 text-sm font-bold text-[#2b1722]">
+                    <span>Nome do usuário</span>
+                    <Input
+                      type="text"
+                      autoComplete="name"
+                      value={accountName}
+                      onChange={(event) => setAccountName(event.target.value)}
+                      placeholder="Seu nome"
+                      className="h-12 rounded-xl border-rose-200"
+                      minLength={2}
+                      maxLength={100}
+                      required
+                    />
+                  </label>
+                  <label className="block space-y-1.5 text-sm font-bold text-[#2b1722]">
+                    <span>WhatsApp</span>
+                    <div className="relative">
+                      <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#d4af55]" />
+                      <Input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        value={accountWhatsapp}
+                        onChange={(event) => setAccountWhatsapp(event.target.value)}
+                        placeholder="(11) 99999-9999"
+                        className="h-12 rounded-xl border-rose-200 pl-10"
+                        maxLength={20}
+                        required
+                      />
+                    </div>
+                  </label>
+                  <p className="-mt-2 text-xs leading-5 text-muted-foreground sm:col-span-2">Usaremos o WhatsApp apenas para identificação e suporte do seu pedido.</p>
+                </div>
+              )}
+
               <label className="block space-y-1.5 text-sm font-bold text-[#2b1722]">
                 <span>Senha</span>
                 <Input
@@ -1952,4 +2017,26 @@ export default function Home() {
       </Dialog>
     </main>
   );
+}
+
+function userDisplayName(metadata: unknown) {
+  if (!metadata || typeof metadata !== "object") return "";
+  const value = (metadata as Record<string, unknown>).display_name;
+  return typeof value === "string" ? value.trim().slice(0, 100) : "";
+}
+
+function userWhatsapp(metadata: unknown) {
+  if (!metadata || typeof metadata !== "object") return "";
+  const value = (metadata as Record<string, unknown>).whatsapp;
+  return typeof value === "string" ? value.trim().slice(0, 20) : "";
+}
+
+function normalizeBrazilianWhatsapp(value: string) {
+  let digits = value.replace(/\D/g, "");
+  if (digits.length === 10 || digits.length === 11) digits = `55${digits}`;
+  return /^55[1-9][0-9]{9,10}$/.test(digits) ? `+${digits}` : null;
+}
+
+function firstName(value: string) {
+  return value.trim().split(/\s+/)[0]?.slice(0, 30) || "cliente";
 }

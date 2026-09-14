@@ -4,6 +4,7 @@ import { Gift, Heart, LockKeyhole, Music2, Sparkles } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { hashShareToken } from "@/lib/delivery/share-token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { hasConfirmedDeliveryPayment } from "@/lib/payment/confirmed-delivery";
 import { PresentAudioPlayer } from "./present-audio-player";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,8 @@ export const metadata: Metadata = {
 
 type SharedPresent = {
   found: boolean;
+  order_id: string;
+  version_id: string;
   recipient_name: string;
   title: string;
   duration_seconds: number | null;
@@ -38,6 +41,7 @@ export default async function PresentPage({ params }: { params: Promise<{ token:
     target_token_hash: tokenHash,
   });
   if (error || !isSharedPresent(data) || !data.found) notFound();
+  if (!(await hasConfirmedDeliveryPayment(admin, data.order_id, data.version_id))) notFound();
 
   return (
     <main className="present-page relative min-h-screen overflow-hidden bg-[#090807] px-4 py-6 text-white sm:px-7 sm:py-10">
@@ -143,6 +147,8 @@ function isSharedPresent(value: unknown): value is SharedPresent {
   if (!value || typeof value !== "object") return false;
   const present = value as Record<string, unknown>;
   return present.found === true &&
+    typeof present.order_id === "string" &&
+    typeof present.version_id === "string" &&
     typeof present.recipient_name === "string" &&
     typeof present.title === "string" &&
     typeof present.dedication === "string" &&

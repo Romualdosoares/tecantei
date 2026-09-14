@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
     const [authUsers, profiles, orders, tasks, payments, periodTasks, periodPayments, costs, events, settings, readiness, audits] = await Promise.all([
       admin.auth.admin.listUsers({ page: 1, perPage: 200 }),
-      admin.from("profiles").select("id, display_name, is_admin, is_support, account_status, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
+      admin.from("profiles").select("id, display_name, whatsapp, is_admin, is_support, account_status, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
       admin.from("orders").select("id, owner_id, recipient_name, status, style, created_at, updated_at").order("created_at", { ascending: false }).limit(500),
       admin.from("generation_tasks").select("id, order_id, provider, model, status, error_code, reserved_credits_millis, created_at, updated_at, completed_at").order("created_at", { ascending: false }).limit(500),
       admin.from("payment_intents").select("id, order_id, provider, amount_cents, currency, status, created_at, updated_at").order("created_at", { ascending: false }).limit(500),
@@ -61,6 +61,7 @@ export async function GET(request: Request) {
         id: user.id,
         email: user.email ?? "",
         displayName: profile?.display_name ?? user.user_metadata?.display_name ?? "",
+        whatsapp: profile?.whatsapp ?? user.user_metadata?.whatsapp ?? "",
         role: profile?.is_admin ? "admin" : profile?.is_support ? "support" : "user",
         status: profile?.account_status ?? (user.banned_until ? "suspended" : "active"),
         createdAt: user.created_at,

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createShareToken, hashShareToken } from "@/lib/delivery/share-token";
+import { hasConfirmedDeliveryPayment } from "@/lib/payment/confirmed-delivery";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const idSchema = z.string().uuid();
@@ -24,6 +26,25 @@ export async function POST(
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
       return NextResponse.json({ error: "authentication_required" }, { status: 401 });
+    }
+
+    const { data: ownedOrder } = await supabase.from("orders")
+      .select("id")
+      .eq("id", orderId.data)
+      .eq("owner_id", authData.user.id)
+      .in("status", ["paid", "delivered"])
+      .maybeSingle();
+    if (!ownedOrder) {
+      return NextResponse.json({ error: "not_found" }, { status: 404, headers: NO_STORE });
+    }
+
+    const admin = createSupabaseAdminClient();
+    const { data: delivery } = await admin.from("deliveries")
+      .select("version_id")
+      .eq("order_id", orderId.data)
+      .maybeSingle();
+    if (!delivery || !(await hasConfirmedDeliveryPayment(admin, orderId.data, delivery.version_id))) {
+      return NextResponse.json({ error: "payment_not_confirmed" }, { status: 403, headers: NO_STORE });
     }
 
     const token = createShareToken();

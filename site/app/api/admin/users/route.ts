@@ -7,6 +7,7 @@ const schema = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(8).max(128),
   displayName: z.string().trim().min(2).max(100),
+  whatsapp: z.string().trim().max(20).refine((value) => value === "" || /^\+[1-9][0-9]{9,14}$/.test(value)),
   role: z.enum(["user", "support", "admin"]),
   reason: z.string().trim().min(8).max(300),
 });
@@ -23,13 +24,14 @@ export async function POST(request: Request) {
       email: input.data.email,
       password: input.data.password,
       email_confirm: true,
-      user_metadata: { display_name: input.data.displayName },
+      user_metadata: { display_name: input.data.displayName, whatsapp: input.data.whatsapp || null },
     });
     if (created.error || !created.data.user) throw created.error ?? new Error("user_not_created");
     const role = roleFlags(input.data.role);
     const { error: profileError } = await admin.from("profiles").upsert({
       id: created.data.user.id,
       display_name: input.data.displayName,
+      whatsapp: input.data.whatsapp || null,
       is_admin: role.isAdmin,
       is_support: role.isSupport,
       account_status: "active",
@@ -68,4 +70,3 @@ export async function writeAudit(
   });
   if (error) throw error;
 }
-

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
+import { hasConfirmedDeliveryPayment } from "@/lib/payment/confirmed-delivery";
 import { DeliveryExperience } from "./delivery-experience";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +40,9 @@ export default async function DeliveryPage({ params }: { params: Promise<{ order
     .eq("order_id", order.id)
     .maybeSingle();
   if (!version) notFound();
+  if (!(await hasConfirmedDeliveryPayment(admin, order.id, delivery.version_id))) {
+    redirect(`/pedidos/${order.id}`);
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground">
