@@ -964,3 +964,21 @@ Defeito real encontrado e corrigido: `publish_generation_output` usava nomes de 
 Validações: suíte estrutural e comportamental aprovada; lint, TypeScript e build de produção aprovados; callback, consulta do fornecedor, download, formato MP3, Storage privado, corte de prévia e transição final de banco foram exercitados com a integração real.
 
 Pendência antes das vendas: ouvir pelo menos uma das prévias do piloto na conta proprietária para avaliação humana de pronúncia, voz, arranjo e qualidade musical; em seguida homologar o gateway de pagamento. A licença comercial/revenda aplicável ao plano contratado da Kie.ai também deve ser confirmada documentalmente antes do lançamento público.
+
+## Continuação de 13/09/2026 — login exclusivo do painel administrativo
+
+Pedido: criar uma página própria de e-mail e senha para acessar o painel administrativo a partir do site publicado.
+
+Alterações:
+
+- nova rota `/admin/login`, responsiva e alinhada à identidade visual do Te Cantei;
+- autenticação por e-mail e senha via Supabase, sem cadastro de novas contas administrativas pela página;
+- validação obrigatória do papel administrativo ativo no servidor antes de liberar `/admin`;
+- encerramento automático da sessão quando a conta autenticada não possui permissão administrativa;
+- mensagens genéricas para não revelar se um e-mail, uma senha ou uma permissão específica existe;
+- recuperação de senha com resposta neutra contra enumeração de contas;
+- `/admin` agora encaminha visitantes sem acesso para `/admin/login` em vez de “Meus pedidos”;
+- link discreto “Acesso administrativo” incluído no rodapé da página principal;
+- página marcada para não ser indexada por mecanismos de busca e respostas de verificação protegidas com `private, no-store`.
+
+Validação local: suíte estrutural e comportamental completa, lint, TypeScript e build de produção aprovados. O build confirmou as novas rotas dinâmicas `/admin/login` e `/api/admin/session`.

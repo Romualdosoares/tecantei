@@ -28,7 +28,7 @@ for (const { path, source } of sources) {
   assert.doesNotMatch(source, /href\s*=\s*(?:["']\s*["']|["']#|["']javascript:)/i, `Link inválido em ${path}`);
 }
 
-const knownStaticRoutes = new Set(["/", "/pedidos", "/suporte", "/auth/reset-password"]);
+const knownStaticRoutes = new Set(["/", "/pedidos", "/suporte", "/auth/reset-password", "/admin/login"]);
 const literalInternalLinks = [...allSource.matchAll(/href\s*=\s*["'](\/[^"'?#]*)["']/g)].map((match) => match[1]);
 for (const href of literalInternalLinks) {
   assert.ok(knownStaticRoutes.has(href), `Rota interna literal sem página correspondente: ${href}`);

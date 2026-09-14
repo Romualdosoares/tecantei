@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   if (!getSupabasePublicConfig()) redirect("/");
   const identity = await getAdminIdentity();
-  if (!identity) redirect("/pedidos");
+  if (!identity) redirect("/admin/login");
   return <AdminDashboard adminEmail={identity.email ?? "Administrador"} />;
 }
-
