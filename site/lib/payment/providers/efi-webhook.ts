@@ -7,11 +7,24 @@ export type EfiPixNotification = {
   occurredAt: string;
 };
 
+// Endereço publicado pela Efí para callbacks Pix. A Vercel sobrescreve
+// x-forwarded-for com o IP real da conexão, impedindo spoofing pelo cliente.
+export const EFI_PIX_WEBHOOK_IPS = ["34.193.116.226"] as const;
+
 export function verifyEfiWebhookToken(received: string | null, expected: string) {
   if (!received || expected.length < 24) return false;
   const receivedBytes = Buffer.from(received, "utf8");
   const expectedBytes = Buffer.from(expected, "utf8");
   return receivedBytes.length === expectedBytes.length && timingSafeEqual(receivedBytes, expectedBytes);
+}
+
+export function verifyEfiWebhookSourceIp(
+  received: string | null,
+  allowedIps: readonly string[] = EFI_PIX_WEBHOOK_IPS,
+) {
+  if (!received) return false;
+  const normalized = received.split(",", 1)[0]?.trim().replace(/^::ffff:/i, "");
+  return Boolean(normalized && allowedIps.some((allowedIp) => allowedIp === normalized));
 }
 
 export function parseEfiPixWebhook(value: unknown): EfiPixNotification[] {

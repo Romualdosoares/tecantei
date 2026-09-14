@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { EfiPixClient, efiTxidFromIdempotencyKey } from "../lib/payment/providers/efi.ts";
-import { parseEfiPixWebhook, verifyEfiWebhookToken } from "../lib/payment/providers/efi-webhook.ts";
+import { parseEfiPixWebhook, verifyEfiWebhookSourceIp, verifyEfiWebhookToken } from "../lib/payment/providers/efi-webhook.ts";
 import { MercadoPagoPixClient } from "../lib/payment/providers/mercado-pago.ts";
 import { verifyMercadoPagoWebhook } from "../lib/payment/providers/mercado-pago-webhook.ts";
 
@@ -160,6 +160,10 @@ assert.equal(efiRequests.filter((request) => request.url.endsWith("/oauth/token"
 const efiWebhookToken = "token-webhook-efi-com-24-chars";
 assert.equal(verifyEfiWebhookToken(efiWebhookToken, efiWebhookToken), true);
 assert.equal(verifyEfiWebhookToken("token-incorreto", efiWebhookToken), false);
+assert.equal(verifyEfiWebhookSourceIp("34.193.116.226"), true);
+assert.equal(verifyEfiWebhookSourceIp("::ffff:34.193.116.226"), true);
+assert.equal(verifyEfiWebhookSourceIp("198.51.100.8"), false);
+assert.equal(verifyEfiWebhookSourceIp("198.51.100.8, 34.193.116.226"), false);
 assert.deepEqual(parseEfiPixWebhook({
   pix: [{
     endToEndId: "E12345678202609111500abcdefghijk",
@@ -178,3 +182,4 @@ console.log("PASS: Mercado Pago cria e consulta Pix com idempotência e normaliz
 console.log("PASS: assinatura HMAC do webhook Mercado Pago rejeita adulteração e admite janela temporal opcional");
 console.log("PASS: Efí usa OAuth2, mTLS e txid determinístico em todas as chamadas Pix");
 console.log("PASS: webhook Efí exige token adicional e valida a lista Pix");
+console.log("PASS: webhook Efí direto aceita somente o IP oficial publicado");

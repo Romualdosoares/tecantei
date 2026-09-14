@@ -4,7 +4,7 @@ import { getApplicationSettings } from "@/lib/admin/settings";
 import { assertPaymentLiveEnabled } from "@/lib/payment/env";
 import { applyVerifiedProviderCharge } from "@/lib/payment/provider-persistence";
 import { createConfiguredPixProvider } from "@/lib/payment/providers/configured-provider";
-import { parseEfiPixWebhook, verifyEfiWebhookToken } from "@/lib/payment/providers/efi-webhook";
+import { parseEfiPixWebhook, verifyEfiWebhookSourceIp, verifyEfiWebhookToken } from "@/lib/payment/providers/efi-webhook";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -20,9 +20,13 @@ export async function POST(request: Request) {
   try {
     assertPaymentLiveEnabled();
     const admin = createSupabaseAdminClient();
-    const expectedGatewaySecret = requiredSecret(await getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookMtlsGatewaySecret, "EFI_WEBHOOK_MTLS_GATEWAY_SECRET"), "EFI_WEBHOOK_MTLS_GATEWAY_SECRET");
-    if (process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() !== "gateway" ||
-        !verifyEfiWebhookToken(request.headers.get("x-efi-mtls-gateway-secret"), expectedGatewaySecret)) {
+    const terminationMode = process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim();
+    const gatewaySecret = await getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookMtlsGatewaySecret, "EFI_WEBHOOK_MTLS_GATEWAY_SECRET");
+    const verifiedByGateway = terminationMode === "gateway" && Boolean(gatewaySecret) &&
+      verifyEfiWebhookToken(request.headers.get("x-efi-mtls-gateway-secret"), gatewaySecret ?? "");
+    const verifiedDirectly = terminationMode === "direct" &&
+      verifyEfiWebhookSourceIp(request.headers.get("x-forwarded-for"));
+    if (!verifiedByGateway && !verifiedDirectly) {
       return NextResponse.json({ error: "mtls_not_verified" }, { status: 403 });
     }
     const hmac = new URL(request.url).searchParams.get("hmac");

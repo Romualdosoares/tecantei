@@ -105,6 +105,7 @@ export async function integrationReadiness(admin: SupabaseClient) {
     paymentMode: getPaymentMode(),
     paymentLiveGateEnabled: process.env.PAYMENT_LIVE_ENABLED?.trim() === "true",
     efiMtlsGatewayEnabled: process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() === "gateway",
+    efiDirectWebhookEnabled: process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() === "direct",
   };
 }
 
