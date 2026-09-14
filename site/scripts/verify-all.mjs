@@ -9,6 +9,7 @@ await import("./verify-preview.mjs");
 await import("./verify-order-preview-ui.mjs");
 await import("./verify-supabase-foundation.mjs");
 await import("./verify-admin-dashboard.mjs");
+await import("./verify-admin-audio-assets.mjs");
 await import("./verify-admin-login.mjs");
 await import("./verify-navigation.mjs");
 await import("./verify-delivery.mjs");

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
-  Activity, Bot, CircleDollarSign, CreditCard, Gauge, History, KeyRound, LayoutDashboard,
+  Activity, Bot, CircleDollarSign, CreditCard, Download, Gauge, Headphones, History, KeyRound, LayoutDashboard,
   LoaderCircle, LogOut, Music2, Plus, RefreshCw, Search, Settings2, ShieldCheck,
   Sparkles, Trash2, UserCog, Users, WandSparkles,
 } from "lucide-react";
@@ -23,6 +23,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type UserRow = { id: string; email: string; displayName: string; role: "user" | "support" | "admin"; status: "active" | "suspended" | "deleted"; createdAt: string; lastSignInAt: string | null };
 type GenerationRow = { id: string; order_id: string; provider: string; model: string; status: string; error_code: string | null; reserved_credits_millis: number; created_at: string; completed_at: string | null; recipientName: string; ownerEmail: string };
+type GenerationAsset = { versionId: string; label: string; title: string; durationSeconds: number | null; previewUrl: string | null; previewDownloadUrl: string | null; fullDownloadUrl: string | null };
 type SaleRow = { id: string; order_id: string; provider: string; amount_cents: number; currency: string; status: string; created_at: string; updated_at: string; recipientName: string };
 type Settings = { lyricsMode: "mock" | "kie"; lyricsModel: "gpt-5-6-sol" | "gpt-5-6-terra" | "gpt-5-6-luna" | "gpt-6-astra"; lyricsReasoningEffort: "low" | "medium" | "high" | "xhigh"; musicMode: "mock" | "live"; musicModel: string };
 type PeriodRange = "today" | "yesterday" | "7d" | "15d" | "30d" | "custom";
@@ -81,6 +82,11 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [webhookReason, setWebhookReason] = useState("");
   const [webhookBusy, setWebhookBusy] = useState(false);
   const [removeWebhookOpen, setRemoveWebhookOpen] = useState(false);
+  const [assetGeneration, setAssetGeneration] = useState<GenerationRow | null>(null);
+  const [assetReason, setAssetReason] = useState("");
+  const [generationAssets, setGenerationAssets] = useState<GenerationAsset[]>([]);
+  const [assetBusy, setAssetBusy] = useState(false);
+  const [assetError, setAssetError] = useState("");
 
   const load = async (range: PeriodRange = periodRange, from = customFrom, to = customTo, initial = false) => {
     if (initial) setLoading(true);
@@ -256,6 +262,46 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setRemoveWebhookOpen(false); setWebhookHmacKey(""); setWebhookReason(""); setMessage("HMAC cadastrado pelo painel removido do cofre."); await load();
   };
 
+  const openGenerationAssets = (generation: GenerationRow) => {
+    setAssetGeneration(generation);
+    setAssetReason("");
+    setGenerationAssets([]);
+    setAssetError("");
+  };
+
+  const closeGenerationAssets = () => {
+    setAssetGeneration(null);
+    setAssetReason("");
+    setGenerationAssets([]);
+    setAssetError("");
+  };
+
+  const loadGenerationAssets = async () => {
+    if (!assetGeneration) return;
+    setAssetBusy(true);
+    setAssetError("");
+    const response = await fetch(`/api/admin/generations/${assetGeneration.id}/assets`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: assetReason }),
+      cache: "no-store",
+    }).catch(() => null);
+    const payload = response
+      ? await response.json().catch(() => null) as { assets?: GenerationAsset[]; error?: string } | null
+      : null;
+    setAssetBusy(false);
+    if (!response?.ok || !payload?.assets) {
+      setAssetError(response?.status === 404
+        ? "Sua sessão administrativa expirou. Entre novamente."
+        : "Não foi possível localizar os arquivos desta geração no armazenamento privado.");
+      return;
+    }
+    setGenerationAssets(payload.assets);
+    if (payload.assets.length === 0) {
+      setAssetError("Esta tarefa ainda não possui arquivos armazenados e prontos para reprodução.");
+    }
+  };
+
   const signOut = async () => {
     setSigningOut(true);
     setError("");
@@ -342,7 +388,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                 <Card className="rounded-[24px] border-black/5 shadow-none"><CardContent className="px-4 sm:px-6"><div className="mb-4 flex items-center gap-2 rounded-xl border bg-white px-3"><Search className="size-4 text-muted-foreground"/><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome ou e-mail" className="border-0 shadow-none focus-visible:ring-0" /></div><Table><TableHeader><TableRow><TableHead>Usuário</TableHead><TableHead>Perfil</TableHead><TableHead>Status</TableHead><TableHead>Último acesso</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredUsers.map((user) => <TableRow key={user.id}><TableCell><p className="font-semibold">{user.displayName || "Sem nome"}</p><p className="text-xs text-muted-foreground">{user.email}</p></TableCell><TableCell><StatusBadge value={user.role} /></TableCell><TableCell><StatusBadge value={user.status} /></TableCell><TableCell>{user.lastSignInAt ? dateTime(user.lastSignInAt) : "Nunca"}</TableCell><TableCell><div className="flex justify-end gap-2"><Button size="sm" variant="outline" className="rounded-full" onClick={() => openEdit(user)}><UserCog /> Editar</Button><Button size="icon-sm" variant="ghost" className="rounded-full text-destructive" disabled={user.id === data.currentAdminId} onClick={() => { setDeleteUser(user); setDeleteReason(""); }} aria-label={`Excluir ${user.displayName || user.email}`}><Trash2 /></Button></div></TableCell></TableRow>)}</TableBody></Table>{filteredUsers.length === 0 && <Empty label="Nenhum usuário encontrado." />}</CardContent></Card>
               </TabsContent>
 
-              <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai, o modelo usado, consumo reservado e falhas." /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em"]} empty={data.generations.length === 0} emptyLabel="Nenhuma geração registrada neste período.">{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p></TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+              <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai e abra os áudios que já foram copiados para o armazenamento privado." /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em","Arquivos"]} empty={data.generations.length === 0} emptyLabel="Nenhuma geração registrada neste período.">{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p></TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell><Button type="button" size="sm" variant="outline" className="rounded-full" onClick={() => openGenerationAssets(row)}><Headphones /> Áudios</Button></TableCell></TableRow>)}</DataTable></TabsContent>
 
               <TabsContent value="sales" className="space-y-5"><SectionTitle title="Vendas e pagamentos" description="Receita confirmada, cobranças pendentes, falhas e reembolsos por provedor." /><div className="grid gap-4 sm:grid-cols-3"><MiniStat label="Receita confirmada" value={money(data.metrics.revenueCents)} detail={`${data.metrics.paidOrders} pagamentos`} /><MiniStat label="Pendente" value={money(data.metrics.pendingRevenueCents)} detail="ainda não libera entrega" /><MiniStat label="Conversão estimada" value={`${data.metrics.conversionRate}%`} detail="venda por visitante" /></div><DataTable headers={["Presente","Provedor","Valor","Status","Criado","Atualizado"]} empty={data.sales.length === 0} emptyLabel="Nenhuma venda registrada neste período.">{data.sales.map((row) => <TableRow key={row.id}><TableCell className="font-semibold">{row.recipientName}</TableCell><TableCell>{providerLabel(row.provider)}</TableCell><TableCell>{money(row.amount_cents)}</TableCell><TableCell><StatusBadge value={row.status}/></TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell>{dateTime(row.updated_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
 
@@ -384,6 +430,53 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           )}
         </section>
       </div>
+
+      <Dialog open={Boolean(assetGeneration)} onOpenChange={(open) => !open && closeGenerationAssets()}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[24px] sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Áudios da geração</DialogTitle>
+            <DialogDescription>
+              {assetGeneration ? `${assetGeneration.recipientName} · ${assetGeneration.provider} · ${statusLabel(assetGeneration.status)}` : ""}. O acesso é temporário e fica registrado na auditoria.
+            </DialogDescription>
+          </DialogHeader>
+
+          {generationAssets.length === 0 && (
+            <div className="mt-5 space-y-4">
+              <Field label="Motivo do acesso">
+                <Textarea minLength={8} maxLength={300} value={assetReason} onChange={(event) => setAssetReason(event.target.value)} placeholder="Ex.: conferir qualidade e preparar a entrega do pedido" />
+              </Field>
+              {assetError && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">{assetError}</p>}
+              <Button type="button" className="w-full rounded-full bg-[#7e2148]" disabled={assetBusy || assetReason.trim().length < 8} onClick={() => void loadGenerationAssets()}>
+                {assetBusy ? <LoaderCircle className="animate-spin" /> : <Headphones />} Localizar e abrir áudios
+              </Button>
+            </div>
+          )}
+
+          {generationAssets.length > 0 && (
+            <div className="mt-5 space-y-4">
+              <p className="rounded-xl bg-[#f6f3f4] px-4 py-3 text-xs leading-5 text-muted-foreground">Os links abaixo expiram em 10 minutos. Atualize o acesso caso um player ou download expire.</p>
+              {generationAssets.map((asset) => (
+                <article key={asset.versionId} className="rounded-2xl border border-[#ead9df] bg-[#fffaf8] p-4 sm:p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div><Badge variant="outline">{asset.label}</Badge><h3 className="mt-2 font-display text-xl font-bold">{asset.title}</h3><p className="mt-1 text-xs text-muted-foreground">{asset.durationSeconds ? `${Math.floor(asset.durationSeconds / 60)}:${String(asset.durationSeconds % 60).padStart(2, "0")} de duração total` : "Duração não informada"}</p></div>
+                    <Music2 className="size-7 text-[#8f2854]" />
+                  </div>
+                  {asset.previewUrl ? <audio controls preload="metadata" src={asset.previewUrl} className="mt-4 h-12 w-full">Seu navegador não oferece suporte a áudio.</audio> : <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">Prévia ainda não armazenada.</p>}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {asset.previewDownloadUrl && <Button asChild size="sm" variant="outline" className="rounded-full"><a href={asset.previewDownloadUrl}><Download /> Baixar prévia</a></Button>}
+                    {asset.fullDownloadUrl && <Button asChild size="sm" className="rounded-full bg-[#7e2148]"><a href={asset.fullDownloadUrl}><Download /> Baixar música completa</a></Button>}
+                  </div>
+                </article>
+              ))}
+              {assetError && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">{assetError}</p>}
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button type="button" variant="outline" className="rounded-full" onClick={() => { setGenerationAssets([]); setAssetError(""); }}>Atualizar acesso</Button>
+                <Button type="button" className="rounded-full bg-[#7e2148]" onClick={closeGenerationAssets}>Fechar</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(userDialog)} onOpenChange={(open) => !open && setUserDialog(null)}><DialogContent className="rounded-[24px] sm:max-w-xl"><form onSubmit={(event) => void saveUser(event)}><DialogHeader><DialogTitle className="font-display text-2xl">{userDialog === "create" ? "Criar usuário" : "Editar usuário"}</DialogTitle><DialogDescription>Permissões administrativas e de suporte só podem ser alteradas aqui por outro administrador.</DialogDescription></DialogHeader><div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Nome"><Input value={userForm.displayName} onChange={(event) => setUserForm({ ...userForm, displayName: event.target.value })} required /></Field><Field label="E-mail"><Input type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} disabled={userDialog === "edit" && selectedUser?.id === data?.currentAdminId} required /></Field><Field label={userDialog === "create" ? "Senha provisória" : "Nova senha (opcional)"}><Input type="password" minLength={8} value={userForm.password} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} disabled={userDialog === "edit" && selectedUser?.id === data?.currentAdminId} required={userDialog === "create"} /></Field><Field label="Perfil"><NativeSelect className="w-full" value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value as typeof userForm.role })} disabled={userDialog === "edit" && selectedUser?.id === data?.currentAdminId}><NativeSelectOption value="user">Cliente</NativeSelectOption><NativeSelectOption value="support">Suporte</NativeSelectOption><NativeSelectOption value="admin">Administrador</NativeSelectOption></NativeSelect></Field>{userDialog === "edit" && <Field label="Status"><NativeSelect className="w-full" value={userForm.status} onChange={(event) => setUserForm({ ...userForm, status: event.target.value as typeof userForm.status })} disabled={selectedUser?.id === data?.currentAdminId}><NativeSelectOption value="active">Ativo</NativeSelectOption><NativeSelectOption value="suspended">Suspenso</NativeSelectOption></NativeSelect></Field>}{userDialog === "edit" && selectedUser?.id === data?.currentAdminId && <p className="sm:col-span-2 rounded-xl bg-[#f6f3f4] p-3 text-xs leading-5 text-muted-foreground">Para manter esta sessão segura, altere aqui somente o nome. E-mail, senha, perfil e status da sua própria conta ficam protegidos.</p>}<div className="sm:col-span-2"><Field label="Motivo da ação"><Textarea minLength={8} maxLength={300} value={userForm.reason} onChange={(event) => setUserForm({ ...userForm, reason: event.target.value })} placeholder="Ex.: cadastro solicitado pelo atendimento" required /></Field></div></div><DialogFooter className="mt-6"><Button type="button" variant="outline" onClick={() => setUserDialog(null)}>Cancelar</Button><Button type="submit" className="bg-[#7e2148]" disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>} Salvar usuário</Button></DialogFooter></form></DialogContent></Dialog>
 
@@ -471,4 +564,4 @@ function relativeDate(daysAgo: number) { const date = new Date(); date.setHours(
 function dashboardUrl(range: PeriodRange, from: string, to: string) { const query = new URLSearchParams({ range }); if (range === "custom") { query.set("from", from); query.set("to", to); } return `/api/admin/dashboard?${query.toString()}`; }
 function providerLabel(value: string) { return value === "mercado_pago" ? "Mercado Pago" : value === "efi" ? "Efí Bank" : value; }
 function statusLabel(value: string) { return ({ user: "Cliente", support: "Suporte", admin: "Administrador", active: "Ativo", suspended: "Suspenso", deleted: "Excluído", created: "Criada", submitted: "Enviada", processing: "Processando", reconciling: "Conciliação", succeeded: "Concluída", failed: "Falhou", pending: "Pendente", confirmed: "Confirmado", cancelled: "Cancelado", refunded: "Reembolsado", ready: "Conectada", configured: "Configurada", missing: "Sem chave", live: "Ao vivo", mock: "Simulação" } as Record<string,string>)[value] ?? value; }
-function humanAction(value: string) { return ({ create_user: "Criou usuário", update_user_requested: "Alterou usuário", soft_delete_user_requested: "Excluiu usuário", update_ai_settings_requested: "Alterou modelos", test_integration: "Testou integração", update_api_secret: "Atualizou chave API", delete_api_secret: "Removeu chave API" } as Record<string,string>)[value] ?? value; }
+function humanAction(value: string) { return ({ create_user: "Criou usuário", update_user_requested: "Alterou usuário", soft_delete_user_requested: "Excluiu usuário", update_ai_settings_requested: "Alterou modelos", test_integration: "Testou integração", update_api_secret: "Atualizou chave API", delete_api_secret: "Removeu chave API", access_generation_audio: "Acessou áudios da geração" } as Record<string,string>)[value] ?? value; }

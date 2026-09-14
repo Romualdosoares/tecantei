@@ -5,7 +5,9 @@ import { getSupabaseAudioBucket } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const idSchema = z.string().uuid();
-const SIGNED_URL_SECONDS = 60;
+// Give the customer enough time to press play after the page loads. The URL is
+// still temporary, private and can only be minted by the authenticated route.
+const SIGNED_URL_SECONDS = 10 * 60;
 
 export async function GET(
   _request: Request,

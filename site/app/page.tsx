@@ -15,8 +15,6 @@ import {
   LoaderCircle,
   LockKeyhole,
   Music2,
-  Pause,
-  Play,
   RotateCcw,
   Share2,
   Sparkles,
@@ -172,7 +170,6 @@ export default function Home() {
   const [generationTaskStatus, setGenerationTaskStatus] = useState<string | null>(null);
   const [generationPollingWarning, setGenerationPollingWarning] = useState(false);
   const [selected, setSelected] = useState("original");
-  const [playing, setPlaying] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
@@ -1587,42 +1584,30 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Player Controls & Waveform */}
+                {/* Visual da versão demonstrativa — nenhum áudio é simulado. */}
                 <div className="p-6 sm:p-7">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h2 className="font-display text-2xl font-bold text-[#2b1722]">{version.title}</h2>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground font-medium">
-                        {version.detail} · prévia de 0:50
+                        {version.detail} · apresentação do layout
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPlaying(playing === version.id ? null : version.id);
-                      }}
-                      aria-label={playing === version.id ? `Pausar ${version.title}` : `Tocar ${version.title}`}
-                      className="grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] text-white shadow-lg shadow-rose-900/20 hover:scale-105 active:scale-95 transition"
-                    >
-                      {playing === version.id ? <Pause className="size-6" /> : <Play className="ml-1 size-6 fill-current" />}
-                    </button>
+                    <span className="grid size-14 shrink-0 place-items-center rounded-full bg-rose-100 text-rose-800" aria-hidden="true"><LockKeyhole className="size-5" /></span>
                   </div>
 
-                  {/* Soundwave Bars */}
                   <div className="mt-6 flex h-12 items-center gap-1.5 overflow-hidden rounded-2xl bg-rose-50/60 p-2.5">
                     {waveform.map((height, index) => (
                       <span
                         key={index}
-                        className={`w-full rounded-full transition-all duration-200 ${
-                          playing === version.id && index < 20
-                            ? "bg-rose-600 wave-animated"
-                            : "bg-rose-200"
-                        }`}
+                        className="w-full rounded-full bg-rose-200"
                         style={{ height: `${Math.max(18, height * 0.5)}%` }}
                       />
                     ))}
                   </div>
+                  <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-950">
+                    Demonstração sem áudio: nenhum MP3 foi criado neste modo. As gerações reais aparecem com player na área “Meus pedidos”.
+                  </p>
                 </div>
               </label>
             ))}
@@ -1792,29 +1777,21 @@ export default function Home() {
                   Música completa · 3 minutos e 24 segundos
                 </p>
 
-                {/* Master Audio Player */}
+                {/* Entrega demonstrativa — nunca simula um arquivo completo. */}
                 <div className="mt-6 rounded-2xl bg-white p-5 border border-rose-200/80 shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <button
-                      aria-label={playing === "final" ? "Pausar música" : "Tocar música"}
-                      onClick={() => setPlaying(playing === "final" ? null : "final")}
-                      className="grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] text-white shadow-md shadow-rose-900/20 hover:scale-105 active:scale-95 transition"
-                    >
-                      {playing === "final" ? <Pause className="size-6" /> : <Play className="ml-0.5 size-6 fill-current" />}
-                    </button>
+                  <div className="flex items-center gap-4" aria-label="Demonstração sem arquivo de áudio">
+                    <span className="grid size-14 shrink-0 place-items-center rounded-full bg-rose-100 text-rose-800"><LockKeyhole className="size-5" /></span>
                     <div className="flex h-12 flex-1 items-center gap-1.5 overflow-hidden">
                       {waveform.map((height, index) => (
                         <span
                           key={index}
-                          className={`w-full rounded-full transition-all ${
-                            playing === "final" && index < 24 ? "bg-rose-600 wave-animated" : "bg-rose-200"
-                          }`}
+                          className="w-full rounded-full bg-rose-200"
                           style={{ height: `${Math.max(20, height * 0.55)}%` }}
                         />
                       ))}
                     </div>
-                    <span className="shrink-0 text-xs font-mono text-muted-foreground">3:24</span>
                   </div>
+                  <p className="mt-3 text-xs font-semibold leading-5 text-amber-950">Este é somente o modelo da página de entrega. Uma música completa real só aparece depois da geração e da liberação do pedido.</p>
                 </div>
 
                 {/* Actions */}

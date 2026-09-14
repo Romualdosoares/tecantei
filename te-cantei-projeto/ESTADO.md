@@ -1016,3 +1016,20 @@ Correções e melhorias:
 - seção de players do pedido redesenhada como apresentação emocional da amostra e recebeu a âncora `#amostras`.
 
 Validação local: teste específico recusando o antigo progresso fixo, suíte estrutural e comportamental completa, lint, TypeScript e build Next.js de produção aprovados. O fluxo preserva a regra de não expor o áudio completo antes do pagamento.
+
+## Continuação de 13/09/2026 — áudio real no cliente e downloads no Admin
+
+Falha observada: os cartões mostrados ao final do fluxo demonstrativo tinham botões que apenas alternavam o desenho de reprodução, sem qualquer arquivo MP3. Além disso, o histórico administrativo listava as tarefas de geração, mas não oferecia acesso aos arquivos reais já copiados para o Storage privado.
+
+Correções:
+
+- a demonstração visual deixou de mostrar botões falsos de reprodução e agora informa de forma explícita que nenhum MP3 é criado no modo simulado;
+- o player real da área do pedido continua exclusivo do proprietário e o link temporário passou de 1 para 10 minutos, reduzindo expiração antes do primeiro play;
+- o histórico de gerações do Admin recebeu a ação “Áudios” para cada tarefa;
+- o administrador precisa registrar um motivo antes de abrir os arquivos, e cada acesso entra na trilha de auditoria;
+- a nova rota administrativa aceita somente versões `ready`, saídas `stored` e chaves determinísticas pertencentes ao pedido;
+- prévia pode ser ouvida e baixada; música completa pode ser baixada pelo Admin mesmo para conferência operacional;
+- os links do Storage permanecem privados, expiram em 10 minutos e as chaves dos objetos nunca são devolvidas pela API;
+- nenhum link temporário da Kie.ai é usado ou exposto ao navegador.
+
+Validação local: teste específico de acesso administrativo aos áudios aprovado; suíte estrutural e comportamental completa aprovada; lint sem erros; TypeScript e build de produção Next.js 16.3.5 aprovados. O modo real de novas gerações continua fechado após o piloto (`KIE_LIVE_GENERATION_ENABLED=false` e `PILOT_ONLY_MODE=true`); portanto somente tarefas reais já armazenadas têm arquivos para exibir.
