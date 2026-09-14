@@ -1033,3 +1033,21 @@ Correções:
 - nenhum link temporário da Kie.ai é usado ou exposto ao navegador.
 
 Validação local: teste específico de acesso administrativo aos áudios aprovado; suíte estrutural e comportamental completa aprovada; lint sem erros; TypeScript e build de produção Next.js 16.3.5 aprovados. O modo real de novas gerações continua fechado após o piloto (`KIE_LIVE_GENERATION_ENABLED=false` e `PILOT_ONLY_MODE=true`); portanto somente tarefas reais já armazenadas têm arquivos para exibir.
+
+## Continuação de 14/09/2026 — prévia real de 50 segundos aberta aos usuários
+
+Falha observada: pedidos de clientes eram finalizados no modo `mock`, chegavam à apresentação demonstrativa e, corretamente, não possuíam MP3. A causa não era o player: depois do piloto, `KIE_LIVE_GENERATION_ENABLED=false` e `PILOT_ONLY_MODE=true` mantinham a geração musical real fechada.
+
+Correção e decisão operacional:
+
+- `KIE_GENERATION_MODE=live`, `KIE_LIVE_GENERATION_ENABLED=true` e `PILOT_ONLY_MODE=false` foram aplicados à produção da Vercel;
+- orçamento móvel inicial limitado a 12 créditos por conta e 60 créditos para todo o ambiente em 24 horas, permitindo no máximo cinco reservas estimadas por dia;
+- a configuração persistida já mantinha `music_mode=live`, modelo `V6`, chave Kie.ai e HMAC no Vault desde o piloto real;
+- em produção, a rota agora recusa o modo simulado e nunca cria uma tarefa falsa no lugar da música do cliente;
+- a interface também recusa respostas `mock` e informa que nenhuma amostra foi criada, em vez de avançar para cartões sem áudio;
+- a tela real continua consultando o estado da tarefa e só chega a 100% quando existe pelo menos uma versão `ready` com prévia privada armazenada;
+- pedidos antigos criados em demonstração continuam sem arquivo e precisam ser refeitos como uma nova criação real.
+
+Validação: teste estrutural específico aprovado, lint aprovado e build limpo da mesma revisão concluído pela Vercel com status `Ready`. A aplicação foi recompilada depois das alterações de ambiente e reassociada a `https://tecantei.vercel.app`.
+
+Limites: cada nova prévia personalizada consome créditos reais da Kie.ai antes da compra. O MP3 completo permanece privado e indisponível ao cliente antes da confirmação de pagamento. Pagamentos reais e licença comercial/revenda continuam como dependências separadas para a abertura definitiva das vendas.
