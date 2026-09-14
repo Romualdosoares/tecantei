@@ -79,6 +79,9 @@ export async function POST(
     const admin = createSupabaseAdminClient();
     const settings = await getApplicationSettings(admin);
     const mode = effectiveMusicMode(settings.musicMode);
+    if (mode === "live" && process.env.PILOT_ONLY_MODE?.trim() === "true") {
+      return NextResponse.json({ error: "generation_not_open" }, { status: 503 });
+    }
     const model = settings.musicModel;
     const estimatedCreditsMillis = mode === "live" ? getKieEstimatedCreditsMillis() : 0;
     const budget = requireGenerationBudgetConfig(mode);
