@@ -1115,3 +1115,11 @@ Validação local: suíte estrutural aprovada, lint sem erros, build de produç�
 O atalho `Acesso administrativo` foi removido do rodapé da landing page para que a experiência pública permaneça focada na criação e compra da música. A rota protegida `/admin/login` continua disponível exclusivamente por acesso direto.
 
 Foi adicionada uma verificação automatizada para impedir que links para `/admin` ou `/admin/login` voltem a ser expostos na landing page.
+
+## Continuação de 14/09/2026 — novas opções de ocasião e estilo
+
+A etapa 1 passou a oferecer `Aniversário` e a opção `Crush/Paixão` foi renomeada para `Conquistar um Crush`. Na etapa 4, `Sertanejo` foi renomeado para `Sertanejo Universitário`.
+
+O editor de pedidos normaliza os nomes anteriores para os novos rótulos, preservando pedidos já existentes. O gerador local de letras mantém aliases internos para interpretar registros antigos sem voltar a expor as opções antigas na interface.
+
+Validação local: suíte estrutural e comportamental completa aprovada, lint sem erros e build de produção Next.js 16.3.5 concluído com sucesso.

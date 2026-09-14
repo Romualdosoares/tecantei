@@ -16,8 +16,9 @@ const recipientOptions = [
   "Namorado(a)",
   "Reconciliação",
   "Noivo(a)",
-  "Crush/Paixão",
+  "Conquistar um Crush",
   "Amigo(a)",
+  "Aniversário",
   "Mãe",
   "Pai",
   "Filho(a)",
@@ -84,9 +85,10 @@ export function OrderEditor({
 }) {
   const router = useRouter();
   const [status, setStatus] = useState(order.status);
-  const orderUsesRecipientOption = recipientOptions.some((item) => item === order.occasion) && order.occasion !== "Outro";
-  const [occasion, setOccasion] = useState(orderUsesRecipientOption ? order.occasion : "Outro");
-  const [customOccasion, setCustomOccasion] = useState(orderUsesRecipientOption ? "" : order.occasion);
+  const initialOccasion = order.occasion === "Crush/Paixão" ? "Conquistar um Crush" : order.occasion;
+  const orderUsesRecipientOption = recipientOptions.some((item) => item === initialOccasion) && initialOccasion !== "Outro";
+  const [occasion, setOccasion] = useState(orderUsesRecipientOption ? initialOccasion : "Outro");
+  const [customOccasion, setCustomOccasion] = useState(orderUsesRecipientOption ? "" : initialOccasion);
   const [recipient, setRecipient] = useState(order.recipient_name);
   const [pronunciation, setPronunciation] = useState(order.pronunciation ?? "");
   const [story, setStory] = useState(latestSource?.content ?? order.story);
@@ -94,9 +96,10 @@ export function OrderEditor({
   const [lyrics, setLyrics] = useState(initialLyrics);
   const [savedLyrics, setSavedLyrics] = useState(initialLyrics);
   const [proposedId, setProposedId] = useState(latestProposed?.id ?? null);
-  const orderUsesPresetStyle = MUSIC_STYLE_OPTIONS.some((item) => item === order.style) && order.style !== "Outro";
-  const [style, setStyle] = useState(orderUsesPresetStyle ? order.style : "Outro");
-  const [customStyle, setCustomStyle] = useState(orderUsesPresetStyle ? "" : order.style);
+  const initialStyle = order.style === "Sertanejo" ? "Sertanejo Universitário" : order.style;
+  const orderUsesPresetStyle = MUSIC_STYLE_OPTIONS.some((item) => item === initialStyle) && initialStyle !== "Outro";
+  const [style, setStyle] = useState(orderUsesPresetStyle ? initialStyle : "Outro");
+  const [customStyle, setCustomStyle] = useState(orderUsesPresetStyle ? "" : initialStyle);
   const [voicePreference, setVoicePreference] = useState<VoicePreference>(order.voice_preference);
   const effectiveOccasion = occasion === "Outro" ? customOccasion.trim() : occasion;
   const effectiveStyle = style === "Outro" ? customStyle.trim() : style;

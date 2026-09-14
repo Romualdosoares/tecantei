@@ -1,5 +1,5 @@
 export const MUSIC_STYLE_OPTIONS = [
-  "Sertanejo",
+  "Sertanejo Universitário",
   "Sertanejo romântico",
   "Piseiro",
   "Pagode animado",
