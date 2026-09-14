@@ -270,6 +270,100 @@ export async function GET(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  if (!authorized(request)) return response({ error: "not_found" }, 404);
+  const admin = createSupabaseAdminClient();
+
+  try {
+    const { data: order } = await admin
+      .from("orders")
+      .select("id, owner_id")
+      .eq("client_request_id", PILOT_REQUEST_ID)
+      .maybeSingle();
+    if (!order) return response({ error: "pilot_order_missing" }, 409);
+    const { data: task } = await admin
+      .from("generation_tasks")
+      .select("id, status")
+      .eq("order_id", order.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!task || task.status !== "succeeded") {
+      return response({ error: "pilot_task_not_succeeded" }, 409);
+    }
+    const { data: outputs, error } = await admin
+      .from("generation_outputs")
+      .select("id, version_id, storage_status, storage_attempts")
+      .eq("generation_task_id", task.id)
+      .order("created_at");
+    if (error || !outputs?.length) return response({ error: "pilot_outputs_missing" }, 409);
+
+    const bucket = createSupabaseAudioBucket(admin);
+    const results = [];
+    for (const output of outputs) {
+      if (output.storage_status === "stored") {
+        results.push({ status: "stored" });
+        continue;
+      }
+      if (output.storage_status !== "failed" || output.storage_attempts >= 3) {
+        results.push({ status: "not_recoverable" });
+        continue;
+      }
+
+      const fullObjectKey = `orders/${order.id}/versions/${output.version_id}/full.mp3`;
+      const previewObjectKey = `orders/${order.id}/versions/${output.version_id}/preview.mp3`;
+      const [fullObject, previewObject] = await Promise.all([
+        bucket.get(fullObjectKey),
+        bucket.get(previewObjectKey),
+      ]);
+      if (!fullObject || !previewObject || fullObject.size === 0 || previewObject.size === 0) {
+        results.push({ status: "objects_missing" });
+        continue;
+      }
+
+      const { data: claimed, error: claimError } = await admin
+        .from("generation_outputs")
+        .update({
+          storage_status: "processing",
+          storage_claimed_at: new Date().toISOString(),
+          last_error_code: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", output.id)
+        .eq("storage_status", "failed")
+        .lt("storage_attempts", 3)
+        .select("id")
+        .maybeSingle();
+      if (claimError || !claimed) {
+        results.push({ status: "claim_failed" });
+        continue;
+      }
+
+      const { data: published, error: publishError } = await admin.rpc("publish_generation_output", {
+        target_output_id: output.id,
+        full_object_key: fullObjectKey,
+        preview_object_key: previewObjectKey,
+      });
+      results.push({ status: !publishError && published ? "stored" : "publish_failed" });
+    }
+
+    const stored = results.filter((result) => result.status === "stored").length;
+    if (stored > 0) {
+      await admin.from("admin_audit_log").insert({
+        actor_id: order.owner_id,
+        action: "recover_single_music_pilot_storage",
+        target_type: "order",
+        target_id: order.id,
+        reason: "Publicar objetos do piloto validados sem nova geração ou nova tentativa externa",
+        metadata: { storedOutputs: stored, generatedAgain: false },
+      });
+    }
+    return response({ recovered: stored, results }, stored === outputs.length ? 200 : 503);
+  } catch {
+    return response({ error: "pilot_recovery_unavailable" }, 503);
+  }
+}
+
 async function diagnosePilotAudio(admin: ReturnType<typeof createSupabaseAdminClient>) {
   const { data: order } = await admin
     .from("orders")
