@@ -305,7 +305,7 @@ export async function PUT(request: Request) {
         results.push({ status: "stored" });
         continue;
       }
-      if (output.storage_status !== "failed" || output.storage_attempts >= 3) {
+      if (!["failed", "processing"].includes(output.storage_status) || output.storage_attempts >= 3) {
         results.push({ status: "not_recoverable" });
         continue;
       }
@@ -321,22 +321,24 @@ export async function PUT(request: Request) {
         continue;
       }
 
-      const { data: claimed, error: claimError } = await admin
-        .from("generation_outputs")
-        .update({
-          storage_status: "processing",
-          storage_claimed_at: new Date().toISOString(),
-          last_error_code: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", output.id)
-        .eq("storage_status", "failed")
-        .lt("storage_attempts", 3)
-        .select("id")
-        .maybeSingle();
-      if (claimError || !claimed) {
-        results.push({ status: "claim_failed" });
-        continue;
+      if (output.storage_status === "failed") {
+        const { data: claimed, error: claimError } = await admin
+          .from("generation_outputs")
+          .update({
+            storage_status: "processing",
+            storage_claimed_at: new Date().toISOString(),
+            last_error_code: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", output.id)
+          .eq("storage_status", "failed")
+          .lt("storage_attempts", 3)
+          .select("id")
+          .maybeSingle();
+        if (claimError || !claimed) {
+          results.push({ status: "claim_failed", code: claimError?.code ?? null });
+          continue;
+        }
       }
 
       const { data: published, error: publishError } = await admin.rpc("publish_generation_output", {
@@ -344,7 +346,10 @@ export async function PUT(request: Request) {
         full_object_key: fullObjectKey,
         preview_object_key: previewObjectKey,
       });
-      results.push({ status: !publishError && published ? "stored" : "publish_failed" });
+      results.push({
+        status: !publishError && published ? "stored" : "publish_failed",
+        code: publishError?.code ?? null,
+      });
     }
 
     const stored = results.filter((result) => result.status === "stored").length;
