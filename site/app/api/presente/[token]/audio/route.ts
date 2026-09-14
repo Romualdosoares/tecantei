@@ -6,7 +6,7 @@ import { getSupabaseAudioBucket } from "@/lib/supabase/env";
 const SIGNED_URL_SECONDS = 60;
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ token: string }> },
 ) {
   const tokenHash = await hashShareToken((await context.params).token);
@@ -22,9 +22,10 @@ export async function GET(
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
+    const download = new URL(request.url).searchParams.get("mode") === "download";
     const { data, error } = await admin.storage
       .from(getSupabaseAudioBucket())
-      .createSignedUrl(access.object_key, SIGNED_URL_SECONDS);
+      .createSignedUrl(access.object_key, SIGNED_URL_SECONDS, download ? { download: true } : undefined);
     if (error || !data) throw error ?? new Error("signed_url_failed");
     await admin.rpc("record_delivery_access", {
       target_delivery_id: access.delivery_id,

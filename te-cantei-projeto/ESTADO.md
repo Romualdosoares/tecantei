@@ -1139,3 +1139,7 @@ Alterações:
 - leitura e gravação das credenciais de pagamento mantidas exclusivamente no servidor, com auditoria administrativa.
 
 Validação: migração `202609140001_financial_settings.sql` aplicada ao Supabase conectado; suíte estrutural completa, lint e build de produção Next.js 16.3.5 aprovados. Pagamento real ainda depende das credenciais do gateway escolhido, dos webhooks configurados e de uma transação de homologação antes da abertura das vendas.
+
+## Continuação de 14/09/2026 — apresentação premium do presente
+
+A página compartilhada `/presente/[token]` foi redesenhada como uma experiência de abertura de presente em preto e dourado, com corações metálicos animados, molduras nítidas, destinatário e dedicatória em forte destaque e hierarquia responsiva. O player nativo foi substituído por um controle visual próprio com progresso, duração e download da música completa por URL assinada de curta duração. A página continua expondo somente destinatário, título, dedicatória e áudio autorizado; briefing e letra permanecem privados. Lint e build de produção Next.js 16.3.5 foram aprovados.

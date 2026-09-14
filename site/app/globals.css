@@ -566,6 +566,94 @@ main > div > section:nth-of-type(3) { animation-delay: 120ms; }
   animation: generation-live-dot 1.8s ease-in-out infinite;
 }
 
+/* Shared present: crisp gold ornamentation without blur. */
+.present-grid {
+  opacity: .28;
+  background-image:
+    linear-gradient(rgb(212 175 85 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(212 175 85 / 4%) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+.present-halo {
+  border: 1px solid rgb(212 175 85 / 12%);
+  background: repeating-radial-gradient(circle, transparent 0 46px, rgb(212 175 85 / 8%) 47px 48px, transparent 49px 78px);
+}
+
+.present-metallic-text {
+  color: var(--tc-gold);
+  background: var(--tc-metallic);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.present-corner {
+  position: absolute;
+  z-index: 1;
+  top: 5.5rem;
+  width: 7rem;
+  height: 7rem;
+  pointer-events: none;
+  border-top: 1px solid rgb(245 215 126 / 38%);
+}
+
+.present-corner::before,
+.present-corner::after {
+  position: absolute;
+  content: "";
+  background: rgb(212 175 85 / 32%);
+}
+
+.present-corner::before { top: .45rem; width: 4.5rem; height: 1px; }
+.present-corner::after { top: .9rem; width: 2.5rem; height: 1px; }
+.present-corner-left { left: 0; border-left: 1px solid rgb(245 215 126 / 38%); }
+.present-corner-left::before,
+.present-corner-left::after { left: 0; transform-origin: left; transform: rotate(45deg); }
+.present-corner-right { right: 0; border-right: 1px solid rgb(245 215 126 / 38%); }
+.present-corner-right::before,
+.present-corner-right::after { right: 0; transform-origin: right; transform: rotate(-45deg); }
+
+.present-floating-heart {
+  animation: present-heart-float 6.5s ease-in-out infinite;
+}
+
+.present-heartbeat {
+  animation: present-heartbeat 3.2s ease-in-out infinite;
+}
+
+.present-audio-range::-webkit-slider-thumb {
+  width: 15px;
+  height: 15px;
+  appearance: none;
+  border: 2px solid #090807;
+  border-radius: 999px;
+  background: #f5d77e;
+  box-shadow: 0 0 0 1px rgb(212 175 85 / 70%);
+}
+
+.present-audio-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border: 2px solid #090807;
+  border-radius: 999px;
+  background: #f5d77e;
+  box-shadow: 0 0 0 1px rgb(212 175 85 / 70%);
+}
+
+@keyframes present-heart-float {
+  0%, 100% { transform: translateY(0) rotate(-5deg); opacity: .36; }
+  50% { transform: translateY(-14px) rotate(6deg); opacity: .8; }
+}
+
+@keyframes present-heartbeat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.08); }
+  24% { transform: scale(1); }
+  36% { transform: scale(1.05); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
