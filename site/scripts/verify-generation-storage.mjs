@@ -17,6 +17,12 @@ import {
 } from "../lib/music/audio-storage.ts";
 
 const root = resolve(import.meta.dirname, "..");
+const publishFix = readFileSync(
+  resolve(root, "supabase/migrations/202609130005_fix_generation_output_publish.sql"),
+  "utf8",
+);
+assert.match(publishFix, /full_audio_object_key = \$2/);
+assert.match(publishFix, /preview_object_key = \$3/);
 const migrationDirectory = resolve(root, "drizzle");
 const migrationFiles = readdirSync(migrationDirectory)
   .filter((file) => file.endsWith(".sql"))
