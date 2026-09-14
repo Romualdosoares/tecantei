@@ -5,6 +5,7 @@ const loginForm = await readFile(new URL("../app/admin/login/admin-login-form.ts
 const adminPage = await readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
 const sessionRoute = await readFile(new URL("../app/api/admin/session/route.ts", import.meta.url), "utf8");
 const footer = await readFile(new URL("../components/landing/footer.tsx", import.meta.url), "utf8");
+const landingPage = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
 
 assert.match(loginPage, /robots:\s*\{\s*index:\s*false,\s*follow:\s*false\s*\}/);
 assert.match(loginPage, /if \(identity\) redirect\("\/admin"\)/);
@@ -18,6 +19,8 @@ assert.match(sessionRoute, /await getAdminIdentity\(\)/);
 assert.match(sessionRoute, /status:\s*404/);
 assert.match(sessionRoute, /"Cache-Control":\s*"private, no-store"/);
 assert.match(footer, /href="\/admin\/login"/);
+const activeLandingSource = landingPage.slice(0, landingPage.indexOf("{false && step === 0"));
+assert.match(activeLandingSource, /<LandingFooter \/>/);
 
 console.log("PASS: login administrativo autentica, valida o papel no servidor e encerra sessões sem permissão");
 console.log("PASS: /admin redireciona visitantes ao login e a landing oferece um acesso administrativo discreto");
