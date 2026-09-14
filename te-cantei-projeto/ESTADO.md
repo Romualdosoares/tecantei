@@ -942,3 +942,25 @@ Validação local: suíte completa de banco, segurança, callbacks, orçamento e
 Trava atual: falta o proprietário gerar ou consultar o `webhookHmacKey` nas configurações oficiais da Kie.ai e salvá-lo em Admin → Integrações. O valor não deve ser enviado pelo chat. Depois disso, será aberta a trava real apenas para executar uma música piloto; o hostname das saídas será observado, permitido explicitamente e o áudio será copiado para o Storage privado antes de validar prévia, edição, compra e entrega.
 
 Venda e entrega de músicas completas permanecem fechadas. O pagamento real continua sendo uma etapa separada e só será habilitado após o piloto musical completo e a homologação do gateway.
+
+## Continuação de 13/09/2026 — piloto musical real concluído
+
+Autorização: depois do cadastro do HMAC, executar exatamente uma música piloto ponta a ponta antes de abrir as vendas.
+
+Resultado real:
+
+- o HMAC armazenado no Vault foi reconhecido em produção; uma assinatura falsa recebeu `401 invalid_signature`;
+- foi criada exatamente uma tarefa musical paga, com pedido sintético e sem dados pessoais de cliente;
+- Kie.ai/Suno V6 aceitou a tarefa e passou por `TEXT_SUCCESS` até `SUCCESS`;
+- a única tarefa retornou duas variações, comportamento previsto no contrato do fornecedor;
+- ambas as faixas completas foram copiadas para o bucket privado do Supabase, com aproximadamente 4,2 MB cada;
+- foram criados arquivos MP3 separados de prévia com `49,992` segundos, abaixo do limite comercial de 50 segundos;
+- as duas saídas ficaram `stored`, as duas versões ficaram `ready` e o pedido ficou `preview_ready` com expiração em 14 dias;
+- o modo exclusivo impediu gerações de clientes durante todo o piloto; o acionador foi fechado imediatamente após a submissão e seu segredo temporário foi removido da Vercel;
+- `KIE_LIVE_GENERATION_ENABLED=false` e `PILOT_ONLY_MODE=true` mantêm novas gerações e vendas fechadas após a validação.
+
+Defeito real encontrado e corrigido: `publish_generation_output` usava nomes de parâmetros iguais aos das colunas e o PostgreSQL retornava `42702` (`ambiguous_column`). A migração `202609130005_fix_generation_output_publish.sql` passou a usar referências posicionais e permitiu publicar os objetos já validados, sem nova geração, sem novo download e sem consumir a última tentativa de armazenamento.
+
+Validações: suíte estrutural e comportamental aprovada; lint, TypeScript e build de produção aprovados; callback, consulta do fornecedor, download, formato MP3, Storage privado, corte de prévia e transição final de banco foram exercitados com a integração real.
+
+Pendência antes das vendas: ouvir pelo menos uma das prévias do piloto na conta proprietária para avaliação humana de pronúncia, voz, arranjo e qualidade musical; em seguida homologar o gateway de pagamento. A licença comercial/revenda aplicável ao plano contratado da Kie.ai também deve ser confirmada documentalmente antes do lançamento público.

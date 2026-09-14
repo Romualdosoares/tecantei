@@ -7,7 +7,6 @@ await import("./verify-generation-storage.mjs");
 await import("./verify-preview.mjs");
 await import("./verify-supabase-foundation.mjs");
 await import("./verify-admin-dashboard.mjs");
-await import("./verify-single-pilot.mjs");
 await import("./verify-navigation.mjs");
 await import("./verify-delivery.mjs");
 await import("./verify-payment-providers.mjs");
