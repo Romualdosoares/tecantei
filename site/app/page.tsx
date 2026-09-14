@@ -45,6 +45,7 @@ import { GenerationReadyStage } from "@/components/studio/generation-ready-stage
 import { MUSIC_STYLE_OPTIONS, VOICE_OPTIONS, type VoicePreference } from "@/lib/order-options";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { BrandLogo } from "@/components/brand-logo";
+import { useStorefrontPrice } from "@/components/storefront-price-provider";
 
 const steps = ["Para quem", "História", "Memórias", "Estilo", "Mensagem", "Letra", "Prévia", "Entrega"];
 
@@ -150,6 +151,7 @@ function generationProgressCap(status: string | null) {
 }
 
 export default function Home() {
+  const { formattedPrice } = useStorefrontPrice();
   const [step, setStep] = useState(0);
   const [occasion, setOccasion] = useState("");
   const [customOccasion, setCustomOccasion] = useState("");
@@ -748,7 +750,7 @@ export default function Home() {
                 <p className="mt-3 text-sm font-bold text-rose-900">Comece agora e ouça 50 segundos antes de decidir pela compra.</p>
 
                 <ul className="mt-7 grid gap-3 text-sm font-semibold text-[#422030] sm:grid-cols-3">
-                  {["Você aprova cada verso", "1 ajuste incluído", "R$ 19,90 sem assinatura"].map((item) => (
+                  {["Você aprova cada verso", "1 ajuste incluído", `${formattedPrice} sem assinatura`].map((item) => (
                     <li key={item} className="flex items-center gap-2">
                       <span className="grid size-5 shrink-0 place-items-center rounded-full bg-rose-100 text-rose-700"><Check className="size-3" /></span>
                       {item}
@@ -833,7 +835,7 @@ export default function Home() {
               </div>
               <div className="relative mt-8 rounded-[26px] border border-white/15 bg-white/10 p-6 text-center backdrop-blur-sm lg:mt-0">
                 <p className="text-sm font-bold text-rose-100">Música completa + página para presentear</p>
-                <p className="mt-2 font-display text-4xl font-extrabold">R$ 19,90</p>
+                <p className="mt-2 font-display text-4xl font-extrabold">{formattedPrice}</p>
                 <p className="mt-1 text-xs text-white/60">Pagamento único · sem mensalidade</p>
                 <Button size="lg" onClick={() => goTo(1)} className="mt-6 h-14 w-full rounded-full bg-white px-6 text-base font-extrabold text-[#3b1228] shadow-xl transition hover:scale-[1.02] hover:bg-rose-50">
                   Criar minha música agora <ArrowRight className="ml-2 size-5" />
@@ -1055,7 +1057,7 @@ export default function Home() {
                   <span className="grid size-5 place-items-center rounded-full bg-rose-100 text-rose-700">
                     <Check className="size-3 font-bold" />
                   </span>
-                  <span>Pagamento único de R$ 19,90</span>
+                  <span>Pagamento único de {formattedPrice}</span>
                 </div>
               </div>
             </div>
@@ -1620,7 +1622,7 @@ export default function Home() {
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
                 Libere a música inteira em MP3, pronta para baixar, e uma página bonita para apresentar e compartilhar o presente.
               </p>
-              <p className="mt-3 text-sm font-extrabold text-rose-900">Pagamento único de R$ 19,90 · sem assinatura</p>
+              <p className="mt-3 text-sm font-extrabold text-rose-900">Pagamento único de {formattedPrice} · sem assinatura</p>
             </div>
             <Button
               size="lg"
@@ -1705,7 +1707,7 @@ export default function Home() {
             <dl className="mt-6 space-y-3.5 text-xs sm:text-sm">
               <div className="flex justify-between">
                 <dt className="text-white/70">Música Personalizada Completa</dt>
-                <dd className="font-semibold">R$ 19,90</dd>
+                <dd className="font-semibold">{formattedPrice}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-white/70">Página Web de Presente com Dedicatória</dt>
@@ -1719,7 +1721,7 @@ export default function Home() {
 
             <div className="mt-6 border-t border-white/10 pt-5 flex items-baseline justify-between">
               <span className="text-white/70 text-sm">Total</span>
-              <strong className="font-display text-3xl font-extrabold text-white">R$ 19,90</strong>
+              <strong className="font-display text-3xl font-extrabold text-white">{formattedPrice}</strong>
             </div>
 
             <p className="mt-6 flex items-center gap-2 text-[0.7rem] text-white/50 leading-relaxed">

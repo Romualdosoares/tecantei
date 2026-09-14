@@ -10,17 +10,17 @@ Criar um site em português no qual uma pessoa transforma uma história pessoal 
 - Fornecedor musical escolhido: **Kie.ai**, utilizando a oferta de modelos Suno.
 - Prévia de áudio: **50 segundos**.
 - Oferta de **1 ajuste gratuito**.
-- Preço da compra avulsa: **R$ 19,90 por pedido**.
+- Preço padrão da compra avulsa: **R$ 19,90 por pedido**, editável no painel Financeiro; o novo valor deve ser aplicado à oferta pública e às novas cobranças, preservando o valor das cobranças Pix já abertas.
 - Conta simples com **e-mail e senha**, exigida antes da primeira geração musical.
 - Prévia disponível por **14 dias**.
 - A primeira pergunta do briefing é **“Para quem é a música?”**, com as opções Esposo(a), Namorado(a), Reconciliação, Noivo(a), Crush/Paixão, Amigo(a), Mãe, Pai, Filho(a), Irmão(ã), Eu mesmo e Outro; “Outro” permite resposta livre.
 - O formulário oferece **8 ideias de história**, os ritmos Sertanejo, Sertanejo romântico, Piseiro, Pagode animado, Pagode romântico, Funk, Funk ostentação, Funknejo, Acústico, Gospel, Pop, Pop romântico, MPB, Romântico e Outro, além da escolha entre voz masculina e feminina. “Outro” permite informar um ritmo livre.
 - A experiência de criação segue um **funil guiado de 8 etapas**: destinatário, história, memórias opcionais, estilo, mensagem opcional, revisão manual da letra, geração/prévia/compra e entrega compartilhável. A página inicial deve ser curta e levar diretamente à primeira etapa pelo botão “Criar minha música”.
 - A landing deve motivar pela preservação de memórias, exclusividade do presente, reação da pessoa amada, prova social e segurança de ouvir antes de comprar. Usar urgência emocional legítima — momentos e detalhes se perdem com o tempo — sem inventar contadores, vagas, estoque ou prazos.
-- Pagamento: integrar **Pix direto por Efí Bank e Mercado Pago**, mantendo uma interface comum e seleção por ambiente. O primeiro piloto pode priorizar Mercado Pago se a terminação mTLS exigida pelo webhook Efí não estiver comprovada na infraestrutura de publicação.
+- Pagamento: integrar **Pix direto por Efí Bank e Mercado Pago**, mantendo uma interface comum e seleção pelo painel. O checkout exibe QR Code e Pix copia e cola em um modal; o botão de confirmação consulta o provedor e nunca libera a música apenas pela ação do navegador. O primeiro piloto pode priorizar Mercado Pago se a terminação mTLS exigida pelo webhook Efí não estiver comprovada na infraestrutura de publicação.
 - Arquitetura final confirmada: **GitHub** para o repositório, **Vercel** para hospedagem e **Supabase** para autenticação por e-mail/senha, PostgreSQL e arquivos privados.
 - A letra será criada pelos modelos **GPT através da API da Kie.ai**, com seleção administrativa entre GPT-5.6 e GPT-6; a música continuará sendo gerada pelos modelos **Suno através da Kie.ai**.
-- O produto terá um painel administrativo protegido para usuários, integrações, gerações, acessos, vendas, custos e auditoria. Exclusões de usuários preservam o histórico operacional e financeiro.
+- O produto terá um painel administrativo protegido para usuários, integrações, gerações, acessos, vendas, custos, auditoria e **Financeiro**, com preço, gateway e credenciais write-only guardadas no cofre. Exclusões de usuários preservam o histórico operacional e financeiro.
 - A criação dos projetos externos, as verificações finais e a publicação no GitHub, Vercel e Supabase serão feitas somente quando a implementação local estiver pronta.
 - Desejo de monetização por música e/ou plano mensal.
 - Primeiro organizar e planejar; a criação deste plano e da skill não inicia a implementação.

@@ -8,7 +8,7 @@ const idSchema = z.string().uuid();
 const SIGNED_URL_SECONDS = 60;
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ orderId: string }> },
 ) {
   const parsed = idSchema.safeParse((await context.params).orderId);
@@ -57,9 +57,10 @@ export async function GET(
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
+    const stream = new URL(request.url).searchParams.get("mode") === "stream";
     const { data, error } = await admin.storage
       .from(getSupabaseAudioBucket())
-      .createSignedUrl(expectedKey, SIGNED_URL_SECONDS, { download: true });
+      .createSignedUrl(expectedKey, SIGNED_URL_SECONDS, stream ? undefined : { download: true });
     if (error || !data) throw error ?? new Error("signed_url_failed");
     await admin.rpc("record_delivery_access", {
       target_delivery_id: delivery.id,

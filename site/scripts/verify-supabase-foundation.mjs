@@ -292,9 +292,9 @@ assert.match(orderEditor, /Estamos conferindo se o fornecedor recebeu o pedido/)
 assert.match(orderEditor, /Solicitar meu ajuste/);
 assert.match(orderEditor, /pode mudar voz, melodia e arranjo/);
 assert.match(orderEditor, /A versão original continua guardada/);
-assert.match(orderEditor, /Preparar pagamento/);
-assert.match(orderEditor, /Código Pix copia e cola/);
-assert.match(orderEditor, /aguardamos a confirmação consultada no provedor/i);
+assert.match(orderEditor, /Quero minha música inteira/);
+assert.match(orderEditor, /Pix copia e cola/);
+assert.match(orderEditor, /A entrega é liberada somente após a confirmação consultada no gateway/i);
 assert.match(orderEditor, /retorno do navegador, sozinho, nunca libera o MP3/);
 assert.match(orderEditor, /Simular confirmação do servidor/);
 assert.match(orderEditor, /História, briefing e letra continuam privados/);

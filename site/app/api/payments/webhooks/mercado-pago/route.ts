@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { assertLivePaymentConfiguration, getPaymentProvider } from "@/lib/payment/env";
+import { getPaymentSecret, PAYMENT_SECRET_NAMES } from "@/lib/admin/secrets";
+import { assertPaymentLiveEnabled } from "@/lib/payment/env";
 import { applyVerifiedProviderCharge } from "@/lib/payment/provider-persistence";
 import { createConfiguredPixProvider } from "@/lib/payment/providers/configured-provider";
 import { verifyMercadoPagoWebhook } from "@/lib/payment/providers/mercado-pago-webhook";
@@ -22,16 +23,14 @@ export async function POST(request: Request) {
   if (!payload) return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
 
   try {
-    assertLivePaymentConfiguration();
-    if (getPaymentProvider() !== "mercado_pago") {
-      return NextResponse.json({ error: "provider_disabled" }, { status: 404 });
-    }
+    assertPaymentLiveEnabled();
+    const admin = createSupabaseAdminClient();
     const dataId = new URL(request.url).searchParams.get("data.id") ?? "";
     const requestId = request.headers.get("x-request-id") ?? "";
     const signature = request.headers.get("x-signature");
     if (!verifyMercadoPagoWebhook(
       { dataId, requestId, signature },
-      requiredEnv("MERCADO_PAGO_WEBHOOK_SECRET"),
+      requiredSecret(await getPaymentSecret(admin, PAYMENT_SECRET_NAMES.mercadoPagoWebhookSecret, "MERCADO_PAGO_WEBHOOK_SECRET"), "MERCADO_PAGO_WEBHOOK_SECRET"),
     )) {
       return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
     }
@@ -39,10 +38,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true, ignored: true }, { status: 200 });
     }
 
-    const provider = createConfiguredPixProvider();
+    const provider = await createConfiguredPixProvider(admin, "mercado_pago");
     const charge = await provider.getPixCharge(dataId);
     const result = await applyVerifiedProviderCharge(
-      createSupabaseAdminClient(),
+      admin,
       charge,
       `payment:${charge.externalId}:${charge.status}`,
     );
@@ -58,8 +57,7 @@ export async function POST(request: Request) {
   }
 }
 
-function requiredEnv(key: string) {
-  const value = process.env[key]?.trim();
+function requiredSecret(value: string | null, key: string) {
   if (!value) throw new Error(`${key} não configurada.`);
   return value;
 }

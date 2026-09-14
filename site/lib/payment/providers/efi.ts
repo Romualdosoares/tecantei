@@ -56,14 +56,29 @@ export class EfiPixClient implements PixPaymentProvider {
       infoAdicionais: [{ nome: "Pedido", valor: request.externalReference }],
     }));
     if (response.status !== 200 && response.status !== 201) throw new EfiPixApiError(response.status);
-    return normalizeEfiCharge(response.body, request.externalReference);
+    return this.withQrPayload(response.body, request.externalReference);
   }
 
   async getPixCharge(externalId: string): Promise<PixCharge> {
     if (!/^[A-Za-z0-9]{26,35}$/.test(externalId)) throw new Error("txid Efí inválido.");
     const response = await this.authorizedRequest("GET", `/v2/cob/${externalId}`);
     if (response.status !== 200) throw new EfiPixApiError(response.status);
-    return normalizeEfiCharge(response.body, null);
+    return this.withQrPayload(response.body, null);
+  }
+
+  private async withQrPayload(value: unknown, externalReference: string | null) {
+    const charge = normalizeEfiCharge(value, externalReference);
+    const locationId = efiLocationId(value);
+    if (!locationId) return charge;
+    const response = await this.authorizedRequest("GET", `/v2/loc/${locationId}/qrcode`);
+    if (response.status !== 200 || !response.body || typeof response.body !== "object") return charge;
+    const payload = response.body as Record<string, unknown>;
+    return {
+      ...charge,
+      qrCode: limitedString(payload.qrcode) ?? charge.qrCode,
+      qrCodeBase64: limitedString(payload.imagemQrcode, 1_000_000),
+      ticketUrl: httpsUrlOrNull(payload.linkVisualizacao) ?? charge.ticketUrl,
+    };
   }
 
   private async authorizedRequest(method: "GET" | "PUT", pathname: string, body?: string) {
@@ -138,6 +153,14 @@ function normalizeEfiCharge(value: unknown, externalReference: string | null): P
     ticketUrl: httpsUrlOrNull(charge.location),
     expiresAt: efiExpiration(calendar),
   };
+}
+
+function efiLocationId(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const charge = value as Record<string, unknown>;
+  const location = charge.loc && typeof charge.loc === "object" ? charge.loc as Record<string, unknown> : null;
+  const id = Number(location?.id);
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
 function normalizeEfiStatus(charge: Record<string, unknown>, amountCents: number): NormalizedPaymentStatus {

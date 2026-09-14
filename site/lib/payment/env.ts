@@ -31,6 +31,12 @@ export function assertLivePaymentConfiguration() {
   if (missing.length > 0) throw new Error(`Configuração ${provider} incompleta: ${missing.join(", ")}.`);
 }
 
+export function assertPaymentLiveEnabled() {
+  if (getPaymentMode() !== "live" || process.env.PAYMENT_LIVE_ENABLED?.trim() !== "true") {
+    throw new Error("Pagamento real exige PAYMENT_MODE=live e PAYMENT_LIVE_ENABLED=true.");
+  }
+}
+
 export function requireMockPaymentSimulation() {
   if (getPaymentMode() !== "mock") {
     throw new Error("O simulador de pagamento só funciona em PAYMENT_MODE=mock.");

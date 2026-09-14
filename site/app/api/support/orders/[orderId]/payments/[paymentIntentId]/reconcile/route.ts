@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { assertLivePaymentConfiguration, getPaymentProvider } from "@/lib/payment/env";
+import { getApplicationSettings } from "@/lib/admin/settings";
+import { assertPaymentLiveEnabled } from "@/lib/payment/env";
 import { applyVerifiedProviderCharge } from "@/lib/payment/provider-persistence";
 import { createConfiguredPixProvider } from "@/lib/payment/providers/configured-provider";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -60,11 +61,9 @@ export async function POST(
     });
     if (auditError) throw auditError;
 
-    assertLivePaymentConfiguration();
-    if (getPaymentProvider() !== payment.provider) {
-      return NextResponse.json({ error: "payment_provider_not_active" }, { status: 409, headers: NO_STORE });
-    }
-    const provider = createConfiguredPixProvider();
+    assertPaymentLiveEnabled();
+    const settings = await getApplicationSettings(admin);
+    const provider = await createConfiguredPixProvider(admin, payment.provider, settings.efiEnvironment);
     const charge = await provider.getPixCharge(payment.external_payment_id);
     const result = await applyVerifiedProviderCharge(
       admin,

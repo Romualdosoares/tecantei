@@ -3,7 +3,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getKieGenerationMode, getKieModel, type KieGenerationMode } from "@/lib/music/kie-env";
 import type { KieModel } from "@/lib/music/kie-client";
-import { getKieApiKey, getKieWebhookHmacKey } from "@/lib/admin/secrets";
+import { getPaymentMode, getPaymentProvider, type PaymentProvider } from "@/lib/payment/env";
+import { getKieApiKey, getKieWebhookHmacKey, getPaymentSecret, PAYMENT_SECRET_NAMES } from "@/lib/admin/secrets";
 
 export const KIE_LYRIC_MODELS = [
   "gpt-5-6-sol",
@@ -20,6 +21,9 @@ export type ApplicationSettings = {
   lyricsReasoningEffort: "low" | "medium" | "high" | "xhigh";
   musicMode: KieGenerationMode;
   musicModel: KieModel;
+  productPriceCents: number;
+  paymentProvider: PaymentProvider;
+  efiEnvironment: "homologation" | "production";
 };
 
 export async function getApplicationSettings(
@@ -27,7 +31,7 @@ export async function getApplicationSettings(
 ): Promise<ApplicationSettings> {
   const { data } = await admin
     .from("application_settings")
-    .select("lyrics_mode, lyrics_model, lyrics_reasoning_effort, music_mode, music_model")
+    .select("lyrics_mode, lyrics_model, lyrics_reasoning_effort, music_mode, music_model, product_price_cents, payment_provider, efi_environment")
     .eq("id", 1)
     .maybeSingle();
 
@@ -44,6 +48,11 @@ export async function getApplicationSettings(
       ? data.music_mode
       : getKieGenerationMode(),
     musicModel: data?.music_model ? data.music_model as KieModel : getKieModel(),
+    productPriceCents: validProductPrice(data?.product_price_cents) ? data.product_price_cents : 1_990,
+    paymentProvider: data?.payment_provider === "efi" || data?.payment_provider === "mercado_pago"
+      ? data.payment_provider
+      : getPaymentProvider(),
+    efiEnvironment: data?.efi_environment === "production" ? "production" : "homologation",
   };
 }
 
@@ -62,9 +71,28 @@ export function effectiveMusicMode(selected: KieGenerationMode) {
 }
 
 export async function integrationReadiness(admin: SupabaseClient) {
-  const [kieApiKey, kieWebhookHmacKey] = await Promise.all([
+  const [
+    kieApiKey,
+    kieWebhookHmacKey,
+    mercadoPagoAccessToken,
+    mercadoPagoWebhookSecret,
+    efiClientId,
+    efiClientSecret,
+    efiPixKey,
+    efiCertificate,
+    efiWebhookToken,
+    efiGatewaySecret,
+  ] = await Promise.all([
     getKieApiKey(admin),
     getKieWebhookHmacKey(admin),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.mercadoPagoAccessToken, "MERCADO_PAGO_ACCESS_TOKEN"),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.mercadoPagoWebhookSecret, "MERCADO_PAGO_WEBHOOK_SECRET"),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiClientId, "EFI_CLIENT_ID"),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiClientSecret, "EFI_CLIENT_SECRET"),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiPixKey, "EFI_PIX_KEY"),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiCertificateP12Base64, "EFI_CERTIFICATE_P12_BASE64"),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookToken, "EFI_WEBHOOK_TOKEN"),
+    getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookMtlsGatewaySecret, "EFI_WEBHOOK_MTLS_GATEWAY_SECRET"),
   ]);
   return {
     kieKeyConfigured: Boolean(kieApiKey),
@@ -72,7 +100,16 @@ export async function integrationReadiness(admin: SupabaseClient) {
     kieLyricsLiveGateEnabled: process.env.KIE_LIVE_LYRICS_ENABLED?.trim() === "true",
     kieLiveGateEnabled: process.env.KIE_LIVE_GENERATION_ENABLED?.trim() === "true" &&
       getKieGenerationMode() === "live" && Boolean(kieWebhookHmacKey),
+    mercadoPagoConfigured: Boolean(mercadoPagoAccessToken && mercadoPagoWebhookSecret),
+    efiConfigured: Boolean(efiClientId && efiClientSecret && efiPixKey && efiCertificate && efiWebhookToken && efiGatewaySecret),
+    paymentMode: getPaymentMode(),
+    paymentLiveGateEnabled: process.env.PAYMENT_LIVE_ENABLED?.trim() === "true",
+    efiMtlsGatewayEnabled: process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() === "gateway",
   };
+}
+
+function validProductPrice(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) >= 100 && Number(value) <= 1_000_000;
 }
 
 function envLyricsModel(): KieLyricModel {

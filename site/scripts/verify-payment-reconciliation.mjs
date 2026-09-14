@@ -18,7 +18,7 @@ const applyIndex = route.indexOf("await applyVerifiedProviderCharge");
 assert.ok(authIndex > 0 && supportIndex > authIndex && adminIndex > supportIndex);
 assert.ok(auditIndex > adminIndex && queryIndex > auditIndex && applyIndex > queryIndex);
 assert.match(route, /\.eq\("id", paymentIntentId\.data\)[\s\S]*?\.eq\("order_id", orderId\.data\)/);
-assert.match(route, /getPaymentProvider\(\) !== payment\.provider/);
+assert.match(route, /createConfiguredPixProvider\(admin, payment\.provider/);
 assert.match(route, /reason: z\.string\(\)\.trim\(\)\.min\(12\)\.max\(300\)/);
 assert.doesNotMatch(route, /createPixCharge|update\(\{\s*status|rotate_delivery_share/);
 

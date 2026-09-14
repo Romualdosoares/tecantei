@@ -39,7 +39,7 @@ for (const target of scrollTargets) {
   assert.match(pageSource, new RegExp(`id=["']${target}["']`), `Destino de rolagem ausente: ${target}`);
 }
 
-for (const value of ["overview", "users", "generations", "sales", "integrations", "audit"]) {
+for (const value of ["overview", "users", "generations", "sales", "finance", "integrations", "audit"]) {
   assert.match(adminSource, new RegExp(`value: ["']${value}["']`), `Item lateral ausente: ${value}`);
   assert.match(adminSource, new RegExp(`<TabsContent value=["']${value}["']`), `Conteúdo administrativo ausente: ${value}`);
 }
@@ -54,5 +54,5 @@ assert.match(pageSource, /onClick=\{openOrderDelivery\}[^>]*>[\s\S]*?Criar link 
 
 console.log("PASS: links internos apontam para páginas existentes e não há hrefs vazios ou placeholders");
 console.log("PASS: todos os atalhos de rolagem da landing possuem destino");
-console.log("PASS: barra lateral administrativa controla as seis áreas e o logout encerra a sessão");
+console.log("PASS: barra lateral administrativa controla as sete áreas e o logout encerra a sessão");
 console.log("PASS: ações finais de download e compartilhamento conduzem à entrega real");

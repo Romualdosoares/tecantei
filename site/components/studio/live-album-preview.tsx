@@ -2,6 +2,7 @@
 
 import { Disc3, Heart, Music2, Sparkles, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useStorefrontPrice } from "@/components/storefront-price-provider";
 
 type AlbumPreviewProps = {
   recipient: string;
@@ -64,6 +65,7 @@ const themeStyles: Record<string, { bg: string; accent: string; discAccent: stri
 };
 
 export function LiveAlbumPreview({ recipient, occasion, style }: AlbumPreviewProps) {
+  const { formattedPrice } = useStorefrontPrice();
   const currentTheme = themeStyles[occasion] || themeStyles["Casal"];
   const displayName = recipient.trim() ? recipient.trim() : "Alguém Especial";
 
@@ -171,7 +173,7 @@ export function LiveAlbumPreview({ recipient, occasion, style }: AlbumPreviewPro
           </div>
           <div className="text-right">
             <span className="font-display text-3xl font-extrabold text-white">
-              R$ 19,90
+              {formattedPrice}
             </span>
           </div>
         </div>

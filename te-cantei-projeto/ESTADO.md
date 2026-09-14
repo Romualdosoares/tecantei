@@ -1123,3 +1123,19 @@ A etapa 1 passou a oferecer `Aniversário` e a opção `Crush/Paixão` foi renom
 O editor de pedidos normaliza os nomes anteriores para os novos rótulos, preservando pedidos já existentes. O gerador local de letras mantém aliases internos para interpretar registros antigos sem voltar a expor as opções antigas na interface.
 
 Validação local: suíte estrutural e comportamental completa aprovada, lint sem erros e build de produção Next.js 16.3.5 concluído com sucesso.
+
+## Continuação de 14/09/2026 — Financeiro, checkout Pix e entrega dedicada
+
+Decisão do usuário: centralizar no painel administrativo o preço da oferta e as credenciais Pix do Mercado Pago e da Efí Bank; apresentar QR Code e Pix copia e cola em um modal; liberar uma página dedicada de entrega e compartilhamento somente após a confirmação real do pagamento.
+
+Alterações:
+
+- nova seção `Financeiro` no painel, com preço, gateway ativo, ambiente Efí e credenciais write-only armazenadas no Supabase Vault;
+- preço público carregado da configuração central e atualizado periodicamente na landing, na oferta e no checkout; novas intenções recebem o preço vigente por trigger no banco, enquanto cobranças existentes mantêm o valor contratado;
+- checkout em modal com QR Code, Pix copia e cola, validade, atalho do gateway e botão `Já paguei — confirmar`;
+- confirmação pelo botão consulta a cobrança no provedor; retorno do navegador sozinho não libera o arquivo;
+- QR dinâmico da Efí obtido pelo endpoint de payload da cobrança;
+- página privada `/pedidos/[orderId]/entrega` com player da música completa, download do MP3, dedicatória e criação/rotação do link de presente;
+- leitura e gravação das credenciais de pagamento mantidas exclusivamente no servidor, com auditoria administrativa.
+
+Validação: migração `202609140001_financial_settings.sql` aplicada ao Supabase conectado; suíte estrutural completa, lint e build de produção Next.js 16.3.5 aprovados. Pagamento real ainda depende das credenciais do gateway escolhido, dos webhooks configurados e de uma transação de homologação antes da abertura das vendas.

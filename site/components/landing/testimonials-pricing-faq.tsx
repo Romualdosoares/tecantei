@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Star, Check, ChevronDown, Lock, Heart, Gift, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useStorefrontPrice } from "@/components/storefront-price-provider";
 
 const testimonials = [
   {
@@ -64,6 +65,7 @@ const faqs = [
 
 export function TestimonialsPricingFaq({ onStart }: { onStart?: () => void }) {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const { formattedPrice } = useStorefrontPrice();
 
   return (
     <div className="space-y-24 my-20">
@@ -163,8 +165,7 @@ export function TestimonialsPricingFaq({ onStart }: { onStart?: () => void }) {
                 Valor do Pedido
               </span>
               <div className="mt-3 flex items-baseline justify-center gap-1">
-                <span className="text-2xl font-light text-rose-200">R$</span>
-                <span className="font-display text-5xl font-extrabold text-white">19,90</span>
+                <span className="font-display text-5xl font-extrabold text-white">{formattedPrice}</span>
               </div>
               <p className="mt-1 text-xs text-white/70">Pagamento único via Pix ou Cartão</p>
 
@@ -224,7 +225,7 @@ export function TestimonialsPricingFaq({ onStart }: { onStart?: () => void }) {
                 </button>
                 {isOpen && (
                   <div className="px-5 pb-5 pt-1 text-sm leading-relaxed text-muted-foreground border-t border-rose-50">
-                    {faq.a}
+                      {faq.a.replace("R$ 19,90", formattedPrice)}
                   </div>
                 )}
               </div>

@@ -26,9 +26,9 @@ type UserRow = { id: string; email: string; displayName: string; role: "user" | 
 type GenerationRow = { id: string; order_id: string; provider: string; model: string; status: string; error_code: string | null; reserved_credits_millis: number; created_at: string; completed_at: string | null; recipientName: string; ownerEmail: string };
 type GenerationAsset = { versionId: string; label: string; title: string; durationSeconds: number | null; previewUrl: string | null; previewDownloadUrl: string | null; fullDownloadUrl: string | null };
 type SaleRow = { id: string; order_id: string; provider: string; amount_cents: number; currency: string; status: string; created_at: string; updated_at: string; recipientName: string };
-type Settings = { lyricsMode: "mock" | "kie"; lyricsModel: "gpt-5-6-sol" | "gpt-5-6-terra" | "gpt-5-6-luna" | "gpt-6-astra"; lyricsReasoningEffort: "low" | "medium" | "high" | "xhigh"; musicMode: "mock" | "live"; musicModel: string };
+type Settings = { lyricsMode: "mock" | "kie"; lyricsModel: "gpt-5-6-sol" | "gpt-5-6-terra" | "gpt-5-6-luna" | "gpt-6-astra"; lyricsReasoningEffort: "low" | "medium" | "high" | "xhigh"; musicMode: "mock" | "live"; musicModel: string; productPriceCents: number; paymentProvider: "mercado_pago" | "efi"; efiEnvironment: "homologation" | "production" };
 type PeriodRange = "today" | "yesterday" | "7d" | "15d" | "30d" | "custom";
-type AdminTab = "overview" | "users" | "generations" | "sales" | "integrations" | "audit";
+type AdminTab = "overview" | "users" | "generations" | "sales" | "finance" | "integrations" | "audit";
 type DashboardData = {
   generatedAt: string;
   period: { range: PeriodRange; from: string; to: string; label: string };
@@ -39,7 +39,7 @@ type DashboardData = {
   generations: GenerationRow[];
   sales: SaleRow[];
   settings: Settings;
-  readiness: { kieKeyConfigured: boolean; kieWebhookHmacConfigured: boolean; kieLyricsLiveGateEnabled: boolean; kieLiveGateEnabled: boolean };
+  readiness: { kieKeyConfigured: boolean; kieWebhookHmacConfigured: boolean; kieLyricsLiveGateEnabled: boolean; kieLiveGateEnabled: boolean; mercadoPagoConfigured: boolean; efiConfigured: boolean; paymentMode: "mock" | "live"; paymentLiveGateEnabled: boolean; efiMtlsGatewayEnabled: boolean };
   audit: Array<{ id: string; action: string; target_type: string; target_id: string | null; reason: string; created_at: string }>;
 };
 
@@ -50,6 +50,7 @@ const adminNavigation: Array<{ value: AdminTab; label: string; icon: typeof Layo
   { value: "users", label: "Usuários", icon: Users },
   { value: "generations", label: "Gerações", icon: Music2 },
   { value: "sales", label: "Vendas", icon: CreditCard },
+  { value: "finance", label: "Financeiro", icon: CircleDollarSign },
   { value: "integrations", label: "Integrações", icon: Bot },
   { value: "audit", label: "Auditoria", icon: History },
 ];
@@ -88,6 +89,11 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [generationAssets, setGenerationAssets] = useState<GenerationAsset[]>([]);
   const [assetBusy, setAssetBusy] = useState(false);
   const [assetError, setAssetError] = useState("");
+  const [priceValue, setPriceValue] = useState("19,90");
+  const [financialReason, setFinancialReason] = useState("");
+  const [financialBusy, setFinancialBusy] = useState(false);
+  const [mercadoPagoSecrets, setMercadoPagoSecrets] = useState({ accessToken: "", webhookSecret: "" });
+  const [efiSecrets, setEfiSecrets] = useState({ clientId: "", clientSecret: "", pixKey: "", certificateP12Base64: "", certificatePassphrase: "", webhookToken: "", webhookMtlsGatewaySecret: "" });
 
   const load = async (range: PeriodRange = periodRange, from = customFrom, to = customTo, initial = false) => {
     if (initial) setLoading(true);
@@ -107,6 +113,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     const next = await response.json() as DashboardData;
     setData(next);
     setSettings(next.settings);
+    setPriceValue((next.settings.productPriceCents / 100).toFixed(2).replace(".", ","));
     setPeriodRange(next.period.range);
     setLoading(false);
     setPeriodBusy(false);
@@ -122,6 +129,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       const next = await response.json() as DashboardData;
       setData(next);
       setSettings(next.settings);
+      setPriceValue((next.settings.productPriceCents / 100).toFixed(2).replace(".", ","));
       setLoading(false);
     }).catch((requestError: unknown) => {
       if (requestError instanceof DOMException && requestError.name === "AbortError") return;
@@ -201,6 +209,58 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setBusy(false);
     if (!response?.ok) { setError("Não foi possível salvar as configurações. Confira o motivo da alteração."); return; }
     setMessage("Configurações de IA atualizadas e registradas na auditoria."); setSettingsReason(""); await load();
+  };
+
+  const saveFinancialSettings = async () => {
+    if (!settings) return;
+    const productPriceCents = currencyInputToCents(priceValue);
+    if (!productPriceCents) { setError("Informe um valor entre R$ 1,00 e R$ 10.000,00."); return; }
+    setFinancialBusy(true); setError(""); setMessage("");
+    const response = await fetch("/api/admin/finance/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productPriceCents, paymentProvider: settings.paymentProvider, efiEnvironment: settings.efiEnvironment, reason: financialReason }),
+    }).catch(() => null);
+    setFinancialBusy(false);
+    if (!response?.ok) { setError("Não foi possível salvar o preço e o gateway. Confira o motivo informado."); return; }
+    setFinancialReason("");
+    setMessage(`Financeiro atualizado. Novos pedidos usarão ${money(productPriceCents)}.`);
+    await load();
+  };
+
+  const savePaymentSecrets = async (provider: "mercado_pago" | "efi") => {
+    const credentials = provider === "mercado_pago" ? mercadoPagoSecrets : efiSecrets;
+    const hasValue = Object.values(credentials).some((value) => value.trim());
+    if (!hasValue || financialReason.trim().length < 8) return;
+    const changedCredentials = Object.fromEntries(
+      Object.entries(credentials).filter(([, value]) => value.trim().length > 0),
+    );
+    setFinancialBusy(true); setError(""); setMessage("");
+    const response = await fetch("/api/admin/finance/secrets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider, ...changedCredentials, reason: financialReason }),
+    }).catch(() => null);
+    setFinancialBusy(false);
+    if (!response?.ok) { setError(`Não foi possível salvar as credenciais do ${provider === "efi" ? "Efí Bank" : "Mercado Pago"}.`); return; }
+    if (provider === "mercado_pago") setMercadoPagoSecrets({ accessToken: "", webhookSecret: "" });
+    else setEfiSecrets({ clientId: "", clientSecret: "", pixKey: "", certificateP12Base64: "", certificatePassphrase: "", webhookToken: "", webhookMtlsGatewaySecret: "" });
+    setFinancialReason("");
+    setMessage(`Credenciais do ${provider === "efi" ? "Efí Bank" : "Mercado Pago"} atualizadas no cofre criptografado.`);
+    await load();
+  };
+
+  const removePaymentSecrets = async (provider: "mercado_pago" | "efi") => {
+    if (financialReason.trim().length < 8) return;
+    setFinancialBusy(true); setError(""); setMessage("");
+    const response = await fetch("/api/admin/finance/secrets", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider, reason: financialReason }),
+    }).catch(() => null);
+    setFinancialBusy(false);
+    if (!response?.ok) { setError("Não foi possível remover as credenciais selecionadas."); return; }
+    setFinancialReason(""); setMessage("Credenciais removidas do cofre. Variáveis do servidor, se existirem, continuam como fallback."); await load();
   };
 
   const testIntegration = async (provider: "kie") => {
@@ -355,7 +415,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           {loading || !data || !settings ? <DashboardSkeleton /> : (
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AdminTab)} className="gap-6">
               <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl border bg-white p-1.5 sm:w-fit">
-                <Tab value="overview" icon={LayoutDashboard} label="Resumo" /><Tab value="users" icon={Users} label="Usuários" /><Tab value="generations" icon={Music2} label="Gerações" /><Tab value="sales" icon={CreditCard} label="Vendas" /><Tab value="integrations" icon={Bot} label="Integrações" /><Tab value="audit" icon={History} label="Auditoria" />
+                <Tab value="overview" icon={LayoutDashboard} label="Resumo" /><Tab value="users" icon={Users} label="Usuários" /><Tab value="generations" icon={Music2} label="Gerações" /><Tab value="sales" icon={CreditCard} label="Vendas" /><Tab value="finance" icon={CircleDollarSign} label="Financeiro" /><Tab value="integrations" icon={Bot} label="Integrações" /><Tab value="audit" icon={History} label="Auditoria" />
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
@@ -392,6 +452,19 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
               <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai e abra os áudios que já foram copiados para o armazenamento privado." /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em","Arquivos"]} empty={data.generations.length === 0} emptyLabel="Nenhuma geração registrada neste período.">{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p></TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell><Button type="button" size="sm" variant="outline" className="rounded-full" onClick={() => openGenerationAssets(row)}><Headphones /> Áudios</Button></TableCell></TableRow>)}</DataTable></TabsContent>
 
               <TabsContent value="sales" className="space-y-5"><SectionTitle title="Vendas e pagamentos" description="Receita confirmada, cobranças pendentes, falhas e reembolsos por provedor." /><div className="grid gap-4 sm:grid-cols-3"><MiniStat label="Receita confirmada" value={money(data.metrics.revenueCents)} detail={`${data.metrics.paidOrders} pagamentos`} /><MiniStat label="Pendente" value={money(data.metrics.pendingRevenueCents)} detail="ainda não libera entrega" /><MiniStat label="Conversão estimada" value={`${data.metrics.conversionRate}%`} detail="venda por visitante" /></div><DataTable headers={["Presente","Provedor","Valor","Status","Criado","Atualizado"]} empty={data.sales.length === 0} emptyLabel="Nenhuma venda registrada neste período.">{data.sales.map((row) => <TableRow key={row.id}><TableCell className="font-semibold">{row.recipientName}</TableCell><TableCell>{providerLabel(row.provider)}</TableCell><TableCell>{money(row.amount_cents)}</TableCell><TableCell><StatusBadge value={row.status}/></TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell>{dateTime(row.updated_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
+
+              <TabsContent value="finance" className="space-y-5">
+                <SectionTitle title="Financeiro" description="Defina o preço da oferta, escolha o gateway Pix e gerencie credenciais protegidas sem expor chaves no navegador." />
+                <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
+                  <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 font-display text-xl"><CircleDollarSign className="size-5 text-primary" /> Oferta e cobrança</CardTitle><CardDescription>O novo valor aparece no site em até 15 segundos e vale para novas intenções de pagamento. Cobranças já abertas preservam o valor anterior.</CardDescription></CardHeader><CardContent className="space-y-4"><Field label="Valor da música (R$)"><Input inputMode="decimal" value={priceValue} onChange={(event) => setPriceValue(event.target.value)} placeholder="19,90" /></Field><Field label="Gateway Pix ativo"><NativeSelect className="h-11 w-full" value={settings.paymentProvider} onChange={(event) => setSettings({ ...settings, paymentProvider: event.target.value as Settings["paymentProvider"] })}><NativeSelectOption value="mercado_pago">Mercado Pago</NativeSelectOption><NativeSelectOption value="efi">Efí Bank</NativeSelectOption></NativeSelect></Field><Field label="Ambiente Efí"><NativeSelect className="h-11 w-full" value={settings.efiEnvironment} onChange={(event) => setSettings({ ...settings, efiEnvironment: event.target.value as Settings["efiEnvironment"] })}><NativeSelectOption value="homologation">Homologação</NativeSelectOption><NativeSelectOption value="production">Produção</NativeSelectOption></NativeSelect></Field><div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm"><p className="font-semibold">Modo do servidor: {data.readiness.paymentMode === "live" && data.readiness.paymentLiveGateEnabled ? "Cobrança real" : "Simulação protegida"}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A seleção no painel não remove a trava de produção configurada no servidor.</p></div><Button type="button" className="w-full rounded-full" disabled={financialBusy || financialReason.trim().length < 8} onClick={() => void saveFinancialSettings()}>{financialBusy ? <LoaderCircle className="animate-spin" /> : <Settings2 />} Salvar preço e gateway</Button></CardContent></Card>
+                  <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="font-display text-xl">Segurança e webhooks</CardTitle><CardDescription>As credenciais são write-only e armazenadas no Supabase Vault. A confirmação do cliente sempre consulta o gateway antes de liberar a entrega.</CardDescription></CardHeader><CardContent className="grid gap-4 sm:grid-cols-2"><MiniStat label="Mercado Pago" value={data.readiness.mercadoPagoConfigured ? "Configurado" : "Incompleto"} detail="Access Token + assinatura do webhook" /><MiniStat label="Efí Bank" value={data.readiness.efiConfigured ? "Configurado" : "Incompleto"} detail={data.readiness.efiMtlsGatewayEnabled ? "mTLS declarado no gateway" : "mTLS do webhook ainda pendente"} /><div className="rounded-xl border p-4 text-xs leading-6 sm:col-span-2"><p><strong>Mercado Pago:</strong> <code>/api/payments/webhooks/mercado-pago</code></p><p><strong>Efí Bank:</strong> <code>/api/payments/webhooks/efi?hmac=SEU_TOKEN</code></p><p className="mt-2 text-muted-foreground">Na Efí, a terminação mTLS precisa continuar configurada no gateway de infraestrutura.</p></div></CardContent></Card>
+                </div>
+                <div className="grid gap-5 xl:grid-cols-2">
+                  <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="font-display text-xl">API Pix · Mercado Pago</CardTitle><CardDescription className="mt-2">Deixe campos vazios para manter os valores já cadastrados.</CardDescription></div><StatusBadge value={data.readiness.mercadoPagoConfigured ? "configured" : "missing"} /></div></CardHeader><CardContent className="space-y-4"><Field label="Access Token"><Input type="password" autoComplete="new-password" value={mercadoPagoSecrets.accessToken} onChange={(event) => setMercadoPagoSecrets({ ...mercadoPagoSecrets, accessToken: event.target.value })} placeholder="APP_USR-..." /></Field><Field label="Segredo de assinatura do webhook"><Input type="password" autoComplete="new-password" value={mercadoPagoSecrets.webhookSecret} onChange={(event) => setMercadoPagoSecrets({ ...mercadoPagoSecrets, webhookSecret: event.target.value })} placeholder="Assinatura secreta do webhook" /></Field><div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="outline" className="rounded-full text-destructive" disabled={financialBusy || !data.readiness.mercadoPagoConfigured || financialReason.trim().length < 8} onClick={() => void removePaymentSecrets("mercado_pago")}><Trash2 /> Remover</Button><Button type="button" className="rounded-full" disabled={financialBusy || financialReason.trim().length < 8 || !Object.values(mercadoPagoSecrets).some((value) => value.trim())} onClick={() => void savePaymentSecrets("mercado_pago")}><KeyRound /> Salvar credenciais</Button></div></CardContent></Card>
+                  <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="font-display text-xl">API Pix · Efí Bank</CardTitle><CardDescription className="mt-2">OAuth, chave Pix, certificado P12 e proteção do webhook.</CardDescription></div><StatusBadge value={data.readiness.efiConfigured ? "configured" : "missing"} /></div></CardHeader><CardContent className="grid gap-4 sm:grid-cols-2"><Field label="Client ID"><Input type="password" value={efiSecrets.clientId} onChange={(event) => setEfiSecrets({ ...efiSecrets, clientId: event.target.value })} /></Field><Field label="Client Secret"><Input type="password" value={efiSecrets.clientSecret} onChange={(event) => setEfiSecrets({ ...efiSecrets, clientSecret: event.target.value })} /></Field><Field label="Chave Pix"><Input type="password" value={efiSecrets.pixKey} onChange={(event) => setEfiSecrets({ ...efiSecrets, pixKey: event.target.value })} /></Field><Field label="Senha do certificado (se houver)"><Input type="password" value={efiSecrets.certificatePassphrase} onChange={(event) => setEfiSecrets({ ...efiSecrets, certificatePassphrase: event.target.value })} /></Field><div className="sm:col-span-2"><Field label="Certificado P12 em Base64"><Textarea value={efiSecrets.certificateP12Base64} onChange={(event) => setEfiSecrets({ ...efiSecrets, certificateP12Base64: event.target.value })} className="min-h-24 font-mono text-xs" placeholder="Cole somente o conteúdo Base64 do certificado" /></Field></div><Field label="Token adicional do webhook"><Input type="password" value={efiSecrets.webhookToken} onChange={(event) => setEfiSecrets({ ...efiSecrets, webhookToken: event.target.value })} /></Field><Field label="Segredo do gateway mTLS"><Input type="password" value={efiSecrets.webhookMtlsGatewaySecret} onChange={(event) => setEfiSecrets({ ...efiSecrets, webhookMtlsGatewaySecret: event.target.value })} /></Field><div className="flex flex-wrap justify-end gap-2 sm:col-span-2"><Button type="button" variant="outline" className="rounded-full text-destructive" disabled={financialBusy || !data.readiness.efiConfigured || financialReason.trim().length < 8} onClick={() => void removePaymentSecrets("efi")}><Trash2 /> Remover</Button><Button type="button" className="rounded-full" disabled={financialBusy || financialReason.trim().length < 8 || !Object.values(efiSecrets).some((value) => value.trim())} onClick={() => void savePaymentSecrets("efi")}><KeyRound /> Salvar credenciais</Button></div></CardContent></Card>
+                </div>
+                <Card className="rounded-[24px] border-black/5 shadow-none"><CardHeader><CardTitle className="font-display text-xl">Motivo da alteração financeira</CardTitle><CardDescription>Obrigatório para preço, gateway e credenciais. O texto fica registrado na auditoria.</CardDescription></CardHeader><CardContent><Textarea value={financialReason} onChange={(event) => setFinancialReason(event.target.value)} minLength={8} maxLength={300} placeholder="Ex.: atualizar o preço da oferta e ativar o Mercado Pago em produção" /></CardContent></Card>
+              </TabsContent>
 
               <TabsContent value="integrations" className="space-y-5">
                 <SectionTitle title="APIs e modelos de geração" description="A Kie.ai fornece o GPT para a letra e o Suno para a música. A chave fica criptografada e nunca volta ao navegador." />
@@ -558,6 +631,7 @@ function StatusBadge({ value }: { value: string }) { const good = ["active","adm
 function Empty({ label }: { label: string }) { return <div className="py-12 text-center text-sm text-muted-foreground">{label}</div>; }
 function DashboardSkeleton() { return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-44 rounded-[22px]" />)}</div><div className="grid gap-5 xl:grid-cols-2"><Skeleton className="h-[380px] rounded-[24px]"/><Skeleton className="h-[380px] rounded-[24px]"/></div></div>; }
 function money(cents: number) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100); }
+function currencyInputToCents(value: string) { const clean = value.trim().replace(/\s/g, "").replace(/^R\$/i, ""); const normalized = clean.includes(",") ? clean.replace(/\./g, "").replace(",", ".") : clean; const amount = Number(normalized); if (!Number.isFinite(amount)) return null; const cents = Math.round(amount * 100); return cents >= 100 && cents <= 1_000_000 ? cents : null; }
 function number(value: number) { return new Intl.NumberFormat("pt-BR").format(value); }
 function dateTime(value: string) { return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
 function shortDate(value: string) { const [, month, day] = value.split("-"); return `${day}/${month}`; }
@@ -565,4 +639,4 @@ function relativeDate(daysAgo: number) { const date = new Date(); date.setHours(
 function dashboardUrl(range: PeriodRange, from: string, to: string) { const query = new URLSearchParams({ range }); if (range === "custom") { query.set("from", from); query.set("to", to); } return `/api/admin/dashboard?${query.toString()}`; }
 function providerLabel(value: string) { return value === "mercado_pago" ? "Mercado Pago" : value === "efi" ? "Efí Bank" : value; }
 function statusLabel(value: string) { return ({ user: "Cliente", support: "Suporte", admin: "Administrador", active: "Ativo", suspended: "Suspenso", deleted: "Excluído", created: "Criada", submitted: "Enviada", processing: "Processando", reconciling: "Conciliação", succeeded: "Concluída", failed: "Falhou", pending: "Pendente", confirmed: "Confirmado", cancelled: "Cancelado", refunded: "Reembolsado", ready: "Conectada", configured: "Configurada", missing: "Sem chave", live: "Ao vivo", mock: "Simulação" } as Record<string,string>)[value] ?? value; }
-function humanAction(value: string) { return ({ create_user: "Criou usuário", update_user_requested: "Alterou usuário", soft_delete_user_requested: "Excluiu usuário", update_ai_settings_requested: "Alterou modelos", test_integration: "Testou integração", update_api_secret: "Atualizou chave API", delete_api_secret: "Removeu chave API", access_generation_audio: "Acessou áudios da geração" } as Record<string,string>)[value] ?? value; }
+function humanAction(value: string) { return ({ create_user: "Criou usuário", update_user_requested: "Alterou usuário", soft_delete_user_requested: "Excluiu usuário", update_ai_settings_requested: "Alterou modelos", update_financial_settings: "Alterou financeiro", test_integration: "Testou integração", update_api_secret: "Atualizou chave API", delete_api_secret: "Removeu chave API", access_generation_audio: "Acessou áudios da geração" } as Record<string,string>)[value] ?? value; }

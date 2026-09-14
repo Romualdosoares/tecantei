@@ -3,13 +3,15 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Ban, CheckCircle2, Copy, Download, Gift, LoaderCircle, Music2, Play, Save, Share2, Sparkles, WandSparkles } from "lucide-react";
+import { Ban, CheckCircle2, Copy, Download, Gift, LoaderCircle, LockKeyhole, Music2, Play, Save, Share2, Sparkles, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MUSIC_STYLE_OPTIONS, VOICE_OPTIONS, type VoicePreference } from "@/lib/order-options";
 import { MusicPreviewPlayer } from "./music-preview-player";
+import { formatBrl, useStorefrontPrice } from "@/components/storefront-price-provider";
 
 const recipientOptions = [
   "Esposo(a)",
@@ -84,6 +86,7 @@ export function OrderEditor({
   delivery: { id: string; version_id: string; dedication: string | null; share_enabled_at: string | null; revoked_at: string | null; first_accessed_at: string | null } | null;
 }) {
   const router = useRouter();
+  const { productPriceCents } = useStorefrontPrice();
   const [status, setStatus] = useState(order.status);
   const initialOccasion = order.occasion === "Crush/Paixão" ? "Conquistar um Crush" : order.occasion;
   const orderUsesRecipientOption = recipientOptions.some((item) => item === initialOccasion) && initialOccasion !== "Outro";
@@ -127,6 +130,9 @@ export function OrderEditor({
   const [pixQrCodeBase64, setPixQrCodeBase64] = useState<string | null>(null);
   const [pixCheckoutUrl, setPixCheckoutUrl] = useState<string | null>(null);
   const [pixExpiresAt, setPixExpiresAt] = useState<string | null>(null);
+  const [paymentAmountCents, setPaymentAmountCents] = useState(paymentIntent?.amount_cents ?? productPriceCents);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [pixCopied, setPixCopied] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [deliveryBusy, setDeliveryBusy] = useState(false);
   const [dedication, setDedication] = useState(
@@ -291,6 +297,7 @@ export function OrderEditor({
       pixQrCodeBase64?: string | null;
       checkoutUrl?: string | null;
       expiresAt?: string | null;
+      amountCents?: number;
     };
     if (!data.paymentIntentId) {
       setError("O pagamento não retornou um identificador válido.");
@@ -304,10 +311,16 @@ export function OrderEditor({
     setPixQrCodeBase64(data.pixQrCodeBase64 ?? null);
     setPixCheckoutUrl(data.checkoutUrl ?? null);
     setPixExpiresAt(data.expiresAt ?? null);
+    if (Number.isInteger(data.amountCents)) setPaymentAmountCents(Number(data.amountCents));
     setStatus(data.status === "confirmed" ? "paid" : data.status === "failed" ? "preview_ready" : "payment_pending");
+    setCheckoutOpen(data.status !== "confirmed");
     setMessage(data.mode === "live"
       ? "Pix preparado com segurança. A música completa será liberada somente após a confirmação do provedor."
       : "Pagamento simulado preparado. Nenhum valor foi cobrado e o áudio completo continua bloqueado.");
+    if (data.status === "confirmed") {
+      router.push(`/pedidos/${order.id}/entrega`);
+      return;
+    }
     router.refresh();
   };
 
@@ -335,6 +348,8 @@ export function OrderEditor({
     if (data.status === "confirmed") {
       setStatus("paid");
       setMessage("Pagamento simulado confirmado pelo servidor. A versão escolhida foi mantida para entrega.");
+      router.push(`/pedidos/${order.id}/entrega`);
+      return;
     } else if (data.status === "failed") {
       setStatus("preview_ready");
       setMessage("Pagamento simulado falhou. O áudio completo permaneceu bloqueado e você pode tentar novamente.");
@@ -492,11 +507,12 @@ export function OrderEditor({
           <h2 className="mt-3 font-display text-2xl font-semibold">Escolha a música do presente</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">O pagamento e a entrega ficam vinculados a esta versão. Confirmar o retorno do navegador, sozinho, nunca libera o MP3.</p>
           <label className="mt-5 block space-y-2 text-sm font-semibold">Versão escolhida<select value={selectedVersionId} onChange={(event) => { setSelectedVersionId(event.target.value); setCheckoutRequestId(crypto.randomUUID()); }} disabled={status !== "preview_ready" || adjustmentStatus === "reserved" || paymentBusy} className="h-12 w-full rounded-xl border bg-background px-3 font-normal">{readyVersions.map((version, index) => <option key={version.id} value={version.id}>{version.title ?? `Versão ${index + 1}`} · {version.origin === "original" ? "original" : "ajuste"}</option>)}</select></label>
-          <div className="mt-5 flex flex-col gap-3 rounded-2xl bg-muted p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">Total: R$ 19,90</p><p className="mt-1 text-xs text-muted-foreground">O áudio completo só é liberado depois da confirmação recebida e consultada no servidor.</p></div>{status === "preview_ready" && <Button type="button" className="rounded-full" disabled={paymentBusy || adjustmentStatus === "reserved"} onClick={() => void prepareCheckout()}>{paymentBusy ? <LoaderCircle className="animate-spin" /> : <Sparkles />} Preparar pagamento</Button>}</div>
+          <div className="mt-5 flex flex-col gap-3 rounded-2xl bg-muted p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">Total: {formatBrl(status === "payment_pending" ? paymentAmountCents : productPriceCents)}</p><p className="mt-1 text-xs text-muted-foreground">O áudio completo só é liberado depois da confirmação recebida e consultada no servidor.</p></div>{status === "preview_ready" && <Button type="button" className="rounded-full" disabled={paymentBusy || adjustmentStatus === "reserved"} onClick={() => void prepareCheckout()}>{paymentBusy ? <LoaderCircle className="animate-spin" /> : <Sparkles />} Quero minha música inteira</Button>}</div>
           {status === "payment_pending" && paymentIntentId && paymentMode === "mock" && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4"><p className="font-semibold text-amber-950">Pagamento pendente · simulação</p><p className="mt-1 text-sm text-amber-900">Use os controles abaixo apenas para testar notificações autenticadas do servidor.</p><div className="mt-4 flex flex-wrap gap-3"><Button type="button" variant="outline" className="rounded-full" disabled={paymentBusy} onClick={() => void simulatePaymentEvent("failed")}>Simular falha</Button><Button type="button" className="rounded-full" disabled={paymentBusy} onClick={() => void simulatePaymentEvent("confirmed")}>{paymentBusy && <LoaderCircle className="animate-spin" />} Simular confirmação do servidor</Button></div></div>}
-          {status === "payment_pending" && paymentIntentId && paymentMode === "live" && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4"><p className="font-semibold text-amber-950">Pix pendente{paymentProvider ? ` · ${paymentProvider === "efi" ? "Efí" : "Mercado Pago"}` : ""}</p><p className="mt-1 text-sm text-amber-900">Pague pelo QR Code ou copia e cola. Esta tela não libera a música; aguardamos a confirmação consultada no provedor.</p>{pixQrCodeBase64 && <Image src={`data:image/png;base64,${pixQrCodeBase64}`} alt="QR Code Pix" width={220} height={220} unoptimized className="mt-4 rounded-xl bg-white p-2" />}{pixCopyPaste && <div className="mt-4 flex flex-col gap-2 sm:flex-row"><Input readOnly value={pixCopyPaste} className="min-w-0 flex-1 bg-white" aria-label="Código Pix copia e cola" /><Button type="button" variant="outline" className="rounded-full" onClick={() => void navigator.clipboard.writeText(pixCopyPaste)}><Copy /> Copiar Pix</Button></div>}{pixExpiresAt && <p className="mt-3 text-xs text-amber-800">Válido até {new Date(pixExpiresAt).toLocaleString("pt-BR")}.</p>}<div className="mt-4 flex flex-wrap gap-3">{pixCheckoutUrl && <Button asChild variant="outline" className="rounded-full"><a href={pixCheckoutUrl} target="_blank" rel="noreferrer">Abrir pagamento</a></Button>}<Button type="button" variant="outline" className="rounded-full" disabled={paymentBusy} onClick={() => void prepareCheckout()}>{paymentBusy && <LoaderCircle className="animate-spin" />} Atualizar Pix</Button></div></div>}
+          {status === "payment_pending" && paymentIntentId && paymentMode === "live" && <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold text-amber-950">Pix aguardando pagamento{paymentProvider ? ` · ${paymentProvider === "efi" ? "Efí Bank" : "Mercado Pago"}` : ""}</p><p className="mt-1 text-sm text-amber-900">Abra o QR Code e confirme depois de pagar.</p></div><Button type="button" className="rounded-full" disabled={paymentBusy} onClick={() => void prepareCheckout()}>{paymentBusy && <LoaderCircle className="animate-spin" />} Abrir pagamento Pix</Button></div>}
           {status === "payment_pending" && paymentIntentId && paymentMode === null && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4"><p className="font-semibold text-amber-950">Pagamento pendente</p><Button type="button" variant="outline" className="mt-3 rounded-full" disabled={paymentBusy} onClick={() => void prepareCheckout()}>{paymentBusy && <LoaderCircle className="animate-spin" />} Carregar pagamento</Button></div>}
           {(status === "paid" || status === "delivered" || paymentStatus === "confirmed") && <div className="mt-4 rounded-2xl bg-emerald-100 p-4 text-sm font-semibold text-emerald-900"><CheckCircle2 className="mr-2 inline size-4" />Pagamento confirmado pelo servidor; versão bloqueada para a entrega.</div>}
+          {(status === "paid" || status === "delivered" || paymentStatus === "confirmed") && <Button type="button" className="mt-4 rounded-full" onClick={() => router.push(`/pedidos/${order.id}/entrega`)}><Gift /> Ir para entrega e presente</Button>}
         </section>
       )}
 
@@ -514,6 +530,31 @@ export function OrderEditor({
           <div className="mt-5 flex flex-wrap gap-3"><Button type="button" className="rounded-full bg-white text-primary hover:bg-white/90" disabled={deliveryBusy} onClick={() => void downloadFullAudio()}><Download /> Baixar MP3</Button>{shareActive && <Button type="button" variant="outline" className="rounded-full border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white" disabled={deliveryBusy} onClick={() => void revokeShareLink()}><Ban /> Revogar link</Button>}</div>
         </section>
       )}
+
+      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="max-h-[92vh] overflow-y-auto rounded-[28px] sm:max-w-lg">
+          <DialogHeader>
+            <Badge className="mb-2 w-fit rounded-full bg-primary/10 text-primary hover:bg-primary/10"><LockKeyhole /> Pagamento Pix seguro</Badge>
+            <DialogTitle className="font-display text-3xl">Finalize para receber sua música</DialogTitle>
+            <DialogDescription>Escaneie o QR Code ou copie o código Pix. A entrega é liberada somente após a confirmação consultada no gateway.</DialogDescription>
+          </DialogHeader>
+          <div className="mt-3 rounded-2xl border bg-muted/50 p-4 text-center">
+            <p className="text-xs font-bold uppercase tracking-[.16em] text-muted-foreground">Valor único</p>
+            <p className="mt-1 font-display text-4xl font-bold">{formatBrl(paymentAmountCents)}</p>
+          </div>
+          {paymentMode === "live" ? (
+            <div className="space-y-4">
+              {pixQrCodeBase64 ? <Image src={pixQrCodeBase64.startsWith("data:image/") ? pixQrCodeBase64 : `data:image/png;base64,${pixQrCodeBase64}`} alt="QR Code Pix para pagamento" width={240} height={240} unoptimized className="mx-auto rounded-2xl border bg-white p-3" /> : <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Use o Pix copia e cola ou abra a página segura do gateway.</p>}
+              {pixCopyPaste && <div className="space-y-2"><label htmlFor="pix-copy-code" className="text-sm font-semibold">Pix copia e cola</label><div className="flex gap-2"><Input id="pix-copy-code" readOnly value={pixCopyPaste} className="min-w-0 flex-1" /><Button type="button" variant="outline" onClick={() => void navigator.clipboard.writeText(pixCopyPaste).then(() => { setPixCopied(true); window.setTimeout(() => setPixCopied(false), 2000); })}><Copy /> {pixCopied ? "Copiado" : "Copiar"}</Button></div></div>}
+              {pixExpiresAt && <p className="text-center text-xs text-muted-foreground">Pix válido até {new Date(pixExpiresAt).toLocaleString("pt-BR")}.</p>}
+              <div className="grid gap-2 sm:grid-cols-2">{pixCheckoutUrl && <Button asChild variant="outline"><a href={pixCheckoutUrl} target="_blank" rel="noreferrer">Abrir no gateway</a></Button>}<Button type="button" className={pixCheckoutUrl ? "" : "sm:col-span-2"} disabled={paymentBusy} onClick={() => void prepareCheckout()}>{paymentBusy ? <LoaderCircle className="animate-spin" /> : <CheckCircle2 />} Já paguei — confirmar</Button></div>
+              <p className="text-center text-xs leading-5 text-muted-foreground">O botão consulta o gateway. Se o Pix ainda estiver processando, aguarde alguns segundos e tente novamente.</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p className="font-semibold">Ambiente de demonstração</p><p className="mt-1">Nenhuma cobrança real foi criada.</p></div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

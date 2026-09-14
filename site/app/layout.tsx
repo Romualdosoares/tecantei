@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { StorefrontPriceProvider } from "@/components/storefront-price-provider";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -35,8 +36,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${jakarta.variable} ${playfair.variable} scroll-smooth`}>
       <body className="font-sans antialiased selection:bg-primary/30 selection:text-[#F5D77E]">
-        <AnalyticsTracker />
-        {children}
+        <StorefrontPriceProvider>
+          <AnalyticsTracker />
+          {children}
+        </StorefrontPriceProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { assertLivePaymentConfiguration, getPaymentMode, getPaymentProvider } from "@/lib/payment/env";
+import { getApplicationSettings } from "@/lib/admin/settings";
+import { assertPaymentLiveEnabled, getPaymentMode } from "@/lib/payment/env";
 import { applyVerifiedProviderCharge, attachProviderCharge } from "@/lib/payment/provider-persistence";
 import { createConfiguredPixProvider } from "@/lib/payment/providers/configured-provider";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -40,6 +41,7 @@ export async function POST(
 
   try {
     const mode = getPaymentMode();
+    const admin = createSupabaseAdminClient();
     const supabase = await createSupabaseServerClient();
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
@@ -47,8 +49,9 @@ export async function POST(
     }
 
     if (mode === "live") {
-      assertLivePaymentConfiguration();
-      const providerName = getPaymentProvider();
+      assertPaymentLiveEnabled();
+      const settings = await getApplicationSettings(admin);
+      const providerName = settings.paymentProvider;
       const { data, error } = await supabase.rpc("prepare_provider_checkout", {
         target_order_id: orderId.data,
         target_version_id: input.data.versionId,
@@ -58,11 +61,11 @@ export async function POST(
       if (error || !isProviderCheckoutResult(data)) {
         return NextResponse.json({ error: "checkout_unavailable" }, { status: 409 });
       }
-      if (data.amount_cents !== 1_990 || data.currency !== "BRL") {
+      if (!Number.isInteger(data.amount_cents) || data.amount_cents < 100 || data.amount_cents > 1_000_000 || data.currency !== "BRL") {
         return NextResponse.json({ error: "checkout_amount_mismatch" }, { status: 409 });
       }
 
-      const provider = createConfiguredPixProvider();
+      const provider = await createConfiguredPixProvider(admin, providerName, settings.efiEnvironment);
       const charge = data.external_payment_id
         ? await provider.getPixCharge(data.external_payment_id)
         : await provider.createPixCharge({
@@ -80,10 +83,10 @@ export async function POST(
         return NextResponse.json({ error: "checkout_reference_mismatch" }, { status: 409 });
       }
       if (!data.external_payment_id) {
-        await attachProviderCharge(createSupabaseAdminClient(), data.payment_intent_id, charge);
+        await attachProviderCharge(admin, data.payment_intent_id, charge);
       }
       const applied = await applyVerifiedProviderCharge(
-        createSupabaseAdminClient(),
+        admin,
         charge,
         `checkout:${charge.externalId}:${charge.status}`,
       );

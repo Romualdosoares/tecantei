@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { assertLivePaymentConfiguration, getPaymentProvider } from "@/lib/payment/env";
+import { getPaymentSecret, PAYMENT_SECRET_NAMES } from "@/lib/admin/secrets";
+import { getApplicationSettings } from "@/lib/admin/settings";
+import { assertPaymentLiveEnabled } from "@/lib/payment/env";
 import { applyVerifiedProviderCharge } from "@/lib/payment/provider-persistence";
 import { createConfiguredPixProvider } from "@/lib/payment/providers/configured-provider";
 import { parseEfiPixWebhook, verifyEfiWebhookToken } from "@/lib/payment/providers/efi-webhook";
@@ -16,17 +18,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    assertLivePaymentConfiguration();
-    if (getPaymentProvider() !== "efi") {
-      return NextResponse.json({ error: "provider_disabled" }, { status: 404 });
-    }
-    const expectedGatewaySecret = requiredEnv("EFI_WEBHOOK_MTLS_GATEWAY_SECRET");
+    assertPaymentLiveEnabled();
+    const admin = createSupabaseAdminClient();
+    const expectedGatewaySecret = requiredSecret(await getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookMtlsGatewaySecret, "EFI_WEBHOOK_MTLS_GATEWAY_SECRET"), "EFI_WEBHOOK_MTLS_GATEWAY_SECRET");
     if (process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() !== "gateway" ||
         !verifyEfiWebhookToken(request.headers.get("x-efi-mtls-gateway-secret"), expectedGatewaySecret)) {
       return NextResponse.json({ error: "mtls_not_verified" }, { status: 403 });
     }
     const hmac = new URL(request.url).searchParams.get("hmac");
-    if (!verifyEfiWebhookToken(hmac, requiredEnv("EFI_WEBHOOK_TOKEN"))) {
+    if (!verifyEfiWebhookToken(hmac, requiredSecret(await getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookToken, "EFI_WEBHOOK_TOKEN"), "EFI_WEBHOOK_TOKEN"))) {
       return NextResponse.json({ error: "invalid_token" }, { status: 401 });
     }
 
@@ -39,8 +39,8 @@ export async function POST(request: Request) {
     }
 
     const notifications = parseEfiPixWebhook(JSON.parse(rawBody));
-    const provider = createConfiguredPixProvider();
-    const admin = createSupabaseAdminClient();
+    const settings = await getApplicationSettings(admin);
+    const provider = await createConfiguredPixProvider(admin, "efi", settings.efiEnvironment);
     let shouldRetry = false;
     for (const notification of notifications) {
       const charge = await provider.getPixCharge(notification.txid);
@@ -64,8 +64,7 @@ export async function POST(request: Request) {
   }
 }
 
-function requiredEnv(key: string) {
-  const value = process.env[key]?.trim();
+function requiredSecret(value: string | null, key: string) {
   if (!value) throw new Error(`${key} não configurada.`);
   return value;
 }
