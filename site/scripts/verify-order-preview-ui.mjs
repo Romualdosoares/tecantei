@@ -7,8 +7,8 @@ const previewRoute = await readFile(new URL("../app/api/orders/[orderId]/version
 
 assert.match(editor, /<MusicPreviewPlayer/);
 assert.match(editor, /readyVersions\.map/);
-assert.match(editor, /Ouça sua música/);
-assert.match(editor, /Somente o trecho de prévia é carregado/);
+assert.match(editor, /Sua amostra exclusiva chegou/);
+assert.match(editor, /Somente a prévia privada de até 50 segundos é carregada/);
 assert.match(editor, /Sua prévia está pronta para ouvir abaixo/);
 assert.match(player, /<audio[\s\S]*?controls[\s\S]*?src=\{audioUrl\}/);
 assert.match(player, /\/api\/orders\/\$\{orderId\}\/versions\/\$\{versionId\}\/preview/);

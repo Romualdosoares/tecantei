@@ -140,3 +140,39 @@ label {
 .wave-animated {
   animation: wave-bar 1.2s ease-in-out infinite alternate;
 }
+
+@keyframes generation-progress-shine {
+  from { transform: translateX(-130%) skewX(-20deg); }
+  to { transform: translateX(260%) skewX(-20deg); }
+}
+
+@keyframes generation-vinyl-glow {
+  0%, 100% { opacity: 0.45; transform: scale(0.96); }
+  50% { opacity: 0.9; transform: scale(1.06); }
+}
+
+@keyframes generation-live-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(110 231 183 / 45%); }
+  50% { box-shadow: 0 0 0 7px rgb(110 231 183 / 0%); }
+}
+
+.generation-progress-shine {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 75%), transparent);
+  animation: generation-progress-shine 1.8s ease-in-out infinite;
+}
+
+.generation-vinyl-glow {
+  animation: generation-vinyl-glow 2.8s ease-in-out infinite;
+}
+
+.generation-live-dot {
+  animation: generation-live-dot 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .generation-progress-shine,
+  .generation-vinyl-glow,
+  .generation-live-dot {
+    animation: none;
+  }
+}

@@ -997,3 +997,22 @@ Correção:
 - mensagem operacional corrigida para informar que a prévia está pronta quando já existem versões disponíveis.
 
 Validação local: teste estrutural específico do player aprovado, lint sem erros, TypeScript e build Next.js de produção concluídos. A suíte também verifica que cada versão pronta usa somente `/versions/{versionId}/preview` e que o áudio completo permanece fora do componente.
+
+## Continuação de 13/09/2026 — progresso real e nova apresentação da amostra
+
+Falha observada: a tela de geração exibia `72%` fixo no código e dependia de botões manuais de simulação, sem consultar o estado persistido da tarefa nem confirmar que a prévia estava pronta.
+
+Correções e melhorias:
+
+- progresso reiniciado em 0% a cada criação e animado continuamente por fases de composição, arranjo, voz, produção e preparação da prévia;
+- modo real consulta a rota autenticada da tarefa a cada quatro segundos e ajusta o avanço ao estado persistido;
+- a API de acompanhamento agora confirma também o estado do pedido e a existência de pelo menos uma versão pronta;
+- 100% e a tela de conclusão só aparecem no modo real quando `previewReady=true` e existe uma versão `ready`;
+- oscilações temporárias da consulta exibem aviso sem afirmar que a geração parou ou reenviar uma tarefa paga;
+- modo simulado avança automaticamente de 0 a 100, mas passa a ser identificado claramente como demonstração sem geração real;
+- removidos os botões “Ver estado de erro” e “Simular conclusão rápida” da tela normal;
+- nova experiência visual de estúdio com vinil, brilho, onda sonora, fases concluídas e barra com efeito luminoso, respeitando redução de movimento;
+- nova tela real de 100% com chamada para ouvir a amostra privada;
+- seção de players do pedido redesenhada como apresentação emocional da amostra e recebeu a âncora `#amostras`.
+
+Validação local: teste específico recusando o antigo progresso fixo, suíte estrutural e comportamental completa, lint, TypeScript e build Next.js de produção aprovados. O fluxo preserva a regra de não expor o áudio completo antes do pagamento.

@@ -4,6 +4,7 @@ await import("./verify-lyrics-draft.mjs");
 await import("./verify-kie-contract.mjs");
 await import("./verify-generation-budget.mjs");
 await import("./verify-generation-storage.mjs");
+await import("./verify-generation-progress-ui.mjs");
 await import("./verify-preview.mjs");
 await import("./verify-order-preview-ui.mjs");
 await import("./verify-supabase-foundation.mjs");

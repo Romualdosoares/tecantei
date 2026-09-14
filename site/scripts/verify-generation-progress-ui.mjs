@@ -1,0 +1,30 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+
+const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+const progressStage = await readFile(new URL("../components/studio/generation-progress-stage.tsx", import.meta.url), "utf8");
+const readyStage = await readFile(new URL("../components/studio/generation-ready-stage.tsx", import.meta.url), "utf8");
+const generationRoute = await readFile(new URL("../app/api/orders/[orderId]/generation/route.ts", import.meta.url), "utf8");
+const orderEditor = await readFile(new URL("../app/pedidos/[orderId]/order-editor.tsx", import.meta.url), "utf8");
+
+assert.doesNotMatch(page, /<Progress value=\{72\}/);
+assert.doesNotMatch(page, />72%<\/span>/);
+assert.match(page, /const \[generationProgress, setGenerationProgress\] = useState\(0\)/);
+assert.match(page, /fetch\(`\/api\/orders\/\$\{persistedOrderId\}\/generation`/);
+assert.match(page, /data\.previewReady && data\.readyVersionCount > 0/);
+assert.match(page, /setGenerationProgress\(100\)/);
+assert.match(page, /generationProgressCap\(data\.status\)/);
+assert.match(page, /generationMode !== "live"/);
+assert.match(progressStage, /role="progressbar"/);
+assert.match(progressStage, /aria-valuemin=\{0\}/);
+assert.match(progressStage, /aria-valuemax=\{100\}/);
+assert.match(progressStage, /generation-progress-shine/);
+assert.match(progressStage, /chegará a 100% somente com a prévia pronta/);
+assert.match(readyStage, /100% · prévia pronta/);
+assert.match(readyStage, /\/pedidos\/\$\{orderId\}#amostras/);
+assert.match(generationRoute, /readyVersionCount/);
+assert.match(generationRoute, /previewReady/);
+assert.match(orderEditor, /id="amostras"/);
+
+console.log("PASS: progresso começa em zero, acompanha a tarefa e só alcança 100% com uma prévia real pronta");
+console.log("PASS: modo demonstrativo é identificado e a amostra real leva aos players privados do pedido");

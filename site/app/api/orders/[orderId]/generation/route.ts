@@ -201,7 +201,7 @@ export async function GET(
     }
     const { data: order } = await supabase
       .from("orders")
-      .select("id")
+      .select("id, status")
       .eq("id", orderId.data)
       .eq("owner_id", authData.user.id)
       .maybeSingle();
@@ -214,6 +214,12 @@ export async function GET(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    const { count: readyVersionCount } = await supabase
+      .from("music_versions")
+      .select("id", { count: "exact", head: true })
+      .eq("order_id", orderId.data)
+      .eq("status", "ready");
+    const previewReady = ["preview_ready", "payment_pending", "paid", "delivered"].includes(order.status) && (readyVersionCount ?? 0) > 0;
 
     return NextResponse.json(
       task
@@ -225,8 +231,11 @@ export async function GET(
             acceptedAt: task.accepted_at,
             completedAt: task.completed_at,
             updatedAt: task.updated_at,
+            orderStatus: order.status,
+            readyVersionCount: readyVersionCount ?? 0,
+            previewReady,
           }
-        : { taskId: null, status: null },
+        : { taskId: null, status: null, orderStatus: order.status, readyVersionCount: readyVersionCount ?? 0, previewReady },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch {

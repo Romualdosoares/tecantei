@@ -26,7 +26,6 @@ import {
   Award,
   Volume2,
   ShieldCheck,
-  Disc3,
   HeartHandshake,
   Baby,
   PenTool,
@@ -44,6 +43,8 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { TestimonialsPricingFaq } from "@/components/landing/testimonials-pricing-faq";
 import { LandingFooter } from "@/components/landing/footer";
 import { LiveAlbumPreview } from "@/components/studio/live-album-preview";
+import { GenerationProgressStage } from "@/components/studio/generation-progress-stage";
+import { GenerationReadyStage } from "@/components/studio/generation-ready-stage";
 import { MUSIC_STYLE_OPTIONS, VOICE_OPTIONS, type VoicePreference } from "@/lib/order-options";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
@@ -123,6 +124,32 @@ async function requestLyricDraft(input: LyricDraftInput) {
   return data;
 }
 
+type GenerationStatusResponse = {
+  status: string | null;
+  orderStatus?: string;
+  readyVersionCount: number;
+  previewReady: boolean;
+};
+
+function demoProgressIncrement(progress: number) {
+  if (progress < 18) return 3;
+  if (progress < 58) return 2;
+  if (progress < 88) return 1.5;
+  return 1;
+}
+
+function generationProgressCap(status: string | null) {
+  switch (status) {
+    case "created": return 12;
+    case "submitting": return 24;
+    case "submitted": return 38;
+    case "processing": return 82;
+    case "reconciling": return 90;
+    case "succeeded": return 98;
+    default: return 8;
+  }
+}
+
 export default function Home() {
   const [step, setStep] = useState(0);
   const [occasion, setOccasion] = useState("");
@@ -141,6 +168,9 @@ export default function Home() {
   const [lyricsError, setLyricsError] = useState("");
   const [generation, setGeneration] = useState<"loading" | "error" | "ready">("loading");
   const [generationMode, setGenerationMode] = useState<"demo" | "mock" | "live">("demo");
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationTaskStatus, setGenerationTaskStatus] = useState<string | null>(null);
+  const [generationPollingWarning, setGenerationPollingWarning] = useState(false);
   const [selected, setSelected] = useState("original");
   const [playing, setPlaying] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
@@ -263,6 +293,79 @@ export default function Home() {
     void Promise.resolve(registration).catch(() => lifecycle.abort());
     return () => lifecycle.abort();
   }, []);
+
+  useEffect(() => {
+    if (step !== 7 || generation !== "loading") return;
+
+    let active = true;
+    let finishTimer: number | undefined;
+    let progressTimer: number | undefined;
+    let pollTimer: number | undefined;
+    let visualProgress = 0;
+
+    const finish = () => {
+      if (!active || finishTimer !== undefined) return;
+      visualProgress = 100;
+      setGenerationProgress(100);
+      setGenerationTaskStatus("preview_ready");
+      finishTimer = window.setTimeout(() => {
+        if (active) setGeneration("ready");
+      }, 900);
+    };
+
+    if (generationMode !== "live" || !persistedOrderId) {
+      progressTimer = window.setInterval(() => {
+        visualProgress = Math.min(100, visualProgress + demoProgressIncrement(visualProgress));
+        setGenerationProgress(Math.round(visualProgress));
+        if (visualProgress >= 100) {
+          if (progressTimer !== undefined) window.clearInterval(progressTimer);
+          finish();
+        }
+      }, 420);
+    } else {
+      let progressCap = 8;
+      progressTimer = window.setInterval(() => {
+        if (visualProgress >= progressCap) return;
+        visualProgress = Math.min(progressCap, visualProgress + (visualProgress < 30 ? 2 : 1));
+        setGenerationProgress(Math.round(visualProgress));
+      }, 650);
+
+      const poll = async () => {
+        const response = await fetch(`/api/orders/${persistedOrderId}/generation`, {
+          cache: "no-store",
+          credentials: "same-origin",
+        }).catch(() => null);
+        const data = response
+          ? await response.json().catch(() => null) as GenerationStatusResponse | null
+          : null;
+        if (!active) return;
+        if (!response?.ok || !data) {
+          setGenerationPollingWarning(true);
+          return;
+        }
+
+        setGenerationPollingWarning(false);
+        setGenerationTaskStatus(data.status);
+        progressCap = generationProgressCap(data.status);
+
+        if (data.status === "failed") {
+          setGeneration("error");
+          return;
+        }
+        if (data.previewReady && data.readyVersionCount > 0) finish();
+      };
+
+      void poll();
+      pollTimer = window.setInterval(() => void poll(), 4_000);
+    }
+
+    return () => {
+      active = false;
+      if (finishTimer !== undefined) window.clearTimeout(finishTimer);
+      if (progressTimer !== undefined) window.clearInterval(progressTimer);
+      if (pollTimer !== undefined) window.clearInterval(pollTimer);
+    };
+  }, [generation, generationMode, persistedOrderId, step]);
 
   const goTo = (next: number) => {
     const destination = Math.max(0, Math.min(9, next));
@@ -398,6 +501,9 @@ export default function Home() {
     }
     const orderId = await persistApprovedDraft();
     if (!orderId || !(await beginGeneration(orderId))) return;
+    setGenerationProgress(0);
+    setGenerationTaskStatus(null);
+    setGenerationPollingWarning(false);
     setGeneration("loading");
     goTo(7);
   };
@@ -454,6 +560,9 @@ export default function Home() {
     setAccountOpen(false);
     const orderId = await persistApprovedDraft();
     if (!orderId || !(await beginGeneration(orderId))) return;
+    setGenerationProgress(0);
+    setGenerationTaskStatus(null);
+    setGenerationPollingWarning(false);
     setGeneration("loading");
     goTo(7);
   };
@@ -1361,52 +1470,20 @@ export default function Home() {
 
       {/* ETAPA 7: GERAÇÃO EM ANDAMENTO */}
       {step === 7 && generation !== "ready" && (
-        <section className="mx-auto max-w-3xl px-4 py-16">
-          <div className="rounded-[36px] border border-rose-200/80 bg-white p-8 text-center shadow-2xl shadow-rose-900/10 sm:p-14">
-            {generation === "loading" && (
-              <>
-                <div className="relative mx-auto grid size-28 place-items-center rounded-full bg-rose-50 border border-rose-200 shadow-inner">
-                  <div className="absolute inset-0 rounded-full border-4 border-rose-500/20 border-t-rose-600 animate-spin" />
-                  <Disc3 className="size-12 text-rose-800 animate-spin-slow" />
-                </div>
-                <Badge className="mt-8 rounded-full bg-rose-100 text-rose-950 hover:bg-rose-100 font-semibold px-4 py-1">
-                  {generationMode === "live"
-                    ? "Geração real em andamento"
-                    : generationMode === "mock"
-                    ? "Produção em estúdio · sem custos extras"
-                    : "Simulação do protótipo"}
-                </Badge>
-                <h1 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[#2b1722]">
-                  Dando som à história de {name || "vocês"}.
-                </h1>
-                <p className="mx-auto mt-3 max-w-lg text-base sm:text-lg text-muted-foreground leading-relaxed">
-                  Os arranjos, harmonia e vocais estão sendo lapidados. Em instantes sua prévia exclusiva estará disponível.
-                </p>
+        <>
+          {generation === "loading" && (
+            <GenerationProgressStage
+              recipient={name}
+              progress={generationProgress}
+              mode={generationMode}
+              taskStatus={generationTaskStatus}
+              pollingWarning={generationPollingWarning}
+            />
+          )}
 
-                {/* Studio progress bar */}
-                <div className="mx-auto mt-8 max-w-md text-left">
-                  <div className="mb-2 flex justify-between text-xs font-semibold text-rose-950">
-                    <span>Compondo arranjos e mixagem final</span>
-                    <span>72%</span>
-                  </div>
-                  <Progress value={72} className="h-3 rounded-full bg-rose-100" />
-                </div>
-
-                <div className="mt-10 flex flex-wrap justify-center gap-3">
-                  <Button variant="outline" className="rounded-full text-xs" onClick={() => setGeneration("error")}>
-                    Ver estado de erro
-                  </Button>
-                  <Button
-                    className="rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] px-6 text-sm font-bold text-white shadow-md"
-                    onClick={() => setGeneration("ready")}
-                  >
-                    Simular conclusão rápida
-                  </Button>
-                </div>
-              </>
-            )}
-
-            {generation === "error" && (
+          {generation === "error" && (
+            <section className="mx-auto max-w-3xl px-4 py-16">
+              <div className="rounded-[36px] border border-rose-200/80 bg-white p-8 text-center shadow-2xl shadow-rose-900/10 sm:p-14">
               <>
                 <div className="mx-auto grid size-24 place-items-center rounded-full bg-destructive/10">
                   <RotateCcw className="size-10 text-destructive" />
@@ -1426,38 +1503,50 @@ export default function Home() {
                   </Button>
                   <Button
                     className="rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] font-bold text-white shadow-md"
-                    onClick={() => setGeneration("loading")}
+                    onClick={() => {
+                      setGenerationProgress(0);
+                      setGenerationTaskStatus(null);
+                      setGenerationPollingWarning(false);
+                      setGeneration("loading");
+                    }}
                   >
                     <RotateCcw className="mr-1.5 size-4" /> Tentar novamente
                   </Button>
                 </div>
               </>
-            )}
-          </div>
-        </section>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {step === 7 && generation === "ready" && generationMode === "live" && persistedOrderId && (
+        <GenerationReadyStage recipient={name} orderId={persistedOrderId} style={effectiveStyle} />
       )}
 
       {/* ETAPA 7: PRÉVIA E CONVERSÃO PARA COMPRA */}
-      {step === 7 && generation === "ready" && (
-        <section className="mx-auto max-w-6xl px-4 py-10 sm:px-8">
-          <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      {step === 7 && generation === "ready" && (generationMode !== "live" || !persistedOrderId) && (
+        <section className="relative mx-auto max-w-6xl overflow-hidden px-4 py-10 sm:px-8">
+          <div className="pointer-events-none absolute -left-24 top-16 size-72 rounded-full bg-rose-200/35 blur-3xl" />
+          <div className="relative mb-8 flex flex-col justify-between gap-6 overflow-hidden rounded-[34px] bg-gradient-to-br from-[#2b0c1c] via-[#551733] to-[#8b2450] p-7 text-white shadow-2xl sm:p-10 lg:flex-row lg:items-end">
+            <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full border-[38px] border-white/[.05]" />
             <div>
-              <Badge className="mb-3 rounded-full bg-rose-100 text-rose-900 font-semibold border-0">
-                Prévia de 50 segundos disponível
+              <Badge className="mb-4 rounded-full border border-white/15 bg-white/10 text-rose-100 font-semibold hover:bg-white/10">
+                Demonstração visual da amostra
               </Badge>
-              <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-[#2b1722]">
-                Qual versão toca mais fundo?
+              <h1 className="max-w-3xl font-display text-4xl font-bold tracking-tight sm:text-6xl">
+                Imagine a história de {name || "quem você ama"} tocando assim.
               </h1>
-              <p className="mt-2 text-muted-foreground text-sm sm:text-base">
-                Dê o play nas opções e escolha a favorita para o presente de {name}.
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
+                Esta tela demonstra a experiência de escolha. Uma geração real exibirá aqui os arquivos privados produzidos para o seu pedido.
               </p>
             </div>
-            <Badge variant="outline" className="rounded-full px-4 py-1.5 text-xs font-semibold border-rose-300 text-rose-900 bg-rose-50">
-              <WandSparkles className="size-3.5 mr-1 text-rose-600" /> 1 ajuste de estilo incluído
+            <Badge variant="outline" className="relative rounded-full border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white">
+              <WandSparkles className="mr-1 size-3.5 text-rose-200" /> 1 ajuste de estilo incluído
             </Badge>
           </div>
 
-          <RadioGroup value={selected} onValueChange={setSelected} className="grid gap-6 lg:grid-cols-2">
+          <RadioGroup value={selected} onValueChange={setSelected} className="relative grid gap-6 lg:grid-cols-2">
             {[
               {
                 id: "original",

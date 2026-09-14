@@ -441,11 +441,15 @@ export function OrderEditor({
       {!editable && <div className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground lg:col-span-2"><p>A história e a letra ficam somente para consulta depois que a geração musical começa.</p>{generationTask && <p className="mt-2 font-semibold text-foreground">{generationTask.status === "reconciling" ? "Estamos conferindo se o fornecedor recebeu o pedido; nenhum novo envio será feito agora." : generationTask.status === "failed" ? "A tentativa falhou e ficou registrada para uma retomada segura." : generationTask.status === "succeeded" && readyVersions.length > 0 ? "Sua prévia está pronta para ouvir abaixo." : generationTask.status === "succeeded" ? "O áudio chegou e está sendo preparado para a prévia." : "A criação musical está na fila ou em processamento."}</p>}</div>}
 
       {readyVersions.length > 0 && ["preview_ready", "payment_pending", "paid", "delivered"].includes(status) && (
-        <section className="rounded-[26px] border border-rose-200/80 bg-card p-5 shadow-sm sm:p-7 lg:col-span-2">
-          <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10"><Play /> Prévia de 50 segundos</Badge>
-          <h2 className="mt-3 font-display text-3xl font-semibold">Ouça sua música</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Escute cada versão antes de escolher. Somente o trecho de prévia é carregado; o áudio completo continua protegido até a confirmação do pagamento.</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <section id="amostras" className="relative scroll-mt-24 overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-br from-[#260b19] via-[#521631] to-[#7e2148] p-5 text-white shadow-[0_28px_90px_rgba(63,15,39,.24)] sm:p-9 lg:col-span-2">
+          <div className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full border-[42px] border-white/[.05]" />
+          <div className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-rose-300/10 blur-3xl" />
+          <div className="relative">
+            <Badge className="rounded-full border border-white/15 bg-white/10 text-rose-100 hover:bg-white/10"><Play /> Sua amostra exclusiva chegou</Badge>
+            <h2 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-tight sm:text-5xl">Agora é só dar o play e sentir a história ganhar vida.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">Escute cada versão com calma antes de escolher. Somente a prévia privada de até 50 segundos é carregada; a música completa continua protegida até a confirmação do pagamento.</p>
+          </div>
+          <div className="relative mt-7 grid gap-4 md:grid-cols-2">
             {readyVersions.map((version, index) => (
               <MusicPreviewPlayer
                 key={version.id}
@@ -455,6 +459,11 @@ export function OrderEditor({
                 title={version.title ?? `Música ${index + 1}`}
               />
             ))}
+          </div>
+          <div className="relative mt-6 flex flex-wrap gap-3 text-xs font-semibold text-white/65">
+            <span className="rounded-full border border-white/12 bg-white/[.07] px-3 py-2">🔒 Áudio privado</span>
+            <span className="rounded-full border border-white/12 bg-white/[.07] px-3 py-2">🎧 Prévia real de até 50 segundos</span>
+            <span className="rounded-full border border-white/12 bg-white/[.07] px-3 py-2">✨ 1 ajuste incluído</span>
           </div>
         </section>
       )}
