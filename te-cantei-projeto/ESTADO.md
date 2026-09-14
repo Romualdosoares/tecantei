@@ -1076,3 +1076,21 @@ Alterações:
 - verificação estrutural dedicada criada para impedir regressões da paleta, logo, botões e acessibilidade de movimento.
 
 Validação local: inspeção visual automatizada da landing em 1440 px aprovada; suíte estrutural e comportamental completa aprovada; lint sem erros; TypeScript e build de produção Next.js 16.3.5 concluídos com sucesso.
+
+## Continuação de 14/09/2026 — contraste tipográfico e movimento premium
+
+Falha observada: classes de texto herdadas da antiga paleta, principalmente `text-rose-100`, `text-rose-200` e `text-rose-300`, passaram a usar tons destinados às superfícies escuras. Isso deixou selos e frases emocionais com contraste insuficiente em blocos ônix e carvão.
+
+Correções e refinamentos:
+
+- cores de texto separadas das cores de superfície, usando branco, champanhe e ouro conforme a hierarquia;
+- CTAs antigos com fundo branco convertidos para ouro sólido e texto ônix;
+- estados selecionados em ouro receberam texto ônix para preservar contraste;
+- combinações essenciais passaram a ser verificadas automaticamente com razão mínima WCAG AA;
+- títulos receberam sombra luminosa quase imperceptível;
+- cards ganharam borda e profundidade douradas no hover;
+- CTAs receberam elevação suave no hover;
+- adicionado brilho ambiente lento no fundo e entrada escalonada das seções;
+- todos os novos movimentos continuam desativados quando o sistema solicita redução de animação.
+
+Validação local: a página completa foi renderizada novamente em 1440 px e os trechos antes escuros apareceram em branco/champanhe; suíte estrutural aprovada, lint sem erros e build de produção Next.js 16.3.5 concluído com sucesso.

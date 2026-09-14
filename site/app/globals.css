@@ -150,6 +150,21 @@ body::before {
   mask-image: linear-gradient(to bottom, black, transparent 78%);
 }
 
+body::after {
+  position: fixed;
+  right: -18rem;
+  bottom: -22rem;
+  z-index: -1;
+  width: 44rem;
+  height: 44rem;
+  pointer-events: none;
+  content: "";
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(212 175 85 / 18%) 0%, rgb(140 106 42 / 7%) 42%, transparent 70%);
+  filter: blur(10px);
+  animation: tc-ambient-drift 14s ease-in-out infinite alternate;
+}
+
 button,
 label {
   -webkit-tap-highlight-color: transparent;
@@ -181,6 +196,11 @@ textarea::placeholder {
 
 .font-display {
   font-family: var(--font-display), "Playfair Display", Georgia, serif;
+}
+
+h1.font-display,
+h2.font-display {
+  text-shadow: 0 2px 22px rgb(212 175 85 / 8%);
 }
 
 /* Glass & Luxury Effects */
@@ -279,6 +299,34 @@ textarea::placeholder {
   color: var(--tc-gold) !important;
 }
 
+/* Cores de texto são deliberadamente mais claras que as superfícies equivalentes. */
+[class~="text-rose-100"] { color: var(--tc-white) !important; }
+[class~="text-rose-200"],
+[class~="text-rose-900"],
+[class~="text-rose-950"],
+[class~="text-rose-900/80"],
+[class~="text-rose-950/70"] { color: var(--tc-champagne) !important; }
+[class~="text-rose-300"],
+[class~="text-rose-500"],
+[class~="text-rose-600"],
+[class~="text-rose-700"],
+[class~="text-rose-800"],
+[class~="text-rose-700/80"] { color: var(--tc-gold) !important; }
+
+[class~="text-pink-100"],
+[class~="text-pink-200"],
+[class~="text-pink-900"],
+[class~="text-purple-100"],
+[class~="text-purple-200"],
+[class~="text-purple-900"],
+[class~="text-fuchsia-200"],
+[class~="text-fuchsia-950"] { color: var(--tc-champagne) !important; }
+
+[class~="bg-rose-500"][class~="text-white"],
+[class~="bg-rose-600"][class~="text-white"] {
+  color: var(--tc-onyx) !important;
+}
+
 [class*="border-[#ead9df]"],
 [class*="border-[#eadfdc]"],
 [class*="border-[#1d1d21]"],
@@ -314,12 +362,29 @@ a[class*="bg-[#7e2148]"] {
   box-shadow: 0 12px 34px -10px rgb(212 175 85 / 48%) !important;
 }
 
+button.bg-white,
+a.bg-white {
+  background-color: var(--tc-action) !important;
+  color: var(--tc-action-text) !important;
+  border-color: rgb(245 215 126 / 55%) !important;
+  box-shadow: 0 12px 34px -10px rgb(212 175 85 / 42%) !important;
+}
+
 button.bg-gradient-to-r:hover,
 a.bg-gradient-to-r:hover,
 button[class*="bg-[#8b2450]"]:hover,
 button[class*="bg-[#7e2148]"]:hover {
   filter: brightness(1.08);
+  transform: translateY(-2px);
   box-shadow: 0 16px 42px -10px rgb(245 215 126 / 58%) !important;
+}
+
+button.bg-white:hover,
+a.bg-white:hover {
+  background-color: var(--tc-action-hover) !important;
+  color: var(--tc-action-text) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 42px -10px rgb(245 215 126 / 55%) !important;
 }
 
 main > header {
@@ -329,6 +394,17 @@ main > header {
 
 [class*="rounded-"][class*="border"] {
   border-color: rgb(212 175 85 / 18%);
+}
+
+article[class*="rounded-"],
+section [class*="rounded-"][class*="shadow-"] {
+  transition: border-color 260ms ease, box-shadow 320ms ease, transform 320ms cubic-bezier(.22, 1, .36, 1);
+}
+
+article[class*="rounded-"]:hover,
+section [class*="rounded-"][class*="shadow-"]:hover {
+  border-color: rgb(212 175 85 / 34%) !important;
+  box-shadow: 0 24px 70px -24px rgb(212 175 85 / 28%), 0 14px 40px rgb(0 0 0 / 35%);
 }
 
 .tc-logo-mark::after {
@@ -351,10 +427,21 @@ main > header {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes tc-ambient-drift {
+  from { transform: translate3d(-2rem, 1rem, 0) scale(.96); opacity: .62; }
+  to { transform: translate3d(2rem, -2rem, 0) scale(1.08); opacity: 1; }
+}
+
 main > section,
 main > div > section {
   animation: tc-premium-rise 520ms cubic-bezier(.22, 1, .36, 1) both;
 }
+
+main > section:nth-of-type(2),
+main > div > section:nth-of-type(2) { animation-delay: 70ms; }
+
+main > section:nth-of-type(3),
+main > div > section:nth-of-type(3) { animation-delay: 120ms; }
 
 /* Vinyl Spin */
 @keyframes spin-slow {
