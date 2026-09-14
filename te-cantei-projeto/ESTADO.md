@@ -1051,3 +1051,11 @@ Correção e decisão operacional:
 Validação: teste estrutural específico aprovado, lint aprovado e build limpo da mesma revisão concluído pela Vercel com status `Ready`. A aplicação foi recompilada depois das alterações de ambiente e reassociada a `https://tecantei.vercel.app`.
 
 Limites: cada nova prévia personalizada consome créditos reais da Kie.ai antes da compra. O MP3 completo permanece privado e indisponível ao cliente antes da confirmação de pagamento. Pagamentos reais e licença comercial/revenda continuam como dependências separadas para a abertura definitiva das vendas.
+
+## Continuação de 14/09/2026 — remoção do bloqueio temporário de criações
+
+Decisão do proprietário: o teto temporário de uma criação por conta e cinco criações globais em 24 horas atrapalhava a operação e deveria ser removido.
+
+Alteração: os limites móveis de conta e ambiente foram elevados ao máximo operacional aceito pelo serviço (`1.000.000` créditos em 24 horas), deixando de bloquear o uso normal. A proteção idempotente contra clique duplo, reenvio da mesma tarefa e cobranças duplicadas permanece ativa. Cada geração continua consumindo créditos reais da conta Kie.ai.
+
+Publicação: variáveis de produção atualizadas e aplicação recompilada pela Vercel; implantação `Ready` e domínio `https://tecantei.vercel.app` reassociado. A tentativa que havia retornado `generation_limit_reached` ocorreu antes da reserva, portanto não consumiu crédito e pode ser repetida pelo cliente.
