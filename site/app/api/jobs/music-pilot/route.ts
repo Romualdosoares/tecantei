@@ -38,6 +38,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createSupabaseAdminClient();
+  let stage = "readiness";
   try {
     const [apiKey, webhookHmacKey, settings] = await Promise.all([
       getKieApiKey(admin),
@@ -49,9 +50,11 @@ export async function POST(request: Request) {
     const budget = requireGenerationBudgetConfig("live");
     const creditsMillis = getKieEstimatedCreditsMillis();
 
+    stage = "prepare_order";
     const { data: pilotData, error: pilotError } = await admin.rpc("prepare_single_music_pilot");
     if (pilotError || !isPilotOrder(pilotData)) throw pilotError ?? new Error("pilot_not_prepared");
 
+    stage = "load_order";
     const { data: order, error: orderError } = await admin
       .from("orders")
       .select("id, owner_id, recipient_name, style, voice_preference")
@@ -64,6 +67,7 @@ export async function POST(request: Request) {
       .single();
     if (orderError || lyricError || !order || !lyric) throw orderError ?? lyricError ?? new Error("pilot_data_missing");
 
+    stage = "reserve_budget";
     const { data: reservedData, error: reserveError } = await admin.rpc(
       "reserve_budgeted_original_generation",
       {
@@ -81,6 +85,7 @@ export async function POST(request: Request) {
       return response({ orderId: order.id, taskId: reservedData.task_id, status: reservedData.status, submitted: false }, 200);
     }
 
+    stage = "claim_submission";
     const { data: claimed, error: claimError } = await admin.rpc("claim_generation_submission", {
       target_task_id: reservedData.task_id,
     });
@@ -88,6 +93,7 @@ export async function POST(request: Request) {
     if (!claimed) return response({ orderId: order.id, taskId: reservedData.task_id, status: "reconciling", submitted: false }, 202);
 
     try {
+      stage = "submit_provider";
       const client = new KieMusicClient(liveConfig.apiKey);
       const submission = await client.submitGeneration({
         approvedLyrics: lyric.content,
@@ -123,7 +129,7 @@ export async function POST(request: Request) {
       }, acceptanceUnknown ? 202 : 502);
     }
   } catch {
-    return response({ error: "pilot_unavailable" }, 503);
+    return response({ error: "pilot_unavailable", stage }, 503);
   }
 }
 
@@ -137,7 +143,36 @@ export async function GET(request: Request) {
       .select("id, status, preview_expires_at")
       .eq("client_request_id", PILOT_REQUEST_ID)
       .maybeSingle();
-    if (!order) return response({ state: "not_started" }, 200);
+    if (!order) {
+      const [apiKey, webhookHmacKey, settings] = await Promise.all([
+        getKieApiKey(admin),
+        getKieWebhookHmacKey(admin),
+        getApplicationSettings(admin),
+      ]);
+      let liveConfigValid = false;
+      let budgetValid = false;
+      try {
+        requireKieLiveConfig("live", apiKey);
+        liveConfigValid = true;
+      } catch {}
+      try {
+        requireGenerationBudgetConfig("live");
+        budgetValid = true;
+      } catch {}
+      return response({
+        state: "not_started",
+        readiness: {
+          apiKeyConfigured: Boolean(apiKey),
+          webhookHmacConfigured: Boolean(webhookHmacKey),
+          liveConfigValid,
+          budgetValid,
+          musicMode: settings.musicMode,
+          musicModel: settings.musicModel,
+          pilotOnlyMode: process.env.PILOT_ONLY_MODE?.trim() === "true",
+          triggerEnabled: process.env.PILOT_TRIGGER_ENABLED?.trim() === "true",
+        },
+      }, 200);
+    }
 
     let { data: task } = await admin
       .from("generation_tasks")
