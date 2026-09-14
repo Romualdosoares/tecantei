@@ -42,7 +42,11 @@ export async function POST(request: Request) {
       return new NextResponse("200", { status: 200, headers: { "Cache-Control": "no-store" } });
     }
 
-    const notifications = parseEfiPixWebhook(JSON.parse(rawBody));
+    const payload: unknown = JSON.parse(rawBody);
+    if (!payload || typeof payload !== "object" || !("pix" in payload)) {
+      return new NextResponse("200", { status: 200, headers: { "Cache-Control": "no-store" } });
+    }
+    const notifications = parseEfiPixWebhook(payload);
     const settings = await getApplicationSettings(admin);
     const provider = await createConfiguredPixProvider(admin, "efi", settings.efiEnvironment);
     let shouldRetry = false;

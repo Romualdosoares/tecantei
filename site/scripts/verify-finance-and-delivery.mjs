@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
-const [migration, financeSettings, financeSecrets, storefrontConfig, priceProvider, layout, adminDashboard, checkout, orderEditor, deliveryPage, deliveryExperience, audioRoute, efiProvider] = await Promise.all([
+const [migration, financeSettings, financeSecrets, storefrontConfig, priceProvider, layout, adminDashboard, checkout, orderEditor, deliveryPage, deliveryExperience, audioRoute, efiProvider, efiWebhookRoute] = await Promise.all([
   read("../supabase/migrations/202609140001_financial_settings.sql"),
   read("../app/api/admin/finance/settings/route.ts"),
   read("../app/api/admin/finance/secrets/route.ts"),
@@ -16,6 +16,7 @@ const [migration, financeSettings, financeSecrets, storefrontConfig, priceProvid
   read("../app/pedidos/[orderId]/entrega/delivery-experience.tsx"),
   read("../app/api/orders/[orderId]/audio/route.ts"),
   read("../lib/payment/providers/efi.ts"),
+  read("../app/api/payments/webhooks/efi/route.ts"),
 ]);
 
 assert.match(migration, /product_price_cents integer not null default 1990/);
@@ -46,7 +47,11 @@ assert.match(deliveryExperience, /Baixar música em MP3/);
 assert.match(audioRoute, /searchParams\.get\("mode"\) === "stream"/);
 assert.match(efiProvider, /`\/v2\/loc\/\$\{locationId\}\/qrcode`/);
 assert.match(efiProvider, /payload\.imagemQrcode/);
+assert.match(efiWebhookRoute, /!\("pix" in payload\)/);
+assert.match(efiWebhookRoute, /verifyEfiWebhookSourceIp/);
+assert.match(efiWebhookRoute, /applyVerifiedProviderCharge/);
 
 console.log("PASS: financeiro controla preço, gateway e segredos sem expor credenciais");
 console.log("PASS: checkout Pix mostra QR/copia-e-cola e só redireciona após consulta confirmada");
 console.log("PASS: entrega privada permite ouvir, baixar e compartilhar a página do presente");
+console.log("PASS: webhook Efí aceita a sondagem de cadastro e mantém validação do pagamento real");
