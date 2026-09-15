@@ -22,8 +22,8 @@ export default function LandingPage() {
           </Link>
           <p className="hidden text-sm font-semibold text-[#B8AE99] lg:block">Ouça 50 segundos antes de decidir · Pagamento único</p>
           <nav aria-label="Ações principais" className="flex items-center gap-2">
-            <Link href="/entrar" className="inline-flex min-h-11 items-center rounded-full px-3 text-xs font-bold text-[#F5D77E] ring-1 ring-[#D4AF55]/30 sm:text-sm">Entrar</Link>
-            <Link href="/criar" className={`${createLinkClass} min-h-11 px-4 py-2`}><Sparkles className="size-4" /><span className="sm:hidden">Criar música</span><span className="hidden sm:inline">Criar minha música</span></Link>
+            <Link href="/entrar" prefetch={false} className="inline-flex min-h-11 items-center rounded-full px-3 text-xs font-bold text-[#F5D77E] ring-1 ring-[#D4AF55]/30 sm:text-sm">Entrar</Link>
+            <Link href="/criar" prefetch={false} className={`${createLinkClass} min-h-11 px-4 py-2`}><Sparkles className="size-4" /><span className="sm:hidden">Criar música</span><span className="hidden sm:inline">Criar minha música</span></Link>
           </nav>
         </div>
       </header>
@@ -39,7 +39,7 @@ export default function LandingPage() {
               <p className="font-display text-xl font-bold text-white">Não é apenas uma música.</p>
               <p className="mt-1 text-sm leading-7 text-[#B8AE99]">É uma forma de dizer aquilo que o coração sente e, às vezes, as palavras não conseguem explicar.</p>
             </div>
-            <Link href="/criar" className={`${createLinkClass} mt-8 min-h-14 px-8 text-base`}><Heart className="size-5 fill-current" />Criar uma música para quem eu amo<ArrowRight className="size-5" /></Link>
+            <Link href="/criar" prefetch={false} className={`${createLinkClass} mt-8 min-h-14 px-8 text-base`}><Heart className="size-5 fill-current" />Criar uma música para quem eu amo<ArrowRight className="size-5" /></Link>
             <p className="mt-3 text-sm font-bold text-[#F5D77E]">Comece agora e ouça 50 segundos antes de decidir pela compra.</p>
             <ul className="mt-7 grid gap-3 text-sm font-semibold text-[#E8E2D6] sm:grid-cols-3">
               {["Você aprova cada verso", "1 ajuste incluído", "Sem assinatura"].map((item) => <li key={item} className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-full border border-[#D4AF55]/40 text-[#D4AF55]"><Check className="size-3.5" /></span>{item}</li>)}
@@ -54,7 +54,7 @@ export default function LandingPage() {
             <p className="text-sm font-bold text-[#B8AE99]">Música completa + página para presentear</p>
             <p className="mt-2 font-display text-5xl font-extrabold text-white"><StorefrontPriceText /></p>
             <p className="mt-2 text-xs text-[#B8AE99]">Pagamento único · sem mensalidade</p>
-            <Link href="/criar" className={`${createLinkClass} mt-6 w-full`}>Criar minha música agora<ArrowRight className="size-4" /></Link>
+            <Link href="/criar" prefetch={false} className={`${createLinkClass} mt-6 w-full`}>Criar minha música agora<ArrowRight className="size-4" /></Link>
             <p className="mt-4 flex items-center justify-center gap-2 text-xs font-semibold text-[#D8D0C1]"><LockKeyhole className="size-4 text-[#D4AF55]" />Você ouve a prévia antes de comprar.</p>
           </aside>
         </div>
@@ -74,13 +74,13 @@ export default function LandingPage() {
       <section className="tc-deferred-section px-4 pb-20 sm:px-8">
         <div className="tc-premium-frame mx-auto grid max-w-6xl gap-8 rounded-[34px] border border-[#D4AF55]/30 bg-[#1A1813] p-7 sm:p-11 lg:grid-cols-[1.2fr_.8fr] lg:items-center">
           <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4AF55]"><Gift className="size-4" />Uma lembrança que não expira</p><h2 className="mt-5 font-display text-3xl font-extrabold text-white sm:text-5xl">O momento passa. A canção fica.</h2><p className="mt-4 max-w-2xl leading-8 text-[#D8D0C1]">Registre essas lembranças enquanto ainda estão vivas e transforme-as em algo que poderá atravessar anos. Imagine a reação de quem você ama ao perceber que a música conta exatamente a história de vocês.</p></div>
-          <div className="border border-[#D4AF55]/20 bg-[#090807] p-6 text-center"><p className="text-sm font-bold text-[#F5D77E]">Música completa + página para presentear</p><p className="mt-2 font-display text-4xl font-extrabold text-white"><StorefrontPriceText /></p><Link href="/criar" className={`${createLinkClass} mt-6 w-full`}>Criar minha música agora<ArrowRight className="size-4" /></Link></div>
+          <div className="border border-[#D4AF55]/20 bg-[#090807] p-6 text-center"><p className="text-sm font-bold text-[#F5D77E]">Música completa + página para presentear</p><p className="mt-2 font-display text-4xl font-extrabold text-white"><StorefrontPriceText /></p><Link href="/criar" prefetch={false} className={`${createLinkClass} mt-6 w-full`}>Criar minha música agora<ArrowRight className="size-4" /></Link></div>
         </div>
       </section>
 
       <footer className="border-t border-[#D4AF55]/15 px-4 py-8 text-center text-xs text-[#B8AE99]">© {new Date().getFullYear()} Te Cantei · Histórias transformadas em música com carinho e privacidade.</footer>
 
-      <div className="fixed inset-x-3 bottom-3 z-40 sm:hidden"><Link href="/criar" className={`${createLinkClass} w-full`}><Heart className="size-4 fill-current" />Criar minha música<ArrowRight className="size-4" /></Link></div>
+      <div className="fixed inset-x-3 bottom-3 z-40 sm:hidden"><Link href="/criar" prefetch={false} className={`${createLinkClass} w-full`}><Heart className="size-4 fill-current" />Criar minha música<ArrowRight className="size-4" /></Link></div>
     </main>
   );
 }
