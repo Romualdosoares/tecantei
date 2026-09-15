@@ -1182,3 +1182,5 @@ Otimizações e correções:
 - teste de regressão passou a conferir SEO técnico, cabeçalhos, comportamento móvel e ausência de credenciais privadas em componentes cliente.
 
 Validação local: `npm audit --omit=dev` retornou zero vulnerabilidades conhecidas; suíte estrutural e comportamental completa aprovada; lint sem erros; `git diff --check` sem erros; TypeScript e build de produção Next.js 16.3.5 concluídos com 23 páginas estáticas/dinâmicas geradas. A publicação e a nova medição móvel/desktop em produção ainda serão registradas após o deploy.
+
+Segundo passe de desempenho: a landing comercial foi separada do estúdio interativo. A rota `/` agora é uma página estática leve e sem hidratação do formulário completo; `/criar` abre diretamente a etapa 1 e `/entrar` abre o fluxo de autenticação. Preço dinâmico e toda a jornada de criação foram preservados. A primeira publicação intermediária elevou o Lighthouse móvel de 57 para 75, reduziu TBT de 8,57 s para 0,81 s, zerou CLS e levou acessibilidade de 94 para 100; a medição final da landing separada será feita na próxima publicação.

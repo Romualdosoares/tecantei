@@ -41,7 +41,7 @@ const [
   readProjectFile("../app/api/orders/[orderId]/audio/route.ts"),
   readProjectFile("../app/presente/[token]/page.tsx"),
   readProjectFile("../app/pedidos/[orderId]/order-editor.tsx"),
-  readProjectFile("../app/page.tsx"),
+  readProjectFile("../components/te-cantei-app.tsx"),
   readProjectFile("../lib/order-options.ts"),
   readProjectFile("./verify-kie-contract.mjs"),
   readProjectFile("./verify-domain.mjs"),

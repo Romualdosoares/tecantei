@@ -21,7 +21,7 @@ const files = await Promise.all([
 ]).then((groups) => groups.flat());
 const sources = await Promise.all(files.map(async (path) => ({ path, source: await readFile(path, "utf8") })));
 const allSource = sources.map(({ source }) => source).join("\n");
-const pageSource = await readFile(join(siteRoot, "app", "page.tsx"), "utf8");
+const pageSource = await readFile(join(siteRoot, "components", "te-cantei-app.tsx"), "utf8");
 const adminSource = await readFile(join(siteRoot, "app", "admin", "admin-dashboard.tsx"), "utf8");
 
 for (const { path, source } of sources) {
@@ -33,7 +33,7 @@ for (const target of fragmentLinks) {
   assert.match(allSource, new RegExp(`id=["']${target}["']`), `Destino de fragmento ausente: ${target}`);
 }
 
-const knownStaticRoutes = new Set(["/", "/pedidos", "/suporte", "/auth/reset-password", "/admin/login"]);
+const knownStaticRoutes = new Set(["/", "/criar", "/entrar", "/pedidos", "/suporte", "/auth/reset-password", "/admin/login"]);
 const literalInternalLinks = [...allSource.matchAll(/href\s*=\s*["'](\/[^"'?#]*)["']/g)].map((match) => match[1]);
 for (const href of literalInternalLinks) {
   assert.ok(knownStaticRoutes.has(href), `Rota interna literal sem página correspondente: ${href}`);

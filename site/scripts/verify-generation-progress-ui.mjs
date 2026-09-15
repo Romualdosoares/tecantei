@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+const page = await readFile(new URL("../components/te-cantei-app.tsx", import.meta.url), "utf8");
 const progressStage = await readFile(new URL("../components/studio/generation-progress-stage.tsx", import.meta.url), "utf8");
 const readyStage = await readFile(new URL("../components/studio/generation-ready-stage.tsx", import.meta.url), "utf8");
 const generationRoute = await readFile(new URL("../app/api/orders/[orderId]/generation/route.ts", import.meta.url), "utf8");

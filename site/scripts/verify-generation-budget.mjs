@@ -34,7 +34,7 @@ const [migration, generationRoute, adjustmentRoute, envExample, home, orderEdito
   readFile(new URL("../app/api/orders/[orderId]/generation/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/orders/[orderId]/adjustment/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../.env.example", import.meta.url), "utf8"),
-  readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/te-cantei-app.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/pedidos/[orderId]/order-editor.tsx", import.meta.url), "utf8"),
 ]);
 

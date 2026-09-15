@@ -6,7 +6,7 @@ const [route, dashboard, previewRoute, landing] = await Promise.all([
   read("../app/api/admin/generations/[taskId]/assets/route.ts"),
   read("../app/admin/admin-dashboard.tsx"),
   read("../app/api/orders/[orderId]/versions/[versionId]/preview/route.ts"),
-  read("../app/page.tsx"),
+  read("../components/te-cantei-app.tsx"),
 ]);
 
 assert.match(route, /getAdminIdentity\(\)/);

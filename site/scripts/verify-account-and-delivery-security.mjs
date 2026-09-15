@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 const [home, migration, ordersPage, paymentGuard, checkout, orderEditor, deliveryPage, audioRoute, shareRoute, presentPage, sharedAudioRoute, adminDashboard, adminUsers, adminUser] = await Promise.all([
-  read("../app/page.tsx"),
+  read("../components/te-cantei-app.tsx"),
   read("../supabase/migrations/202609140002_customer_contact.sql"),
   read("../app/pedidos/page.tsx"),
   read("../lib/payment/confirmed-delivery.ts"),

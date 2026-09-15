@@ -21,7 +21,7 @@ assert.equal(createMockLyricDraft({ occasion: "Casal", recipient: "Vitória", st
 
 const [route, home, envExample] = await Promise.all([
   readFile(new URL("../app/api/lyrics/draft/route.ts", import.meta.url), "utf8"),
-  readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/te-cantei-app.tsx", import.meta.url), "utf8"),
   readFile(new URL("../.env.example", import.meta.url), "utf8"),
 ]);
 assert.match(route, /MAX_BODY_BYTES = 8 \* 1_024/);

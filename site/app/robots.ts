@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin/", "/api/", "/auth/", "/pedidos/", "/presente/", "/suporte/"],
+      disallow: ["/admin/", "/api/", "/auth/", "/criar", "/entrar", "/pedidos/", "/presente/", "/suporte/"],
     },
     sitemap: "https://tecantei.vercel.app/sitemap.xml",
     host: "https://tecantei.vercel.app",
