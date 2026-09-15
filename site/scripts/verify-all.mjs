@@ -21,3 +21,4 @@ await import("./verify-finance-and-delivery.mjs");
 await import("./verify-payment-reconciliation.mjs");
 await import("./verify-pilot-readiness.mjs");
 await import("./verify-preflight.mjs");
+await import("./verify-performance-security-seo.mjs");

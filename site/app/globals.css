@@ -136,6 +136,38 @@ body {
   font-family: var(--font-sans), "Plus Jakarta Sans", -apple-system, sans-serif;
 }
 
+html,
+body {
+  overflow-x: clip;
+}
+
+html {
+  scroll-padding-top: 6rem;
+}
+
+.tc-skip-link {
+  position: fixed;
+  top: .75rem;
+  left: .75rem;
+  z-index: 100;
+  padding: .7rem 1rem;
+  border: 1px solid var(--tc-champagne);
+  border-radius: 999px;
+  color: var(--tc-onyx);
+  background: var(--tc-champagne);
+  font-weight: 800;
+  transform: translateY(-180%);
+}
+
+.tc-skip-link:focus {
+  transform: translateY(0);
+}
+
+.tc-deferred-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 680px;
+}
+
 body::before {
   position: fixed;
   inset: 0;
@@ -447,7 +479,7 @@ section [class*="rounded-"][class*="shadow-"]:hover {
   isolation: isolate;
 }
 
-:where(.tc-premium-frame, [data-slot="card"], article[class*="rounded-"], figure[class*="rounded-"], section[class*="rounded-"])::after {
+.tc-premium-frame::after {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -467,7 +499,7 @@ section [class*="rounded-"][class*="shadow-"]:hover {
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: tc-border-orbit 8s linear infinite;
+  animation: tc-border-orbit 12s linear infinite;
 }
 
 .tc-logo-mark::after {
@@ -689,6 +721,17 @@ main > div > section:nth-of-type(3) { animation-delay: 120ms; }
   .generation-spectrum-bar,
   .generation-signal-ring,
   .generation-live-dot {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .tc-premium-frame::after {
+    animation: none;
+    background: linear-gradient(115deg, transparent 8%, rgb(212 175 85 / 62%) 38%, rgb(245 215 126 / 88%) 50%, rgb(212 175 85 / 62%) 62%, transparent 92%);
+  }
+
+  body::after {
     animation: none;
   }
 }

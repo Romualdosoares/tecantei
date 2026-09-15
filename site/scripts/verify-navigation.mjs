@@ -25,7 +25,12 @@ const pageSource = await readFile(join(siteRoot, "app", "page.tsx"), "utf8");
 const adminSource = await readFile(join(siteRoot, "app", "admin", "admin-dashboard.tsx"), "utf8");
 
 for (const { path, source } of sources) {
-  assert.doesNotMatch(source, /href\s*=\s*(?:["']\s*["']|["']#|["']javascript:)/i, `Link inválido em ${path}`);
+  assert.doesNotMatch(source, /href\s*=\s*(?:["']\s*["']|["']javascript:)/i, `Link inválido em ${path}`);
+}
+
+const fragmentLinks = [...allSource.matchAll(/href\s*=\s*["']#([^"']+)["']/g)].map((match) => match[1]);
+for (const target of fragmentLinks) {
+  assert.match(allSource, new RegExp(`id=["']${target}["']`), `Destino de fragmento ausente: ${target}`);
 }
 
 const knownStaticRoutes = new Set(["/", "/pedidos", "/suporte", "/auth/reset-password", "/admin/login"]);

@@ -1163,3 +1163,22 @@ O cadastro público passou a solicitar nome do usuário e WhatsApp com DDD. O te
 Segurança de pagamento reforçada em profundidade: além de o checkout consultar diretamente o gateway antes de retornar `confirmed`, a página de entrega, a geração da URL temporária do MP3, a criação do compartilhamento, a página do presente e seu áudio agora revalidam no servidor uma intenção confirmada para o pedido e a versão exatos. Em `PAYMENT_MODE=live`, somente confirmações de `efi` ou `mercado_pago` são aceitas; registros `mock` permanecem válidos apenas no ambiente simulado. Estado do navegador, retorno de checkout, URL manual, pedido pendente ou pagamento reembolsado não liberam o arquivo.
 
 Validação: teste dedicado de cadastro e guarda de entrega, suíte estrutural completa, lint e build de produção aprovados.
+
+## Continuação de 14/09/2026 — auditoria de desempenho, navegação, segurança e SEO
+
+Auditoria inicial em produção, com Lighthouse móvel, registrou desempenho 57, acessibilidade 94, boas práticas 100 e SEO 100. O gargalo dominante era trabalho contínuo de estilo/layout: o contorno metálico animado havia sido aplicado globalmente a praticamente todos os cards, inclusive fora da área visível. Também foram encontrados nome acessível divergente no logotipo, salto na hierarquia de títulos e `aria-label` proibido em um `div` sem papel semântico.
+
+Otimizações e correções:
+
+- animação orbital restrita aos quadros realmente destacados, com borda premium estática em telas móveis e suporte preservado a `prefers-reduced-motion`;
+- seções abaixo da dobra usam `content-visibility` e tamanho intrínseco, evitando renderização antecipada sem causar salto de layout;
+- componentes exclusivos das etapas posteriores, players e tela de geração são carregados sob demanda;
+- cabeçalho móvel ficou mais compacto, com alvos de toque de 44 px e CTA inferior fixo para iniciar a criação;
+- largura horizontal foi contida, a rolagem considera o cabeçalho fixo e foi incluído link de salto para o conteúdo principal;
+- nome acessível da marca, papel semântico das avaliações e hierarquia da capa musical foram corrigidos;
+- metadados completos, canonical, Open Graph/Twitter, imagem social 1200×630, JSON-LD de organização/site, `robots.txt`, `sitemap.xml` e manifesto foram adicionados;
+- áreas administrativas, autenticação, pedidos e suporte receberam `noindex` explícito; rotas privadas e APIs também foram excluídas das regras de rastreamento;
+- CSP, HSTS, proteção contra MIME sniffing e iframe, política de referenciador, permissões restritas, remoção de `X-Powered-By` e compressão foram configurados globalmente;
+- teste de regressão passou a conferir SEO técnico, cabeçalhos, comportamento móvel e ausência de credenciais privadas em componentes cliente.
+
+Validação local: `npm audit --omit=dev` retornou zero vulnerabilidades conhecidas; suíte estrutural e comportamental completa aprovada; lint sem erros; `git diff --check` sem erros; TypeScript e build de produção Next.js 16.3.5 concluídos com 23 páginas estáticas/dinâmicas geradas. A publicação e a nova medição móvel/desktop em produção ainda serão registradas após o deploy.

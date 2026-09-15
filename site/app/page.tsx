@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,17 +38,18 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { AudioShowcase } from "@/components/landing/audio-showcase";
-import { HowItWorks } from "@/components/landing/how-it-works";
-import { TestimonialsPricingFaq } from "@/components/landing/testimonials-pricing-faq";
 import { LandingFooter } from "@/components/landing/footer";
 import { LiveAlbumPreview } from "@/components/studio/live-album-preview";
-import { GenerationProgressStage } from "@/components/studio/generation-progress-stage";
-import { GenerationReadyStage } from "@/components/studio/generation-ready-stage";
 import { MUSIC_STYLE_OPTIONS, VOICE_OPTIONS, type VoicePreference } from "@/lib/order-options";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { BrandLogo } from "@/components/brand-logo";
 import { useStorefrontPrice } from "@/components/storefront-price-provider";
+
+const AudioShowcase = dynamic(() => import("@/components/landing/audio-showcase").then((module) => module.AudioShowcase));
+const HowItWorks = dynamic(() => import("@/components/landing/how-it-works").then((module) => module.HowItWorks));
+const TestimonialsPricingFaq = dynamic(() => import("@/components/landing/testimonials-pricing-faq").then((module) => module.TestimonialsPricingFaq));
+const GenerationProgressStage = dynamic(() => import("@/components/studio/generation-progress-stage").then((module) => module.GenerationProgressStage));
+const GenerationReadyStage = dynamic(() => import("@/components/studio/generation-ready-stage").then((module) => module.GenerationReadyStage));
 
 const steps = ["Para quem", "História", "Memórias", "Estilo", "Mensagem", "Letra", "Prévia", "Entrega"];
 
@@ -674,13 +676,13 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground selection:bg-rose-500/20">
+    <main id="conteudo-principal" tabIndex={-1} className="min-h-screen bg-background pb-20 text-foreground selection:bg-rose-500/20 sm:pb-0">
       {/* Top Floating Glass Navigation Header */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
-          <button onClick={() => goTo(0)} className="flex shrink-0 items-center gap-2.5 text-left group" aria-label="Voltar ao início">
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-2 px-3 sm:h-20 sm:gap-4 sm:px-8">
+          <button onClick={() => goTo(0)} className="group flex min-h-11 shrink-0 items-center gap-2.5 text-left" aria-label="Te Cantei — sua história virou música — voltar ao início">
             <BrandLogo compact priority className="transition duration-500 group-hover:scale-105 group-hover:border-[#F5D77E]/70" />
-            <div>
+            <div className="hidden sm:block">
               <span className="font-display text-2xl font-bold tracking-tight text-[#2b1722] group-hover:text-rose-900 transition">
                 Te Cantei
               </span>
@@ -717,7 +719,7 @@ export default function Home() {
             ) : (
               <Button
                 variant="ghost"
-                className="rounded-full px-3 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-rose-900"
+                className="min-h-11 rounded-full px-3 text-xs font-semibold text-muted-foreground hover:text-rose-900 sm:text-sm"
                 onClick={() => setAccountOpen(true)}
               >
                 Entrar
@@ -727,10 +729,10 @@ export default function Home() {
             {step === 0 ? (
               <Button
                 onClick={() => goTo(1)}
-                className="rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] px-5 py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-rose-900/20 hover:scale-105 active:scale-95 transition"
+                className="min-h-11 rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] px-4 py-2 text-xs font-bold text-white shadow-md shadow-rose-900/20 transition hover:scale-[1.02] active:scale-95 sm:px-5 sm:text-sm"
               >
                 <Sparkles className="size-3.5 mr-1.5" />
-                Criar minha música
+                <span className="sm:hidden">Criar música</span><span className="hidden sm:inline">Criar minha música</span>
               </Button>
             ) : (
               <Button
@@ -797,7 +799,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="border-y border-rose-100 bg-white/65 px-4 py-9 sm:px-8">
+          <section className="tc-deferred-section border-y border-rose-100 bg-white/65 px-4 py-9 sm:px-8">
             <div className="mx-auto max-w-6xl">
               <p className="text-center text-sm font-extrabold uppercase tracking-[0.18em] text-rose-800">Do sentimento ao presente</p>
               <div className="mt-6 grid gap-3 sm:grid-cols-4">
@@ -821,10 +823,10 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="px-4 py-14 sm:px-8 sm:py-18">
+          <section className="tc-deferred-section px-4 py-14 sm:px-8 sm:py-18">
             <div className="mx-auto max-w-6xl">
               <div className="mx-auto max-w-3xl text-center">
-                <div className="flex justify-center gap-1 text-amber-400" aria-label="Avaliações com cinco estrelas">
+                <div className="flex justify-center gap-1 text-amber-400" role="img" aria-label="Avaliações com cinco estrelas">
                   {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="size-5 fill-current" />)}
                 </div>
                 <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.16em] text-rose-800">Histórias que viraram emoção</p>
@@ -850,7 +852,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="px-4 pb-16 sm:px-8 sm:pb-20">
+          <section className="tc-deferred-section px-4 pb-16 sm:px-8 sm:pb-20">
             <div className="tc-premium-frame relative mx-auto grid max-w-6xl overflow-hidden rounded-[34px] bg-gradient-to-br from-[#351426] via-[#571a3b] to-[#250a18] p-7 text-white shadow-2xl sm:p-11 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-10">
               <div className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full bg-rose-400/20 blur-3xl" />
               <div className="relative">
@@ -874,6 +876,11 @@ export default function Home() {
           </section>
 
           <LandingFooter />
+          <div className="fixed inset-x-3 bottom-3 z-40 sm:hidden">
+            <Button onClick={() => goTo(1)} className="h-13 w-full rounded-full bg-gradient-to-r from-[#8b2450] to-[#b94970] px-5 text-sm font-extrabold text-white">
+              <Heart className="size-4 fill-current" /> Criar minha música <ArrowRight className="size-4" />
+            </Button>
+          </div>
         </div>
       )}
 

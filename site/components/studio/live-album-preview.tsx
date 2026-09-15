@@ -124,9 +124,9 @@ export function LiveAlbumPreview({ recipient, occasion, style }: AlbumPreviewPro
                 <span className="text-[0.65rem] font-bold uppercase tracking-widest text-white/60">
                   {occasion}
                 </span>
-                <h3 className="font-display text-xl sm:text-2xl font-bold leading-tight text-white drop-shadow-md line-clamp-2">
+                <p className="font-display text-xl sm:text-2xl font-bold leading-tight text-white drop-shadow-md line-clamp-2">
                   Canção para {displayName}
-                </h3>
+                </p>
                 <p className="mt-1 text-[0.7rem] font-medium text-white/70">
                   {style} · Produção Exclusiva
                 </p>
