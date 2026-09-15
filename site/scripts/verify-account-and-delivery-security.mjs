@@ -45,8 +45,8 @@ assert.match(deliveryPage, /hasConfirmedDeliveryPayment\(admin, order\.id, deliv
 assert.match(audioRoute, /hasConfirmedDeliveryPayment\(admin, orderId, delivery\.version_id\)/);
 assert.match(shareRoute, /hasConfirmedDeliveryPayment\(admin, orderId\.data, delivery\.version_id\)/);
 assert.match(shareRoute, /\.eq\("owner_id", authData\.user\.id\)/);
-assert.match(presentPage, /hasConfirmedDeliveryPayment\(admin, data\.order_id, data\.version_id\)/);
-assert.match(sharedAudioRoute, /hasConfirmedDeliveryPayment\(admin, access\.order_id, access\.version_id\)/);
+assert.match(presentPage, /hasConfirmedDeliveryPayment\(admin, paidPresent\.order_id, paidPresent\.version_id\)/);
+assert.match(sharedAudioRoute, /hasConfirmedDeliveryPayment\(admin, paidAccess\.order_id, paidAccess\.version_id\)/);
 assert.match(audioRoute, /error: "payment_not_confirmed"/);
 
 console.log("PASS: cadastro exige nome e WhatsApp, grava o perfil privado e exibe o primeiro nome após o login");

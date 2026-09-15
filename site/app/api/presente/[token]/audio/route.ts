@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { findAdminPresentShare, recordAdminPresentAccess } from "@/lib/delivery/admin-present-share";
 import { hashShareToken } from "@/lib/delivery/share-token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabaseAudioBucket } from "@/lib/supabase/env";
@@ -15,25 +16,33 @@ export async function GET(
 
   try {
     const admin = createSupabaseAdminClient();
-    const { data: access, error: accessError } = await admin.rpc(
+    const { data: paidAccess, error: accessError } = await admin.rpc(
       "get_shared_present_audio",
       { target_token_hash: tokenHash },
     );
-    if (accessError || !isAudioAccess(access) || !access.found) {
+    const confirmedPaidAccess = !accessError && isAudioAccess(paidAccess) && paidAccess.found &&
+      await hasConfirmedDeliveryPayment(admin, paidAccess.order_id, paidAccess.version_id)
+      ? paidAccess
+      : null;
+    const adminAccess = confirmedPaidAccess ? null : await findAdminPresentShare(admin, tokenHash);
+    if (!confirmedPaidAccess && !adminAccess) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
-    if (!(await hasConfirmedDeliveryPayment(admin, access.order_id, access.version_id))) {
-      return NextResponse.json({ error: "not_found" }, { status: 404 });
-    }
+    const objectKey = confirmedPaidAccess?.object_key ?? adminAccess?.objectKey;
+    if (!objectKey) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
     const download = new URL(request.url).searchParams.get("mode") === "download";
     const { data, error } = await admin.storage
       .from(getSupabaseAudioBucket())
-      .createSignedUrl(access.object_key, SIGNED_URL_SECONDS, download ? { download: true } : undefined);
+      .createSignedUrl(objectKey, SIGNED_URL_SECONDS, download ? { download: true } : undefined);
     if (error || !data) throw error ?? new Error("signed_url_failed");
-    await admin.rpc("record_delivery_access", {
-      target_delivery_id: access.delivery_id,
-    });
+    if (confirmedPaidAccess) {
+      await admin.rpc("record_delivery_access", {
+        target_delivery_id: confirmedPaidAccess.delivery_id,
+      });
+    } else if (adminAccess) {
+      await recordAdminPresentAccess(admin, adminAccess.shareId);
+    }
     return NextResponse.redirect(data.signedUrl, {
       status: 307,
       headers: { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex" },

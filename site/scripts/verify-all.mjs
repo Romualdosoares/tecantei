@@ -12,6 +12,7 @@ await import("./verify-account-and-delivery-security.mjs");
 await import("./verify-supabase-foundation.mjs");
 await import("./verify-admin-dashboard.mjs");
 await import("./verify-admin-audio-assets.mjs");
+await import("./verify-admin-sharing-and-showcase.mjs");
 await import("./verify-admin-login.mjs");
 await import("./verify-navigation.mjs");
 await import("./verify-delivery.mjs");

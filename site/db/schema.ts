@@ -177,6 +177,24 @@ export const deliveries = sqliteTable("deliveries", {
   uniqueIndex("idx_deliveries_share_token").on(table.shareTokenHash),
 ]);
 
+export const adminPresentShares = sqliteTable("admin_present_shares", {
+  id: text("id").primaryKey(),
+  orderId: text("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  versionId: text("version_id").notNull().references(() => musicVersions.id, { onDelete: "cascade" }),
+  shareTokenHash: text("share_token_hash").notNull(),
+  dedication: text("dedication").notNull(),
+  createdBy: text("created_by"),
+  createdAt: timestamps.createdAt,
+  updatedAt: timestamps.updatedAt,
+  firstAccessedAt: text("first_accessed_at"),
+  revokedAt: text("revoked_at"),
+}, (table) => [
+  uniqueIndex("idx_admin_present_shares_order").on(table.orderId),
+  uniqueIndex("idx_admin_present_shares_token").on(table.shareTokenHash),
+  index("idx_admin_present_shares_version").on(table.versionId),
+  check("admin_present_shares_token_check", sql`${table.shareTokenHash} glob '[0-9a-f]*' and length(${table.shareTokenHash}) = 64`),
+]);
+
 export const homeShowcase = sqliteTable("home_showcase", {
   orderId: text("order_id").primaryKey().references(() => orders.id, { onDelete: "cascade" }),
   versionId: text("version_id").notNull().references(() => musicVersions.id, { onDelete: "cascade" }),

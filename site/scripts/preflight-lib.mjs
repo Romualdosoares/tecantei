@@ -29,6 +29,9 @@ const REQUIRED_MIGRATIONS = [
   "202609130004_single_music_pilot.sql",
   "202609130005_fix_generation_output_publish.sql",
   "202609140001_financial_settings.sql",
+  "202609140002_customer_contact.sql",
+  "202609150001_home_showcase.sql",
+  "202609150002_admin_present_shares.sql",
 ];
 
 const REQUIRED_ENV_KEYS = [

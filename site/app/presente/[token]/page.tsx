@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Gift, Heart, LockKeyhole, Music2, Sparkles } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { findAdminPresentShare } from "@/lib/delivery/admin-present-share";
 import { hashShareToken } from "@/lib/delivery/share-token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { hasConfirmedDeliveryPayment } from "@/lib/payment/confirmed-delivery";
@@ -37,11 +38,24 @@ export default async function PresentPage({ params }: { params: Promise<{ token:
   if (!tokenHash) notFound();
 
   const admin = createSupabaseAdminClient();
-  const { data, error } = await admin.rpc("get_shared_present", {
+  const { data: paidPresent, error } = await admin.rpc("get_shared_present", {
     target_token_hash: tokenHash,
   });
-  if (error || !isSharedPresent(data) || !data.found) notFound();
-  if (!(await hasConfirmedDeliveryPayment(admin, data.order_id, data.version_id))) notFound();
+  const paidAccess = !error && isSharedPresent(paidPresent) && paidPresent.found &&
+    await hasConfirmedDeliveryPayment(admin, paidPresent.order_id, paidPresent.version_id)
+    ? paidPresent
+    : null;
+  const adminAccess = paidAccess ? null : await findAdminPresentShare(admin, tokenHash);
+  const data: SharedPresent | null = paidAccess ?? (adminAccess ? {
+    found: true,
+    order_id: adminAccess.orderId,
+    version_id: adminAccess.versionId,
+    recipient_name: adminAccess.recipientName,
+    title: adminAccess.title,
+    duration_seconds: adminAccess.durationSeconds,
+    dedication: adminAccess.dedication,
+  } : null);
+  if (!data) notFound();
 
   return (
     <main className="present-page relative min-h-screen overflow-hidden bg-[#090807] px-4 py-6 text-white sm:px-7 sm:py-10">

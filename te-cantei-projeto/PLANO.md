@@ -21,6 +21,7 @@ Criar um site em português no qual uma pessoa transforma uma história pessoal 
 - Arquitetura final confirmada: **GitHub** para o repositório, **Vercel** para hospedagem e **Supabase** para autenticação por e-mail/senha, PostgreSQL e arquivos privados.
 - A letra será criada pelos modelos **GPT através da API da Kie.ai**, com seleção administrativa entre GPT-5.6 e GPT-6; a música continuará sendo gerada pelos modelos **Suno através da Kie.ai**.
 - O produto terá um painel administrativo protegido para usuários, integrações, gerações, acessos, vendas, custos, auditoria e **Financeiro**, com preço, gateway e credenciais write-only guardadas no cofre. Exclusões de usuários preservam o histórico operacional e financeiro.
+- O painel administrativo pode escolher a faixa exata de qualquer geração realmente pronta para destacá-la na página inicial ou criar um link administrativo auditado. Esse link é separado da entrega comercial: não confirma pagamento, não altera a versão comprada nem libera o arquivo na conta do cliente.
 - A criação dos projetos externos, as verificações finais e a publicação no GitHub, Vercel e Supabase serão feitas somente quando a implementação local estiver pronta.
 - Desejo de monetização por música e/ou plano mensal.
 - Primeiro organizar e planejar; a criação deste plano e da skill não inicia a implementação.

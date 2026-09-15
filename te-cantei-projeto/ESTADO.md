@@ -1198,3 +1198,15 @@ Banco: a migração aditiva `202609150001_home_showcase.sql` foi tornada idempot
 Validação: suíte `npm run verify` aprovada, incluindo verificações estruturais e comportamentais, lint sem erros, TypeScript e build de produção Next.js 16.3.5 com 24 páginas geradas. `git diff --check` também foi aprovado.
 
 Publicação: branch `main` sincronizada com `origin/main` e deploy de produção forçado pelo projeto Vercel `tecantei`, com o domínio canônico `https://tecantei.vercel.app` conferido após a publicação.
+
+## Correção dos botões Destacar e Link em 15/09/2026
+
+Falha observada pelo proprietário: tarefas concluídas apareciam com `Destacar` desativado e o botão `Link` só ficava disponível para parte das músicas.
+
+Causa: o painel consultava `generation_tasks.version_id`, embora as faixas produzidas pela Kie.ai sejam vinculadas à tarefa por `generation_outputs`. Além disso, o botão de link dependia de uma entrega comercial já criada após pagamento.
+
+Correção: o dashboard agora associa cada tarefa às versões realmente armazenadas e prontas, oferece a escolha exata da faixa nos diálogos de destaque e link e habilita as duas ações sempre que existe ao menos uma música completa válida. Links criados pelo administrador usam `admin_present_shares`, com token armazenado apenas por hash, RLS, rotação, validação da chave privada do MP3 e auditoria. Eles não confirmam pagamento, não mudam o pedido para pago/entregue e não substituem a entrega comercial do cliente.
+
+Banco: migração `202609150002_admin_present_shares.sql` aplicada ao Supabase conectado.
+
+Validação: teste dedicado de associação, seleção, RLS, auditoria e separação da entrega aprovado; suíte estrutural e comportamental completa aprovada; lint sem erros; TypeScript e build de produção Next.js 16.3.5 aprovados com 24 páginas geradas. Publicação sincronizada no GitHub e Vercel e domínio de produção conferido após o deploy.

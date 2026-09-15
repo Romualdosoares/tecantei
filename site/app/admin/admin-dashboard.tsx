@@ -23,7 +23,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
 
 type UserRow = { id: string; email: string; displayName: string; whatsapp: string; role: "user" | "support" | "admin"; status: "active" | "suspended" | "deleted"; createdAt: string; lastSignInAt: string | null };
-type GenerationRow = { id: string; order_id: string; versionId: string | null; provider: string; model: string; status: string; error_code: string | null; reserved_credits_millis: number; created_at: string; completed_at: string | null; recipientName: string; ownerEmail: string; orderStatus: string; shareable: boolean; showcased: boolean };
+type GenerationVersion = { id: string; title: string; label: string };
+type GenerationRow = { id: string; order_id: string; versionId: string | null; versions: GenerationVersion[]; provider: string; model: string; status: string; error_code: string | null; reserved_credits_millis: number; created_at: string; completed_at: string | null; recipientName: string; ownerEmail: string; orderStatus: string; shareable: boolean; showcased: boolean };
 type ShowcaseItem = { order_id: string; version_id: string; position: number; created_at: string };
 type GenerationAsset = { versionId: string; label: string; title: string; durationSeconds: number | null; previewUrl: string | null; previewDownloadUrl: string | null; fullDownloadUrl: string | null };
 type SaleRow = { id: string; order_id: string; provider: string; amount_cents: number; currency: string; status: string; created_at: string; updated_at: string; recipientName: string };
@@ -97,6 +98,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [mercadoPagoSecrets, setMercadoPagoSecrets] = useState({ accessToken: "", webhookSecret: "" });
   const [efiSecrets, setEfiSecrets] = useState({ clientId: "", clientSecret: "", pixKey: "", certificateP12Base64: "", certificatePassphrase: "", webhookToken: "", webhookMtlsGatewaySecret: "" });
   const [shareGeneration, setShareGeneration] = useState<GenerationRow | null>(null);
+  const [shareVersionId, setShareVersionId] = useState("");
   const [shareReason, setShareReason] = useState("");
   const [shareDedication, setShareDedication] = useState("");
   const [shareBusy, setShareBusy] = useState(false);
@@ -104,6 +106,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [shareUrl, setShareUrl] = useState("");
   const [shareCopied, setShareCopied] = useState(false);
   const [showcaseAction, setShowcaseAction] = useState<{ row: GenerationRow; mode: "add" | "remove" } | null>(null);
+  const [showcaseVersionId, setShowcaseVersionId] = useState("");
   const [showcaseReason, setShowcaseReason] = useState("");
   const [showcaseBusy, setShowcaseBusy] = useState(false);
   const [showcaseError, setShowcaseError] = useState("");
@@ -382,6 +385,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
 
   const openShareDialog = (generation: GenerationRow) => {
     setShareGeneration(generation);
+    setShareVersionId(generation.versions[0]?.id ?? "");
     setShareReason("");
     setShareDedication("");
     setShareError("");
@@ -391,6 +395,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
 
   const closeShareDialog = () => {
     setShareGeneration(null);
+    setShareVersionId("");
     setShareReason("");
     setShareDedication("");
     setShareError("");
@@ -399,23 +404,21 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   };
 
   const generateShareLink = async () => {
-    if (!shareGeneration) return;
+    if (!shareGeneration || !shareVersionId) return;
     setShareBusy(true);
     setShareError("");
     const response = await fetch(`/api/admin/orders/${shareGeneration.order_id}/share`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dedication: shareDedication, reason: shareReason }),
+      body: JSON.stringify({ versionId: shareVersionId, dedication: shareDedication, reason: shareReason }),
     }).catch(() => null);
     const payload = response ? await response.json().catch(() => null) as { shareUrl?: string; error?: string } | null : null;
     setShareBusy(false);
     if (!response?.ok || !payload?.shareUrl) {
       setShareError(
-        payload?.error === "order_not_deliverable"
-          ? "Este pedido ainda não foi pago e entregue, por isso não pode gerar um link de presente."
-          : payload?.error === "delivery_not_found"
-            ? "Este pedido ainda não possui uma entrega disponível para compartilhar."
-            : "Não foi possível gerar o link do presente agora.",
+        payload?.error === "version_not_ready"
+          ? "Esta versão ainda não possui a música completa armazenada."
+          : "Não foi possível gerar o link do presente agora.",
       );
       return;
     }
@@ -431,18 +434,20 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
 
   const openShowcaseDialog = (row: GenerationRow, mode: "add" | "remove") => {
     setShowcaseAction({ row, mode });
+    setShowcaseVersionId(row.versions[0]?.id ?? "");
     setShowcaseReason("");
     setShowcaseError("");
   };
 
   const closeShowcaseDialog = () => {
     setShowcaseAction(null);
+    setShowcaseVersionId("");
     setShowcaseReason("");
     setShowcaseError("");
   };
 
   const confirmShowcaseAction = async () => {
-    if (!showcaseAction) return;
+    if (!showcaseAction || (showcaseAction.mode === "add" && !showcaseVersionId)) return;
     const { row, mode } = showcaseAction;
     setShowcaseBusy(true);
     setShowcaseError("");
@@ -450,7 +455,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       method: mode === "add" ? "POST" : "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(mode === "add"
-        ? { orderId: row.order_id, versionId: row.versionId, reason: showcaseReason }
+        ? { orderId: row.order_id, versionId: showcaseVersionId, reason: showcaseReason }
         : { reason: showcaseReason }),
     }).catch(() => null);
     const payload = response ? await response.json().catch(() => null) as { error?: string } | null : null;
@@ -560,7 +565,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                 <Card className="rounded-[24px] border-black/5 shadow-none"><CardContent className="px-4 sm:px-6"><div className="mb-4 flex items-center gap-2 rounded-xl border bg-white px-3"><Search className="size-4 text-muted-foreground"/><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, e-mail ou WhatsApp" className="border-0 shadow-none focus-visible:ring-0" /></div><Table><TableHeader><TableRow><TableHead>Usuário</TableHead><TableHead>Perfil</TableHead><TableHead>Status</TableHead><TableHead>Último acesso</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader><TableBody>{filteredUsers.map((user) => <TableRow key={user.id}><TableCell><p className="font-semibold">{user.displayName || "Sem nome"}</p><p className="text-xs text-muted-foreground">{user.email}</p>{user.whatsapp && <p className="text-xs text-muted-foreground">{user.whatsapp}</p>}</TableCell><TableCell><StatusBadge value={user.role} /></TableCell><TableCell><StatusBadge value={user.status} /></TableCell><TableCell>{user.lastSignInAt ? dateTime(user.lastSignInAt) : "Nunca"}</TableCell><TableCell><div className="flex justify-end gap-2"><Button size="sm" variant="outline" className="rounded-full" onClick={() => openEdit(user)}><UserCog /> Editar</Button><Button size="icon-sm" variant="ghost" className="rounded-full text-destructive" disabled={user.id === data.currentAdminId} onClick={() => { setDeleteUser(user); setDeleteReason(""); }} aria-label={`Excluir ${user.displayName || user.email}`}><Trash2 /></Button></div></TableCell></TableRow>)}</TableBody></Table>{filteredUsers.length === 0 && <Empty label="Nenhum usuário encontrado." />}</CardContent></Card>
               </TabsContent>
 
-              <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai, gere o link do presente para o cliente e escolha até 6 músicas para a seção “Músicas criadas” da página inicial." action={<Badge variant="outline" className="rounded-full px-3 py-1.5"><Star className="size-3.5 text-amber-500" /> Destaques na home: {data.showcase.length}/6</Badge>} /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em","Ações"]} empty={data.generations.length === 0} emptyLabel="Nenhuma geração registrada neste período.">{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p>{row.showcased && <Badge variant="outline" className="mt-1.5 rounded-full border-amber-300 bg-amber-50 text-amber-900"><Star className="size-3 fill-amber-500 text-amber-500" /> Na página inicial</Badge>}</TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell><div className="flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" className="rounded-full" onClick={() => openGenerationAssets(row)}><Headphones /> Áudios</Button><Button type="button" size="sm" variant="outline" className="rounded-full" disabled={!row.shareable} title={row.shareable ? "Gerar link da página de presente para enviar ao cliente" : "Disponível quando o pedido estiver pago e entregue"} onClick={() => openShareDialog(row)}><Link2 /> Link</Button><Button type="button" size="sm" variant={row.showcased ? "default" : "outline"} className={row.showcased ? "rounded-full bg-amber-500 text-white hover:bg-amber-600" : "rounded-full"} disabled={row.showcased || (Boolean(row.versionId) && row.status === "succeeded" && data.showcase.length < 6) ? false : true} title={row.showcased ? "Remover da página inicial" : data.showcase.length >= 6 ? "A vitrine já tem 6 músicas" : row.versionId && row.status === "succeeded" ? "Destacar na seção “Músicas criadas” da página inicial" : "Disponível quando a geração estiver concluída"} onClick={() => openShowcaseDialog(row, row.showcased ? "remove" : "add")}><Star className={row.showcased ? "fill-current" : ""} /> {row.showcased ? "Destacada" : "Destacar"}</Button></div></TableCell></TableRow>)}</DataTable></TabsContent>
+              <TabsContent value="generations" className="space-y-5"><SectionTitle title="Histórico de gerações" description="Acompanhe cada tarefa enviada à Kie.ai, gere um link administrativo da música e escolha até 6 faixas para a seção “Músicas criadas” da página inicial." action={<Badge variant="outline" className="rounded-full px-3 py-1.5"><Star className="size-3.5 text-amber-500" /> Destaques na home: {data.showcase.length}/6</Badge>} /><DataTable headers={["Cliente / música","Fornecedor","Modelo","Status","Créditos","Criada em","Ações"]} empty={data.generations.length === 0} emptyLabel="Nenhuma geração registrada neste período.">{data.generations.map((row) => <TableRow key={row.id}><TableCell><p className="font-semibold">{row.recipientName}</p><p className="text-xs text-muted-foreground">{row.ownerEmail}</p>{row.showcased && <Badge variant="outline" className="mt-1.5 rounded-full border-amber-300 bg-amber-50 text-amber-900"><Star className="size-3 fill-amber-500 text-amber-500" /> Na página inicial</Badge>}</TableCell><TableCell>{row.provider}</TableCell><TableCell><Badge variant="outline">{row.model}</Badge></TableCell><TableCell><StatusBadge value={row.status} />{row.error_code && <p className="mt-1 text-xs text-destructive">{row.error_code}</p>}</TableCell><TableCell>{Number(row.reserved_credits_millis || 0) / 1_000}</TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell><div className="flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" className="rounded-full" onClick={() => openGenerationAssets(row)}><Headphones /> Áudios</Button><Button type="button" size="sm" variant="outline" className="rounded-full" disabled={!row.shareable} title={row.shareable ? "Gerar link administrativo da página de presente" : "Disponível quando houver uma música completa armazenada"} onClick={() => openShareDialog(row)}><Link2 /> Link</Button><Button type="button" size="sm" variant={row.showcased ? "default" : "outline"} className={row.showcased ? "rounded-full bg-amber-500 text-white hover:bg-amber-600" : "rounded-full"} disabled={!row.showcased && (!row.shareable || data.showcase.length >= 6)} title={row.showcased ? "Remover da página inicial" : data.showcase.length >= 6 ? "A vitrine já tem 6 músicas" : row.shareable ? "Escolher uma faixa para destacar na página inicial" : "Disponível quando houver uma música completa armazenada"} onClick={() => openShowcaseDialog(row, row.showcased ? "remove" : "add")}><Star className={row.showcased ? "fill-current" : ""} /> {row.showcased ? "Destacada" : "Destacar"}</Button></div></TableCell></TableRow>)}</DataTable></TabsContent>
 
               <TabsContent value="sales" className="space-y-5"><SectionTitle title="Vendas e pagamentos" description="Receita confirmada, cobranças pendentes, falhas e reembolsos por provedor." /><div className="grid gap-4 sm:grid-cols-3"><MiniStat label="Receita confirmada" value={money(data.metrics.revenueCents)} detail={`${data.metrics.paidOrders} pagamentos`} /><MiniStat label="Pendente" value={money(data.metrics.pendingRevenueCents)} detail="ainda não libera entrega" /><MiniStat label="Conversão estimada" value={`${data.metrics.conversionRate}%`} detail="venda por visitante" /></div><DataTable headers={["Presente","Provedor","Valor","Status","Criado","Atualizado"]} empty={data.sales.length === 0} emptyLabel="Nenhuma venda registrada neste período.">{data.sales.map((row) => <TableRow key={row.id}><TableCell className="font-semibold">{row.recipientName}</TableCell><TableCell>{providerLabel(row.provider)}</TableCell><TableCell>{money(row.amount_cents)}</TableCell><TableCell><StatusBadge value={row.status}/></TableCell><TableCell>{dateTime(row.created_at)}</TableCell><TableCell>{dateTime(row.updated_at)}</TableCell></TableRow>)}</DataTable></TabsContent>
 
@@ -674,19 +679,24 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
 
           <div className="mt-5 space-y-4">
             <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
-              Atenção: por segurança, o link atual do cliente não pode ser recuperado. Gerar um novo link aqui <strong>invalida o link anterior</strong>, se existir. Use quando o cliente pedir o link novamente.
+              Este é um link administrativo para a versão escolhida. Ele funciona mesmo antes do pagamento, fica registrado na auditoria e <strong>não libera a entrega na conta do cliente</strong>. Um novo link invalida somente o link administrativo anterior deste pedido.
             </p>
 
             {!shareUrl && (
               <>
+                <Field label="Música do link">
+                  <NativeSelect className="w-full" value={shareVersionId} onChange={(event) => setShareVersionId(event.target.value)}>
+                    {shareGeneration?.versions.map((version) => <NativeSelectOption key={version.id} value={version.id}>{version.label} · {version.title}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
                 <Field label="Dedicatória (opcional)">
-                  <Textarea maxLength={500} value={shareDedication} onChange={(event) => setShareDedication(event.target.value)} placeholder="Se vazio, mantém a dedicatória atual do pedido" />
+                  <Textarea maxLength={500} value={shareDedication} onChange={(event) => setShareDedication(event.target.value)} placeholder="Se vazio, usa uma mensagem padrão" />
                 </Field>
                 <Field label="Motivo da geração">
                   <Textarea minLength={8} maxLength={300} value={shareReason} onChange={(event) => setShareReason(event.target.value)} placeholder="Ex.: cliente solicitou o link do presente pelo suporte" />
                 </Field>
                 {shareError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{shareError}</p>}
-                <Button type="button" className="w-full rounded-full bg-[#7e2148]" disabled={shareBusy || shareReason.trim().length < 8} onClick={() => void generateShareLink()}>
+                <Button type="button" className="w-full rounded-full bg-[#7e2148]" disabled={shareBusy || !shareVersionId || shareReason.trim().length < 8} onClick={() => void generateShareLink()}>
                   {shareBusy ? <LoaderCircle className="animate-spin" /> : <Link2 />} Gerar novo link do presente
                 </Button>
               </>
@@ -726,11 +736,18 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           </DialogHeader>
 
           <div className="mt-5 space-y-4">
+            {showcaseAction?.mode === "add" && (
+              <Field label="Música para destacar">
+                <NativeSelect className="w-full" value={showcaseVersionId} onChange={(event) => setShowcaseVersionId(event.target.value)}>
+                  {showcaseAction.row.versions.map((version) => <NativeSelectOption key={version.id} value={version.id}>{version.label} · {version.title}</NativeSelectOption>)}
+                </NativeSelect>
+              </Field>
+            )}
             <Field label="Motivo da alteração">
               <Textarea minLength={8} maxLength={300} value={showcaseReason} onChange={(event) => setShowcaseReason(event.target.value)} placeholder={showcaseAction?.mode === "add" ? "Ex.: cliente autorizou exibir a música como exemplo na página inicial" : "Ex.: cliente pediu para remover a música da página inicial"} />
             </Field>
             {showcaseError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{showcaseError}</p>}
-            <Button type="button" className="w-full rounded-full bg-[#7e2148]" disabled={showcaseBusy || showcaseReason.trim().length < 8} onClick={() => void confirmShowcaseAction()}>
+            <Button type="button" className="w-full rounded-full bg-[#7e2148]" disabled={showcaseBusy || (showcaseAction?.mode === "add" && !showcaseVersionId) || showcaseReason.trim().length < 8} onClick={() => void confirmShowcaseAction()}>
               {showcaseBusy ? <LoaderCircle className="animate-spin" /> : <Star />} {showcaseAction?.mode === "add" ? "Confirmar destaque" : "Remover destaque"}
             </Button>
           </div>
