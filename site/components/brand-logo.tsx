@@ -24,7 +24,7 @@ export function BrandLogo({
   }
 
   return (
-    <span className={cn("tc-logo-mark relative block size-12 shrink-0 overflow-hidden rounded-2xl border border-[#D4AF55]/35 bg-black shadow-[0_8px_28px_rgba(212,175,85,.2)]", className)}>
+    <span className={cn("tc-logo-mark relative block size-12 shrink-0 overflow-hidden rounded-2xl border border-[#F0BD4F]/45 bg-black shadow-[0_8px_28px_rgba(240,189,79,.28)]", className)}>
       <Image
         src="/tecantei-logodourada.jpg"
         alt=""

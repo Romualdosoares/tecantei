@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Crie uma música personalizada para presentear quem você ama.",
     start_url: "/",
     display: "standalone",
-    background_color: "#090807",
-    theme_color: "#090807",
+    background_color: "#050505",
+    theme_color: "#050505",
     lang: "pt-BR",
     icons: [{ src: "/tecantei-logodourada.jpg", sizes: "any", type: "image/jpeg", purpose: "any" }],
   };

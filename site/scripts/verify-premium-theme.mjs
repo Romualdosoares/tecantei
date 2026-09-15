@@ -20,15 +20,16 @@ const [styles, logo, layout, landing, admin, adminLogin, orders, order, support,
 await access(new URL("../public/tecantei-logodourada.jpg", import.meta.url));
 
 for (const token of [
-  "--tc-onyx: #090807",
-  "--tc-charcoal: #1a1813",
-  "--tc-gold: #d4af55",
-  "--tc-champagne: #f5d77e",
-  "--tc-bronze: #8c6a2a",
-  "--tc-sand: #b8ae99",
+  "--tc-onyx: #050505",
+  "--tc-ink: #0b0a08",
+  "--tc-charcoal: #18150f",
+  "--tc-gold: #f0bd4f",
+  "--tc-champagne: #ffe49a",
+  "--tc-bronze: #b77a1f",
+  "--tc-sand: #d6c8ae",
 ]) assert.ok(styles.includes(token), `Token visual ausente: ${token}`);
 
-assert.match(styles, /--tc-metallic:\s*linear-gradient\(115deg, #8c6a2a 0%, #d4af55 35%, #f5d77e 52%, #d4af55 72%, #8c6a2a 100%\)/);
+assert.match(styles, /--tc-metallic:\s*linear-gradient\(115deg, #7a490b 0%, #c98216 18%, #f0bd4f 39%, #fff2ad 52%, #f0bd4f 65%, #c98216 82%, #70410a 100%\)/);
 assert.match(styles, /button\.bg-gradient-to-r,[\s\S]*background-image: none !important/);
 assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(styles, /\.tc-logo-mark::after/);
@@ -53,8 +54,8 @@ for (const source of [landing, admin, adminLogin, orders, order, support, presen
   assert.doesNotMatch(source, /src="\/te-cantei-logo\.png"/, "Logo anterior ainda referenciada");
 }
 
-assert.match(admin, /color: "#D4AF55"/);
-assert.match(admin, /color: "#F5D77E"/);
+assert.match(admin, /color: "#F0BD4F"/);
+assert.match(admin, /color: "#FFE49A"/);
 assert.match(pricing, /bg-primary text-primary-foreground/);
 
 const luminance = (hex) => {
@@ -66,12 +67,12 @@ const contrast = (foreground, background) => {
   const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
   return (values[0] + 0.05) / (values[1] + 0.05);
 };
-assert.ok(contrast("ffffff", "090807") >= 4.5);
-assert.ok(contrast("b8ae99", "090807") >= 4.5);
-assert.ok(contrast("090807", "d4af55") >= 4.5);
-assert.ok(contrast("f5d77e", "1a1813") >= 4.5);
+assert.ok(contrast("fffdf8", "050505") >= 4.5);
+assert.ok(contrast("d6c8ae", "050505") >= 4.5);
+assert.ok(contrast("050505", "f0bd4f") >= 4.5);
+assert.ok(contrast("ffe49a", "18150f") >= 4.5);
 
-console.log("PASS: paleta premium preto e dourado aplicada aos tokens globais e ao painel");
+console.log("PASS: paleta ônix, ouro vivo e champanhe aplicada aos tokens globais e ao painel");
 console.log("PASS: nova logo dourada aplicada às jornadas públicas, administrativas e de entrega");
 console.log("PASS: botões usam ouro sólido, gradiente fica decorativo e animações respeitam redução de movimento");
 console.log("PASS: combinações principais de texto, superfície e ação atendem contraste WCAG AA");

@@ -76,6 +76,7 @@ Levantar na documentação e em um teste autorizado a unidade cobrada pela Kie.a
 ### 2 — Identidade e experiência
 Usar o logo atual como base e mostrar aplicações em cabeçalho, celular e página do presente. Produzir as telas de apresentação, briefing, letra, geração, prévia, escolha, compra, entrega e área de pedidos.
 A interface deve explicar o que o cliente pode fazer em cada estado, com linguagem simples. Não expor nomes de APIs, identificadores internos ou detalhes de infraestrutura.
+A identidade mantém o padrão preto e dourado, com ônix profundo, superfícies de maior contraste, ouro luminoso e champanhe claro. O acabamento premium deve usar linhas metálicas nítidas e luz ambiente controlada, sem blur ou halos que prejudiquem a leitura.
 
 ### 3 — Base do produto
 Modelar usuários, pedidos, letra aprovada, versões, tarefas de geração, solicitações de ajuste, eventos de pagamento, entregas e custos.

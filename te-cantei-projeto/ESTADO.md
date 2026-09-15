@@ -1210,3 +1210,11 @@ Correção: o dashboard agora associa cada tarefa às versões realmente armazen
 Banco: migração `202609150002_admin_present_shares.sql` aplicada ao Supabase conectado.
 
 Validação: teste dedicado de associação, seleção, RLS, auditoria e separação da entrega aprovado; suíte estrutural e comportamental completa aprovada; lint sem erros; TypeScript e build de produção Next.js 16.3.5 aprovados com 24 páginas geradas. Publicação sincronizada no GitHub e Vercel e domínio de produção conferido após o deploy.
+
+## Atualização da paleta premium em 15/09/2026
+
+A identidade preto e dourado foi preservada e recebeu uma paleta mais viva: ônix profundo, tinta quente nas áreas de fundo, superfícies com maior contraste, ouro luminoso, champanhe claro e bronze mais saturado. A landing, o estúdio, os players, a página do presente, os elementos administrativos, o manifesto e a imagem social passaram a compartilhar os mesmos tokens, inclusive nos componentes antigos que ainda usam classes de cor literais.
+
+O acabamento ganhou luz ambiente dourada controlada, contornos e reflexos metálicos mais definidos, mantendo a leitura e a aparência sofisticada sem blur. As combinações principais continuam atendendo contraste WCAG AA e a preferência de movimento reduzido permanece respeitada.
+
+Validação: suíte estrutural completa aprovada, lint sem erros, TypeScript e build de produção Next.js 16.3.5 aprovados com 24 páginas geradas, `git diff --check` sem erros e inspeção visual da landing concluída em desktop e em largura móvel.

@@ -67,7 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${jakarta.variable} ${playfair.variable} scroll-smooth`}>
-      <body className="font-sans antialiased selection:bg-primary/30 selection:text-[#F5D77E]">
+      <body className="font-sans antialiased selection:bg-primary/30 selection:text-[#FFE49A]">
         <a className="tc-skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
         <script
           type="application/ld+json"
