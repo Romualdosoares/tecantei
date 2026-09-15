@@ -2,6 +2,10 @@ import Link from "next/link";
 import { ArrowRight, Check, Gift, Heart, LockKeyhole, Music2, Sparkles, Star } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { StorefrontPriceText } from "@/components/storefront-price-text";
+import { ShowcaseAudioPlayer } from "@/components/showcase/showcase-audio-player";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
 
 const testimonials = [
   ["Quando a música falou o apelido que só nós usamos, meu marido começou a chorar. Foi inesquecível.", "Mariana & Thiago", "Presente de bodas"],
@@ -11,7 +15,52 @@ const testimonials = [
 
 const createLinkClass = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#D4AF55] px-6 py-3 text-sm font-extrabold text-[#090807] ring-1 ring-[#F5D77E]/60 transition hover:-translate-y-0.5 hover:bg-[#F5D77E] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F5D77E]";
 
-export default function LandingPage() {
+type ShowcaseItem = {
+  orderId: string;
+  recipientName: string;
+  occasion: string;
+  style: string;
+  title: string;
+  durationSeconds: number | null;
+};
+
+async function getHomeShowcase(): Promise<ShowcaseItem[]> {
+  try {
+    const admin = createSupabaseAdminClient();
+    const { data: rows, error } = await admin
+      .from("home_showcase")
+      .select("order_id, version_id, position")
+      .order("position", { ascending: true })
+      .limit(6);
+    if (error || !rows || rows.length === 0) return [];
+
+    const [{ data: orders }, { data: versions }] = await Promise.all([
+      admin.from("orders").select("id, recipient_name, occasion, style").in("id", rows.map((row) => row.order_id)),
+      admin.from("music_versions").select("id, title, duration_seconds").in("id", rows.map((row) => row.version_id)),
+    ]);
+    const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
+    const versionById = new Map((versions ?? []).map((version) => [version.id, version]));
+
+    return rows.flatMap((row) => {
+      const order = orderById.get(row.order_id);
+      const version = versionById.get(row.version_id);
+      if (!order || !version) return [];
+      return [{
+        orderId: row.order_id,
+        recipientName: order.recipient_name,
+        occasion: order.occasion,
+        style: order.style,
+        title: version.title?.trim() || "Música personalizada",
+        durationSeconds: version.duration_seconds,
+      }];
+    });
+  } catch {
+    return [];
+  }
+}
+
+export default async function LandingPage() {
+  const showcase = await getHomeShowcase();
   return (
     <main id="conteudo-principal" tabIndex={-1} className="min-h-screen overflow-x-clip bg-background pb-24 text-foreground sm:pb-0">
       <header className="sticky top-0 z-50 border-b border-[#D4AF55]/20 bg-[#090807]">
@@ -70,6 +119,33 @@ export default function LandingPage() {
           <div className="mt-10 grid gap-5 md:grid-cols-3">{testimonials.map(([quote, name, context]) => <figure key={name} className="rounded-[26px] border border-[#D4AF55]/20 bg-[#1A1813] p-6"><div role="img" aria-label="Cinco estrelas" className="flex gap-1 text-[#D4AF55]">{Array.from({ length: 5 }).map((_, index) => <Star key={index} className="size-4 fill-current" />)}</div><blockquote className="mt-5 leading-7 text-[#E8E2D6]">“{quote}”</blockquote><figcaption className="mt-6 border-t border-[#D4AF55]/15 pt-4"><strong className="text-sm text-white">{name}</strong><span className="mt-1 block text-xs text-[#B8AE99]">{context}</span></figcaption></figure>)}</div>
         </div>
       </section>
+
+      {showcase.length > 0 && (
+        <section className="tc-deferred-section border-y border-[#D4AF55]/15 bg-[#11100D] px-4 py-16 sm:px-8" aria-labelledby="musicas-criadas">
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#D4AF55]">Músicas criadas</p>
+              <h2 id="musicas-criadas" className="mt-4 font-display text-3xl font-extrabold text-white sm:text-5xl">Histórias reais que já viraram canção.</h2>
+              <p className="mt-4 text-sm leading-7 text-[#B8AE99] sm:text-base">Aperte o play e sinta como uma história de verdade emociona quando vira música.</p>
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {showcase.map((item) => (
+                <article key={item.orderId} className="tc-premium-frame flex flex-col rounded-[26px] border border-[#D4AF55]/20 bg-[#1A1813] p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full border border-[#D4AF55]/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#D4AF55]">{item.style}</span>
+                    <Music2 className="size-4 shrink-0 text-[#D4AF55]" />
+                  </div>
+                  <h3 className="mt-4 font-display text-xl font-bold leading-snug text-white">“{item.title}”</h3>
+                  <p className="mt-2 text-sm font-semibold text-[#B8AE99]">Para {item.recipientName} · {item.occasion}</p>
+                  <div className="mt-5 pt-1">
+                    <ShowcaseAudioPlayer src={`/api/showcase/${item.orderId}/audio`} title={item.title} durationSeconds={item.durationSeconds} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="tc-deferred-section px-4 pb-20 sm:px-8">
         <div className="tc-premium-frame mx-auto grid max-w-6xl gap-8 rounded-[34px] border border-[#D4AF55]/30 bg-[#1A1813] p-7 sm:p-11 lg:grid-cols-[1.2fr_.8fr] lg:items-center">

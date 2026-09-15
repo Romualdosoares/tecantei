@@ -1186,3 +1186,15 @@ Validação local: `npm audit --omit=dev` retornou zero vulnerabilidades conheci
 Segundo passe de desempenho: a landing comercial foi separada do estúdio interativo. A rota `/` agora é uma página estática leve e sem hidratação do formulário completo; `/criar` abre diretamente a etapa 1 e `/entrar` abre o fluxo de autenticação. Preço dinâmico e toda a jornada de criação foram preservados. A primeira publicação intermediária elevou o Lighthouse móvel de 57 para 75, reduziu TBT de 8,57 s para 0,81 s, zerou CLS e levou acessibilidade de 94 para 100; a medição final da landing separada será feita na próxima publicação.
 
 Resultado final em produção após desativar o prefetch do estúdio pesado na landing: Lighthouse móvel com desempenho 88, acessibilidade 100, boas práticas 100 e SEO 100; FCP 1,2 s, LCP 1,9 s, TBT 460 ms e CLS 0. No desktop: desempenho 95, acessibilidade 100, boas práticas 100 e SEO 100; FCP 0,4 s, LCP 0,6 s, TBT 180 ms e CLS 0. A landing e a autenticação também foram inspecionadas visualmente; `/criar`, `/entrar` e `/admin/login` retornam `noindex`, `/admin` e `/pedidos` continuam redirecionando visitantes sem sessão e o domínio entrega os cabeçalhos de segurança configurados.
+
+## Sincronização e publicação de 15/09/2026
+
+Pedido: sincronizar o projeto do computador com GitHub e Vercel e executar um deploy forçado em produção.
+
+Conteúdo publicado: seção administrável “Músicas criadas” na página inicial, player público restrito às músicas selecionadas, geração administrativa de novo link do presente e nome do homenageado opcional na criação. A cópia local `site antigo/` permanece fora do repositório e da publicação.
+
+Banco: a migração aditiva `202609150001_home_showcase.sql` foi tornada idempotente e aplicada ao Supabase conectado. A versão local e a remota ficaram alinhadas no histórico de migrações.
+
+Validação: suíte `npm run verify` aprovada, incluindo verificações estruturais e comportamentais, lint sem erros, TypeScript e build de produção Next.js 16.3.5 com 24 páginas geradas. `git diff --check` também foi aprovado.
+
+Publicação: branch `main` sincronizada com `origin/main` e deploy de produção forçado pelo projeto Vercel `tecantei`, com o domínio canônico `https://tecantei.vercel.app` conferido após a publicação.

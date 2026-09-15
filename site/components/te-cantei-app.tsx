@@ -197,6 +197,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
 
   const effectiveOccasion = occasion === "Outro" ? (customOccasion.trim() || "Outro") : occasion;
   const effectiveStyle = style === "Outro" ? customStyle.trim() : style;
+  const recipientDisplay = name.trim() || "Alguém especial";
   const completeStory = [
     story.trim(),
     favoriteMemories.trim() ? `Memórias favoritas: ${favoriteMemories.trim()}` : "",
@@ -415,10 +416,6 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
       setLyricsError("Por favor, diga para quem é a música.");
       return;
     }
-    if (!name.trim()) {
-      setLyricsError("Informe para quem é a música.");
-      return;
-    }
     if (!effectiveStyle) {
       setLyricsError("Escreva qual ritmo você deseja.");
       return;
@@ -433,7 +430,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
     try {
       const draft = await requestLyricDraft({
         occasion: effectiveOccasion,
-        recipient: name,
+        recipient: recipientDisplay,
         pronunciation,
         story: completeStory,
         style: effectiveStyle,
@@ -461,7 +458,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
       body: JSON.stringify({
         requestId: draftRequestId,
         occasion: effectiveOccasion,
-        recipient: name,
+        recipient: recipientDisplay,
         pronunciation,
         story: completeStory,
         style: effectiveStyle,
@@ -657,10 +654,6 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
       }
       if (occasion === "Outro" && !customOccasion.trim()) {
         setLyricsError("Diga para quem é a música.");
-        return;
-      }
-      if (!name.trim()) {
-        setLyricsError("Informe o nome da pessoa homenageada.");
         return;
       }
     }
@@ -926,7 +919,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
                 )}
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm font-bold text-[#2b1722]">
-                    <span>Nome da pessoa homenageada *</span>
+                    <span>Nome da pessoa homenageada <small className="font-normal text-muted-foreground">(Opcional)</small></span>
                     <Input value={name} onChange={(event) => setName(event.target.value)} maxLength={120} placeholder="Ex.: Marina" className="h-12 rounded-xl border-rose-200 text-base" />
                   </label>
                   <label className="space-y-2 text-sm font-bold text-[#2b1722]">
@@ -934,6 +927,9 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
                     <Input value={pronunciation} onChange={(event) => setPronunciation(event.target.value)} maxLength={200} placeholder="Ex.: Mari, Amor..." className="h-12 rounded-xl border-rose-200 text-base" />
                   </label>
                 </div>
+                <p className="mt-4 rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3 text-xs font-semibold leading-5 text-rose-950">
+                  Você pode informar o nome para deixar a música ainda mais pessoal — ou deixar em branco se preferir criar a música sem citar um nome específico.
+                </p>
               </div>
             )}
 
@@ -1585,14 +1581,14 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
             {[
               {
                 id: "original",
-                title: `Você é meu lugar (${name})`,
+                title: `Você é meu lugar (${recipientDisplay})`,
                 label: "Versão Original",
                 detail: effectiveStyle,
                 art: "bg-gradient-to-br from-[#40182b] via-[#6e2343] to-[#240a17]",
               },
               {
                 id: "ajuste",
-                title: `Nosso melhor verso (${name})`,
+                title: `Nosso melhor verso (${recipientDisplay})`,
                 label: "Ajuste Alternativo",
                 detail: `${effectiveStyle} · Mais acústico e intimista`,
                 art: "bg-gradient-to-br from-[#3b1d2b] via-[#815636] to-[#1c0d16]",
@@ -1656,7 +1652,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
             <div>
               <Badge className="border-0 bg-rose-100 text-rose-900 hover:bg-rose-100">Sua música está pronta</Badge>
               <p className="mt-3 font-display text-2xl font-extrabold text-[#2b1722]">
-                Leve a emoção completa para {name}.
+                Leve a emoção completa para {recipientDisplay}.
               </p>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
                 Libere a música inteira em MP3, pronta para baixar, e uma página bonita para apresentar e compartilhar o presente.
@@ -1737,9 +1733,9 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
               </div>
               <div>
                 <p className="font-display text-lg font-bold">
-                  {selected === "original" ? `Você é meu lugar (${name})` : `Nosso melhor verso (${name})`}
+                  {selected === "original" ? `Você é meu lugar (${recipientDisplay})` : `Nosso melhor verso (${recipientDisplay})`}
                 </p>
-                <p className="text-xs text-white/70">Para {name} · {effectiveStyle}</p>
+                <p className="text-xs text-white/70">Para {recipientDisplay} · {effectiveStyle}</p>
               </div>
             </div>
 
@@ -1787,7 +1783,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
 
                   <Gift className="mt-8 size-14 text-rose-300" />
                   <h1 className="mt-5 font-display text-4xl sm:text-5xl font-extrabold leading-tight">
-                    O presente de {name}<br />está pronto!
+                    O presente de {recipientDisplay}<br />está pronto!
                   </h1>
                   <p className="mt-4 text-white/75 text-sm sm:text-base leading-relaxed max-w-sm">
                     A versão final completa foi liberada com áudio em alta fidelidade. Agora é só emocionar quem você ama!
@@ -1803,13 +1799,13 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
               <div className="m-4 sm:m-6 rounded-[28px] bg-[#fffaf8] p-6 text-foreground sm:p-8 shadow-xl">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-extrabold uppercase tracking-widest text-rose-800">
-                    Dedicatória para {name}
+                    Dedicatória para {recipientDisplay}
                   </span>
                   <Badge className="bg-rose-100 text-rose-900 border-0 text-xs">{effectiveStyle}</Badge>
                 </div>
 
                 <h2 className="mt-3 font-display text-2xl sm:text-3xl font-bold text-[#2b1722]">
-                  {selected === "original" ? `Você é meu lugar (${name})` : `Nosso melhor verso (${name})`}
+                  {selected === "original" ? `Você é meu lugar (${recipientDisplay})` : `Nosso melhor verso (${recipientDisplay})`}
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground font-medium">
                   Música completa · 3 minutos e 24 segundos

@@ -177,6 +177,17 @@ export const deliveries = sqliteTable("deliveries", {
   uniqueIndex("idx_deliveries_share_token").on(table.shareTokenHash),
 ]);
 
+export const homeShowcase = sqliteTable("home_showcase", {
+  orderId: text("order_id").primaryKey().references(() => orders.id, { onDelete: "cascade" }),
+  versionId: text("version_id").notNull().references(() => musicVersions.id, { onDelete: "cascade" }),
+  position: integer("position").notNull(),
+  createdBy: text("created_by"),
+  createdAt: timestamps.createdAt,
+}, (table) => [
+  uniqueIndex("idx_home_showcase_position").on(table.position),
+  check("home_showcase_position_check", sql`${table.position} between 1 and 6`),
+]);
+
 export const costEvents = sqliteTable("cost_events", {
   id: text("id").primaryKey(),
   orderId: text("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),

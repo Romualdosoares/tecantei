@@ -23,6 +23,7 @@ site/.env.*
 *.pfx
 
 # Pacotes locais e arquivos do sistema
+/site antigo/
 *.zip
 *.rar
 .DS_Store

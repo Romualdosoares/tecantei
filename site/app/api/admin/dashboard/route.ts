@@ -34,12 +34,14 @@ export async function GET(request: Request) {
     const period = resolvePeriod(input.data);
     if (!period) return NextResponse.json({ error: "invalid_period" }, { status: 400, headers: NO_STORE });
 
-    const [authUsers, profiles, orders, tasks, payments, periodTasks, periodPayments, costs, events, settings, readiness, audits] = await Promise.all([
+    const [authUsers, profiles, orders, tasks, payments, deliveries, showcase, periodTasks, periodPayments, costs, events, settings, readiness, audits] = await Promise.all([
       admin.auth.admin.listUsers({ page: 1, perPage: 200 }),
       admin.from("profiles").select("id, display_name, whatsapp, is_admin, is_support, account_status, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
       admin.from("orders").select("id, owner_id, recipient_name, status, style, created_at, updated_at").order("created_at", { ascending: false }).limit(500),
-      admin.from("generation_tasks").select("id, order_id, provider, model, status, error_code, reserved_credits_millis, created_at, updated_at, completed_at").order("created_at", { ascending: false }).limit(500),
+      admin.from("generation_tasks").select("id, order_id, version_id, provider, model, status, error_code, reserved_credits_millis, created_at, updated_at, completed_at").order("created_at", { ascending: false }).limit(500),
       admin.from("payment_intents").select("id, order_id, provider, amount_cents, currency, status, created_at, updated_at").order("created_at", { ascending: false }).limit(500),
+      admin.from("deliveries").select("order_id").limit(1000),
+      admin.from("home_showcase").select("order_id, version_id, position, created_at"),
       admin.from("generation_tasks").select("status, created_at").gte("created_at", period.fromInstant).lt("created_at", period.untilInstant).limit(10_000),
       admin.from("payment_intents").select("status, amount_cents, updated_at").gte("updated_at", period.fromInstant).lt("updated_at", period.untilInstant).limit(10_000),
       admin.from("cost_events").select("credits_millis, usd_micros, status, created_at").gte("created_at", period.fromInstant).lt("created_at", period.untilInstant).limit(10_000),
@@ -70,6 +72,8 @@ export async function GET(request: Request) {
     });
     const paymentRows = payments.data ?? [];
     const taskRows = tasks.data ?? [];
+    const deliveryOrderIds = new Set((deliveries.data ?? []).map((delivery) => delivery.order_id));
+    const showcaseOrderIds = new Set((showcase.data ?? []).map((item) => item.order_id));
     const eventRows = events.data ?? [];
     const periodPaymentRows = periodPayments.data ?? [];
     const periodTaskRows = periodTasks.data ?? [];
@@ -100,10 +104,15 @@ export async function GET(request: Request) {
         const order = orderById.get(task.order_id);
         return {
           ...task,
+          versionId: task.version_id ?? null,
           recipientName: order?.recipient_name ?? "—",
           ownerEmail: order ? authById.get(order.owner_id)?.email ?? "—" : "—",
+          orderStatus: order?.status ?? "",
+          shareable: Boolean(order && ["paid", "delivered"].includes(order.status) && deliveryOrderIds.has(task.order_id)),
+          showcased: showcaseOrderIds.has(task.order_id),
         };
       }),
+      showcase: showcase.data ?? [],
       sales: paymentRows.slice(0, 100).map((payment) => ({
         ...payment,
         recipientName: orderById.get(payment.order_id)?.recipient_name ?? "—",
