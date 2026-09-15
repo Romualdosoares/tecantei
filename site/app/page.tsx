@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Check, Gift, Heart, LockKeyhole, Music2, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Gift, Heart, LockKeyhole, Music2, Sparkles, Star } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { StorefrontPriceText } from "@/components/storefront-price-text";
 import { ShowcaseAudioPlayer } from "@/components/showcase/showcase-audio-player";
+import { FloatingWhatsAppButton, WHATSAPP_URL, WhatsAppIcon } from "@/components/whatsapp-button";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,15 @@ const testimonials = [
   ["Quando a música falou o apelido que só nós usamos, meu marido começou a chorar. Foi inesquecível.", "Mariana & Thiago", "Presente de bodas"],
   ["Minha mãe se emocionou com as lembranças da nossa família. Hoje ela ouve a música quase todos os dias.", "Rodrigo Mendonça", "Aniversário da mãe"],
   ["Poder editar a letra antes fez toda a diferença. Coloquei nossa gíria e a música ficou com a nossa cara.", "Beatriz Silveira", "Presente romântico"],
+];
+
+const faqs = [
+  ["Quanto tempo demora para a música ficar pronta?", "Assim que você aprova a letra da sua história, a melodia e os vocais são criados e ficam prontos em cerca de 2 a 5 minutos, diretamente na sua tela."],
+  ["Posso ouvir a música antes de pagar?", "Sim! Você ouve uma prévia de 50 segundos em alta qualidade antes de decidir pela compra. E ainda tem direito a 1 ajuste gratuito de estilo ou ritmo se quiser experimentar outra versão."],
+  ["E se a letra não ficar do jeito que eu quero?", "Antes de qualquer música ser gerada, você recebe a letra completa na tela e pode editar cada verso, trocar palavras e adicionar nomes quantas vezes quiser, sem custo algum."],
+  ["Como a pessoa presenteada vai ouvir a música?", "Você recebe o arquivo MP3 em alta fidelidade e também uma página de presente exclusiva, com dedicatória e player elegante, que pode enviar por WhatsApp ou QR Code."],
+  ["A história que eu contar fica em segredo?", "Sim, com total privacidade e sigilo. O texto da sua história nunca é compartilhado publicamente. Na página de presente aparecem apenas a música final e a sua dedicatória."],
+  ["Existe alguma assinatura ou mensalidade?", "Não! O valor é um pagamento único por pedido. Não há mensalidades, cobranças recorrentes nem taxas ocultas."],
 ];
 
 const createLinkClass = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#D4AF55] px-6 py-3 text-sm font-extrabold text-[#090807] ring-1 ring-[#F5D77E]/60 transition hover:-translate-y-0.5 hover:bg-[#F5D77E] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F5D77E]";
@@ -147,16 +157,39 @@ export default async function LandingPage() {
         </section>
       )}
 
+      <section className="tc-deferred-section px-4 py-16 sm:px-8" aria-labelledby="duvidas-frequentes">
+        <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-xs font-extrabold uppercase tracking-[.18em] text-[#D4AF55]">Dúvidas frequentes</p>
+            <h2 id="duvidas-frequentes" className="mt-4 font-display text-3xl font-extrabold text-white sm:text-5xl">Tudo o que você precisa saber antes de criar.</h2>
+            <p className="mt-4 text-sm leading-7 text-[#B8AE99] sm:text-base">Respostas diretas para você criar a sua música com total confiança.</p>
+          </div>
+          <div className="mt-10 space-y-3">
+            {faqs.map(([question, answer]) => (
+              <details key={question} className="group rounded-2xl border border-[#D4AF55]/20 bg-[#1A1813] transition open:border-[#D4AF55]/40">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-left font-display text-base font-bold text-white marker:hidden [&::-webkit-details-marker]:hidden sm:text-lg">
+                  {question}
+                  <ChevronDown className="size-5 shrink-0 text-[#D4AF55] transition-transform duration-200 group-open:rotate-180" />
+                </summary>
+                <p className="border-t border-[#D4AF55]/15 px-5 pb-5 pt-4 text-sm leading-7 text-[#D8D0C1]">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="tc-deferred-section px-4 pb-20 sm:px-8">
         <div className="tc-premium-frame mx-auto grid max-w-6xl gap-8 rounded-[34px] border border-[#D4AF55]/30 bg-[#1A1813] p-7 sm:p-11 lg:grid-cols-[1.2fr_.8fr] lg:items-center">
           <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4AF55]"><Gift className="size-4" />Uma lembrança que não expira</p><h2 className="mt-5 font-display text-3xl font-extrabold text-white sm:text-5xl">O momento passa. A canção fica.</h2><p className="mt-4 max-w-2xl leading-8 text-[#D8D0C1]">Registre essas lembranças enquanto ainda estão vivas e transforme-as em algo que poderá atravessar anos. Imagine a reação de quem você ama ao perceber que a música conta exatamente a história de vocês.</p></div>
-          <div className="border border-[#D4AF55]/20 bg-[#090807] p-6 text-center"><p className="text-sm font-bold text-[#F5D77E]">Música completa + página para presentear</p><p className="mt-2 font-display text-4xl font-extrabold text-white"><StorefrontPriceText /></p><Link href="/criar" prefetch={false} className={`${createLinkClass} mt-6 w-full`}>Criar minha música agora<ArrowRight className="size-4" /></Link></div>
+          <div className="border border-[#D4AF55]/20 bg-[#090807] p-6 text-center"><p className="text-sm font-bold text-[#F5D77E]">Música completa + página para presentear</p><p className="mt-2 font-display text-4xl font-extrabold text-white"><StorefrontPriceText /></p><Link href="/criar" prefetch={false} className={`${createLinkClass} mt-6 w-full`}>Criar minha música agora<ArrowRight className="size-4" /></Link><p className="mt-5 text-xs font-semibold text-[#B8AE99]">Ficou com alguma dúvida? Fale com a gente:</p><a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-sm font-extrabold text-[#062b16] ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:bg-[#3ee07a] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#25D366]"><WhatsAppIcon className="size-5" />Tirar dúvidas no WhatsApp</a><p className="mt-2 text-xs text-[#B8AE99]">(43) 9145-6410</p></div>
         </div>
       </section>
 
       <footer className="border-t border-[#D4AF55]/15 px-4 py-8 text-center text-xs text-[#B8AE99]">© {new Date().getFullYear()} Te Cantei · Histórias transformadas em música com carinho e privacidade.</footer>
 
       <div className="fixed inset-x-3 bottom-3 z-40 sm:hidden"><Link href="/criar" prefetch={false} className={`${createLinkClass} w-full`}><Heart className="size-4 fill-current" />Criar minha música<ArrowRight className="size-4" /></Link></div>
+
+      <FloatingWhatsAppButton />
     </main>
   );
 }
