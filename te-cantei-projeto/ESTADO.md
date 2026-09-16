@@ -1345,4 +1345,4 @@ Pedido: instalar o Meta Pixel `1080024137940742` na página Home.
 
 Entrega: `site/app/page.tsx` carrega o script oficial do Meta Pixel apenas na rota `/`, depois da página se tornar interativa, inicializa o identificador informado e registra `PageView`. O fallback oficial via `noscript` também foi incluído, sem redirecionar ou expor qualquer dado do cliente.
 
-Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. Pendente apenas a confirmação do carregamento pela ferramenta Meta após a publicação.
+Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. O deploy `dpl_3DHNhgwWcXiirq63EnibZs3HySQN` foi promovido para `www.tecantei.site`; a Home pública respondeu HTTP 200 e contém o identificador, o carregador `fbevents.js` e o fallback `noscript`. A confirmação final de eventos recebidos depende da ferramenta Meta, após visitas reais ao site.
