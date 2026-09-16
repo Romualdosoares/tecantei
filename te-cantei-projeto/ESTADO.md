@@ -1294,3 +1294,13 @@ Publicação: o primeiro envio foi corretamente rejeitado antes da promoção po
 Cache: `vercel cache purge` removeu com sucesso os caches CDN e Data do projeto. Consultas posteriores com cache-buster retornaram HTTP 200, `Age: 0`, `X-Vercel-Cache: MISS` na landing e conteúdo atualizado em `/criar`, incluindo a indicação opcional e a tipografia móvel compacta.
 
 Observação: o preflight local de produção continuou apontando ausência de segredos no arquivo local, coerente com a política de não manter credenciais de produção no workspace; o build remoto da Vercel concluiu normalmente com 24 páginas.
+
+## Correção do rascunho na etapa 5 em 16/09/2026
+
+Pedido: corrigir o bloqueio na etapa 5 do fluxo de criação, que mostrava “Não foi possível preparar o rascunho agora”.
+
+Diagnóstico: a rota publicada `POST /api/lyrics/draft` retornava HTTP 503. Quando as configurações administrativas ou o provedor de letras Kie.ai falhavam, a exceção interrompia a criação antes de chegar ao rascunho local.
+
+Correção: `site/app/api/lyrics/draft/route.ts` agora usa o rascunho simulado como contingência identificada quando o carregamento administrativo ou a Kie.ai estiverem indisponíveis. O modo real continua sendo usado normalmente quando estiver configurado e responder com sucesso; falhas ficam registradas no log do servidor, sem bloquear o avanço para a revisão da letra.
+
+Validação: ESLint do arquivo, TypeScript, a suíte estrutural e o build local de produção Next.js 16.3.5 passaram. O deploy `dpl_29UKk9YEEQrR6upiQJqGeuXZXSP8` foi concluído e promovido para `www.tecantei.site`. A rota externa não foi reenviada após a detecção da falha da Kie.ai, para evitar uma nova tentativa com custo externo ambíguo.
