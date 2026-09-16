@@ -1275,6 +1275,16 @@ Entrega: a página `site/app/presente/[token]/page.tsx` agora define metadados p
 
 Validação: a checagem estrutural de SEO passou com verificações específicas da página do presente e da imagem padrão. ESLint e TypeScript foram aprovados. Após liberar um processo de build residual, a compilação de produção Next.js 16.3.5 foi concluída normalmente, com 24 páginas geradas; `git diff --check` também foi aprovado. A mudança permanece local e depende de nova publicação para aparecer nos links reais. Plataformas sociais podem manter a miniatura anterior em cache até atualizarem o endereço.
 
+## Sincronização e publicação das melhorias do presente em 15/09/2026
+
+Pedido: sincronizar as pastas com GitHub e Vercel e executar um deploy forçado.
+
+GitHub: as alterações da capa móvel 9:16, compartilhamento social e CTA, tipografia móvel compacta, destinatário opcional, novos estilos e ocasião, e logo padrão da prévia social foram reunidas no commit `5f9fbda` (`feat: aprimorar criacao e compartilhamento do presente`) e enviadas à branch `main` do repositório `Romualdosoares/tecantei`. Antes do envio, `main` e `origin/main` estavam no mesmo commit-base, sem conflito remoto.
+
+Validação: a suíte estrutural completa, o lint de todos os arquivos alterados, TypeScript, `git diff --check` e o build de produção Next.js 16.3.5 foram aprovados; o build gerou 24 páginas. Nenhuma chamada paga de música ou pagamento foi executada.
+
+Vercel: deploy de produção forçado a partir da raiz vinculada ao projeto `tecantei`. O deployment `dpl_6myCaP4qgZ4EkMiozF8Wzs21ZV1d` concluiu em estado `Ready` e recebeu os aliases `www.tecantei.site`, `tecantei.site` e `tecantei.vercel.app`. A conferência posterior retornou HTTP 200 para a landing, `/criar` e `tecantei-logodourada.jpg`; a criação publicada contém a nova opção “Música Viral” e a imagem da marca é entregue como `image/jpeg`.
+
 ## Deploy forçado e limpeza de cache em 15/09/2026
 
 Pedido: executar deploy forçado e limpar o cache.
