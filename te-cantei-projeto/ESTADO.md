@@ -1346,3 +1346,11 @@ Pedido: instalar o Meta Pixel `1080024137940742` na página Home.
 Entrega: `site/app/page.tsx` carrega o script oficial do Meta Pixel apenas na rota `/`, depois da página se tornar interativa, inicializa o identificador informado e registra `PageView`. O fallback oficial via `noscript` também foi incluído, sem redirecionar ou expor qualquer dado do cliente.
 
 Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. O deploy `dpl_3DHNhgwWcXiirq63EnibZs3HySQN` foi promovido para `www.tecantei.site`; a Home pública respondeu HTTP 200 e contém o identificador, o carregador `fbevents.js` e o fallback `noscript`. A confirmação final de eventos recebidos depende da ferramenta Meta, após visitas reais ao site.
+
+## API de Conversões da Meta na Home em 16/09/2026
+
+Pedido: configurar a API de Conversões, mantendo o token fora do navegador.
+
+Entrega: `site/components/meta-pixel.tsx` passa a enviar o `PageView` do Pixel com um `event_id` único. A Home gera o mesmo identificador no servidor e `site/lib/meta/conversions.ts` encaminha o evento à API de Conversões apenas quando `META_CAPI_ACCESS_TOKEN` estiver configurado. Assim, Pixel e servidor são deduplicados sem criar uma rota pública capaz de disparar eventos indevidos. A credencial não foi gravada no repositório, HTML ou registros; `site/.env.example` documenta as três variáveis privadas necessárias.
+
+Validação: ESLint, TypeScript, `git diff --check` e build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. A listagem da Vercel confirmou que as variáveis `META_CAPI_*` ainda não existem em produção; portanto, nenhum evento CAPI foi enviado. Próximo passo: revogar o token exposto, gerar outro no Gerenciador de Eventos e criar na Vercel, para Production, `META_CAPI_ACCESS_TOKEN` com o novo valor. Os valores públicos já documentados são `META_CAPI_PIXEL_ID=1080024137940742` e `META_CAPI_GRAPH_VERSION=v25.0`.

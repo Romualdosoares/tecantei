@@ -1,11 +1,14 @@
 import Link from "next/link";
-import Script from "next/script";
+import { randomUUID } from "node:crypto";
+import { headers } from "next/headers";
 import { ArrowRight, Check, ChevronDown, Gift, Heart, LockKeyhole, Music2, Sparkles, Star } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { MetaPixel } from "@/components/meta-pixel";
 import { StorefrontPriceText } from "@/components/storefront-price-text";
 import { ShowcaseAudioPlayer } from "@/components/showcase/showcase-audio-player";
 import { HeroShowcasePlayer } from "@/components/showcase/hero-showcase-player";
 import { FloatingWhatsAppButton, WHATSAPP_URL, WhatsAppIcon } from "@/components/whatsapp-button";
+import { sendMetaPageView } from "@/lib/meta/conversions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -73,20 +76,20 @@ async function getHomeShowcase(): Promise<ShowcaseItem[]> {
 
 export default async function LandingPage() {
   const showcase = await getHomeShowcase();
+  const requestHeaders = await headers();
+  const metaEventId = randomUUID();
+
+  if (requestHeaders.get("accept")?.includes("text/html")) {
+    await sendMetaPageView({
+      eventId: metaEventId,
+      userAgent: requestHeaders.get("user-agent"),
+      clientIp: requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+    });
+  }
+
   return (
     <>
-      <Script id="meta-pixel" strategy="afterInteractive">
-        {`!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1080024137940742');
-fbq('track', 'PageView');`}
-      </Script>
+      <MetaPixel eventId={metaEventId} />
       <main id="conteudo-principal" tabIndex={-1} className="tc-mobile-font-compact min-h-screen overflow-x-clip bg-background pb-24 text-foreground sm:pb-0">
       <noscript>
         {/* The Meta Pixel fallback must remain a plain tracking image. */}
