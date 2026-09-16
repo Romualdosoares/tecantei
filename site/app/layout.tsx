@@ -58,6 +58,11 @@ export const metadata: Metadata = {
     apple: "/tecantei-logodourada.jpg",
   },
   manifest: "/manifest.webmanifest",
+  verification: {
+    other: {
+      "facebook-domain-verification": "lk683l9t1n38n9fsywuougkujzkc8v",
+    },
+  },
 };
 
 export default function RootLayout({

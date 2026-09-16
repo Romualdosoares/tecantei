@@ -1322,3 +1322,19 @@ Pedido: exibir uma barra de processo durante a criação de uma música ajustada
 Entrega: `site/app/pedidos/[orderId]/order-editor.tsx` agora mostra um painel escuro/dourado enquanto o pedido está em geração, com percentual orientado pelo estado real da tarefa, etapa atual, barra de progresso e os marcos Recebido, Melodia, Produção e Prévia. A página já atualiza automaticamente durante a tarefa; quando a prévia ajustada for publicada, ela substitui o painel pelas versões disponíveis para comparação.
 
 Validação: ESLint, TypeScript, build local de produção e `git diff --check` foram aprovados. O deploy `dpl_CchfazhrcsuYqCRDKTasXqAuf9BU` foi concluído e promovido para `www.tecantei.site`.
+
+## Player animado das músicas criadas em 16/09/2026
+
+Pedido: transformar o player do topo da página inicial em uma área mais animada, com equalizador e reprodução sequencial das faixas exibidas em “Músicas criadas”.
+
+Entrega: `site/components/showcase/hero-showcase-player.tsx` implementa a playlist com equalizador animado, faixa atual, tempo, barra de progresso, controles anterior/reproduzir/próxima e avanço automático ao terminar. `site/app/page.tsx` fornece ao player somente as músicas autorizadas na vitrine pública; quando não houver itens publicados, a arte anterior permanece como contingência. Os players da página também se pausam mutuamente para evitar reprodução simultânea.
+
+Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. Nenhuma geração musical paga foi acionada.
+
+## Verificação de domínio do Facebook em 16/09/2026
+
+Pedido: inserir na Home a meta tag `facebook-domain-verification` fornecida para confirmar o domínio.
+
+Entrega: `site/app/layout.tsx` registra o código `lk683l9t1n38n9fsywuougkujzkc8v` pela API de metadados do Next.js, que materializa a tag no `<head>` da página inicial.
+
+Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas.

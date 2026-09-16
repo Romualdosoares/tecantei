@@ -3,6 +3,7 @@ import { ArrowRight, Check, ChevronDown, Gift, Heart, LockKeyhole, Music2, Spark
 import { BrandLogo } from "@/components/brand-logo";
 import { StorefrontPriceText } from "@/components/storefront-price-text";
 import { ShowcaseAudioPlayer } from "@/components/showcase/showcase-audio-player";
+import { HeroShowcasePlayer } from "@/components/showcase/hero-showcase-player";
 import { FloatingWhatsAppButton, WHATSAPP_URL, WhatsAppIcon } from "@/components/whatsapp-button";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -107,9 +108,7 @@ export default async function LandingPage() {
 
           <aside className="tc-premium-frame mx-auto w-full max-w-md rounded-[30px] border border-[#D4AF55]/25 bg-[#1A1813] p-6 sm:p-8" aria-label="Resumo da oferta">
             <div className="flex items-center justify-between"><span className="rounded-full border border-[#D4AF55]/25 px-3 py-1 text-xs font-bold text-[#D4AF55]">CANÇÃO EXCLUSIVA</span><Music2 className="size-6 text-[#D4AF55]" /></div>
-            <div className="my-8 grid aspect-[1.2] place-items-center border-y border-[#D4AF55]/20 bg-[radial-gradient(circle_at_center,#2b2415_0,#11100d_60%,#090807_100%)]">
-              <div className="grid size-32 place-items-center rounded-full border border-[#F5D77E]/35 bg-[#090807] text-[#F5D77E] sm:size-40"><Heart className="size-14 fill-[#D4AF55]/15" /></div>
-            </div>
+            {showcase.length > 0 ? <HeroShowcasePlayer items={showcase} /> : <div className="my-8 grid aspect-[1.2] place-items-center border-y border-[#D4AF55]/20 bg-[radial-gradient(circle_at_center,#2b2415_0,#11100d_60%,#090807_100%)]"><div className="grid size-32 place-items-center rounded-full border border-[#F5D77E]/35 bg-[#090807] text-[#F5D77E] sm:size-40"><Heart className="size-14 fill-[#D4AF55]/15" /></div></div>}
             <p className="text-sm font-bold text-[#B8AE99]">Música completa + página para presentear</p>
             <p className="mt-2 font-display text-5xl font-extrabold text-white"><StorefrontPriceText /></p>
             <p className="mt-2 text-xs text-[#B8AE99]">Pagamento único · sem mensalidade</p>
