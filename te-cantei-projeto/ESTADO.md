@@ -1329,7 +1329,7 @@ Pedido: transformar o player do topo da página inicial em uma área mais animad
 
 Entrega: `site/components/showcase/hero-showcase-player.tsx` implementa a playlist com equalizador animado, faixa atual, tempo, barra de progresso, controles anterior/reproduzir/próxima e avanço automático ao terminar. `site/app/page.tsx` fornece ao player somente as músicas autorizadas na vitrine pública; quando não houver itens publicados, a arte anterior permanece como contingência. Os players da página também se pausam mutuamente para evitar reprodução simultânea.
 
-Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. Nenhuma geração musical paga foi acionada.
+Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. Nenhuma geração musical paga foi acionada. O deploy `dpl_CUWqvwXGTBnhnG5Wq7ueAHK2W4wi` foi concluído e promovido para `www.tecantei.site`.
 
 ## Verificação de domínio do Facebook em 16/09/2026
 
@@ -1337,4 +1337,4 @@ Pedido: inserir na Home a meta tag `facebook-domain-verification` fornecida para
 
 Entrega: `site/app/layout.tsx` registra o código `lk683l9t1n38n9fsywuougkujzkc8v` pela API de metadados do Next.js, que materializa a tag no `<head>` da página inicial.
 
-Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas.
+Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. Após o deploy `dpl_CUWqvwXGTBnhnG5Wq7ueAHK2W4wi`, a Home pública respondeu HTTP 200 e o HTML entregue contém exatamente `<meta name="facebook-domain-verification" content="lk683l9t1n38n9fsywuougkujzkc8v"/>` dentro do `<head>`.
