@@ -1,5 +1,5 @@
 # Te Cantei — estado do projeto
-Atualizado em 11/09/2026.
+Atualizado em 15/09/2026.
 
 ## Situação atual
 Etapas 0 a 2 concluídas; base Supabase, história/letra, integração musical simulada, pagamento, entrega e piloto local estão em desenvolvimento.
@@ -1218,3 +1218,69 @@ A identidade preto e dourado foi preservada e recebeu uma paleta mais viva: ôni
 O acabamento ganhou luz ambiente dourada controlada, contornos e reflexos metálicos mais definidos, mantendo a leitura e a aparência sofisticada sem blur. As combinações principais continuam atendendo contraste WCAG AA e a preferência de movimento reduzido permanece respeitada.
 
 Validação: suíte estrutural completa aprovada, lint sem erros, TypeScript e build de produção Next.js 16.3.5 aprovados com 24 páginas geradas, `git diff --check` sem erros e inspeção visual da landing concluída em desktop e em largura móvel.
+
+## Correção da capa móvel do presente em 15/09/2026
+
+Pedido: reduzir a apresentação inicial da página pública de presente para que nome, título da música e dedicatória fiquem dentro de uma composição móvel 9:16, evitando a rolagem excessiva observada no celular.
+
+Correção: a capa inicial agora usa proporção 9:16 abaixo de 640 px, com margem externa de 8 px, cabeçalho e ornamentos compactos, tipografia móvel ajustada e dedicatória acomodada no espaço restante. Em telas maiores, a composição anterior foi preservada. O player continua imediatamente depois da capa.
+
+Validação: captura local em viewport exato de 390 × 844 confirmou capa de 372 × 665 px, nome, título e dedicatória integralmente visíveis, largura total de 390 px e ausência de overflow horizontal. ESLint do arquivo alterado, TypeScript e build de produção Next.js 16.3.5 foram aprovados; 24 páginas foram geradas. A correção permanece local, sem nova publicação nesta sessão.
+
+## Compartilhamento social e conversão na página do presente em 15/09/2026
+
+Pedido: permitir que a pessoa presenteada compartilhe seu presente nas redes sociais e adicionar, abaixo, um convite para quem acessou o link criar uma música própria.
+
+Entrega: `site/app/presente/[token]/present-share-actions.tsx` adiciona compartilhamento nativo do dispositivo, WhatsApp, Facebook e cópia do link, sempre iniciado voluntariamente pelo visitante. `site/app/presente/[token]/page.tsx` inclui esse bloco após o player e acrescenta o CTA “Quer fazer uma música para alguém especial?”, ligado a `/criar`. Nenhum briefing, letra ou dado financeiro foi incluído no texto compartilhado.
+
+Validação: em viewport de 390 × 844, os destinos codificados de WhatsApp e Facebook foram conferidos, a cópia devolveu o estado “Copiado”, o CTA apontou para `/criar` e não houve overflow horizontal. ESLint, TypeScript e build de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. A alteração permanece local; uma eventual publicação não foi solicitada nesta sessão.
+
+## Tipografia móvel mais compacta em 15/09/2026
+
+Pedido: reduzir em 2 px as letras das etapas de criação e da página principal para melhorar a organização no celular.
+
+Correção: a classe compartilhada `tc-mobile-font-compact` passou a aplicar, somente abaixo de 640 px, uma redução exata de 2 px aos níveis tipográficos de 14 px ou maiores. Textos auxiliares que já usam 12 px ou menos foram preservados para manter a legibilidade. A regra foi aplicada à landing `site/app/page.tsx` e a toda a jornada `site/components/te-cantei-app.tsx`; o desktop não foi alterado.
+
+Validação: em 390 × 844, o título das etapas foi medido em 28 px, descrições em 14 px e opções em 12 px; na landing, o título principal foi medido em 34 px e o texto em 14 px. As duas páginas permaneceram com largura total de 390 px e sem overflow horizontal. Inspeção visual, ESLint, TypeScript, `git diff --check` e build de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. A alteração permanece local, sem publicação nesta sessão.
+
+## Destinatário/ocasião opcional no briefing em 15/09/2026
+
+Pedido: remover a obrigação de preencher “Para quem é a música?”.
+
+Correção: a etapa 1 agora identifica a pergunta como opcional e permite continuar sem selecionar uma opção. A validação antes da criação da letra e o contrato da ferramenta experimental também deixaram de exigir `occasion`. As rotas de rascunho, aprovação do novo pedido e revisão do briefing aceitam o campo ausente ou vazio e o normalizam para “Uma homenagem especial”, preservando os contratos não nulos do banco sem inventar uma escolha visível para o cliente.
+
+Validação: em 390 × 844, o fluxo avançou da etapa 1 para a história com zero opções selecionadas; também avançou após selecionar “Outro” e deixar o complemento vazio. Não houve mensagem de erro nem overflow horizontal. ESLint dos arquivos alterados, TypeScript, `git diff --check` e build de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. A alteração permanece local, sem publicação nesta sessão.
+
+## Novos estilos motivacionais em 15/09/2026
+
+Pedido: adicionar “Motivacional” e “Motivacional impactante” à etapa 4, “Escolha um estilo musical”.
+
+Entrega: os dois estilos foram adicionados à lista central de opções musicais, ficando disponíveis tanto no fluxo de criação quanto na edição posterior do pedido. O gerador local de rascunhos também ganhou uma linha específica para cada novo estilo, enquanto a integração real continua recebendo o nome selecionado sem conversão.
+
+Validação: os testes dedicados do gerador de letras e da prontidão do piloto foram aprovados, incluindo a presença e o comportamento dos dois estilos. ESLint, TypeScript e build de produção Next.js 16.3.5 também passaram, com 24 páginas geradas. Nenhuma geração musical paga foi acionada. A alteração permanece local, sem nova publicação solicitada.
+
+## Música Viral, Trap e Trap Gospel em 15/09/2026
+
+Pedido: adicionar “Música Viral” à etapa 1, “Para quem é a música?”, e os estilos “Trap” e “Trap Gospel” à etapa 4.
+
+Entrega: “Música Viral” foi adicionada ao fluxo de criação e à edição posterior do pedido. “Trap” e “Trap Gospel” foram incluídos na lista central de estilos, ficando disponíveis nos dois pontos. O gerador local de rascunhos ganhou linhas próprias para a nova ocasião e para cada estilo; a integração real continua recebendo as escolhas sem conversão.
+
+Validação: os testes do gerador de letras e da prontidão do piloto foram aprovados com verificações específicas para as três novas opções. ESLint, TypeScript, `git diff --check` e o build de produção Next.js 16.3.5 passaram, com 24 páginas geradas. Nenhuma geração musical paga foi acionada. A alteração permanece local, sem nova publicação solicitada.
+
+## Logo padrão na prévia compartilhada em 15/09/2026
+
+Pedido: fazer a logo do Te Cantei aparecer como imagem padrão quando o link público do presente for compartilhado.
+
+Entrega: a página `site/app/presente/[token]/page.tsx` agora define metadados próprios de Open Graph e Twitter, usando a logo dourada quadrada `site/public/tecantei-logodourada.jpg` (1254 × 1254). O título e a descrição permanecem genéricos e não expõem briefing, dedicatória, nome do cliente ou dados financeiros. O compartilhamento continua enviando o link; WhatsApp, Facebook e demais plataformas compatíveis podem montar a miniatura a partir desses metadados.
+
+Validação: a checagem estrutural de SEO passou com verificações específicas da página do presente e da imagem padrão. ESLint e TypeScript foram aprovados. Após liberar um processo de build residual, a compilação de produção Next.js 16.3.5 foi concluída normalmente, com 24 páginas geradas; `git diff --check` também foi aprovado. A mudança permanece local e depende de nova publicação para aparecer nos links reais. Plataformas sociais podem manter a miniatura anterior em cache até atualizarem o endereço.
+
+## Deploy forçado e limpeza de cache em 15/09/2026
+
+Pedido: executar deploy forçado e limpar o cache.
+
+Publicação: o primeiro envio foi corretamente rejeitado antes da promoção porque havia sido iniciado dentro de `site/`, enquanto o projeto remoto já usa `site` como Root Directory. O reenvio foi feito pela raiz `D:\Claude Projetos\Te Cantei`, apontando explicitamente para o projeto Vercel `tecantei`, com `--prod --force`; o log remoto confirmou que o cache de build foi ignorado. O deployment `dpl_67CCeCmgrFHw8uSmjvkFGiEFsG8D` concluiu com estado `Ready` e foi promovido para `www.tecantei.site`, `tecantei.site` e `tecantei.vercel.app`.
+
+Cache: `vercel cache purge` removeu com sucesso os caches CDN e Data do projeto. Consultas posteriores com cache-buster retornaram HTTP 200, `Age: 0`, `X-Vercel-Cache: MISS` na landing e conteúdo atualizado em `/criar`, incluindo a indicação opcional e a tipografia móvel compacta.
+
+Observação: o preflight local de produção continuou apontando ausência de segredos no arquivo local, coerente com a política de não manter credenciais de produção no workspace; o build remoto da Vercel concluiu normalmente com 24 páginas.

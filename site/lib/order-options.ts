@@ -13,6 +13,10 @@ export const MUSIC_STYLE_OPTIONS = [
   "Pop romântico",
   "MPB",
   "Romântico",
+  "Motivacional",
+  "Motivacional impactante",
+  "Trap",
+  "Trap Gospel",
   "Outro",
 ] as const;
 

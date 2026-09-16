@@ -52,6 +52,7 @@ const GenerationProgressStage = dynamic(() => import("@/components/studio/genera
 const GenerationReadyStage = dynamic(() => import("@/components/studio/generation-ready-stage").then((module) => module.GenerationReadyStage));
 
 const steps = ["Para quem", "História", "Memórias", "Estilo", "Mensagem", "Letra", "Prévia", "Entrega"];
+const DEFAULT_OCCASION = "Uma homenagem especial";
 
 const occasionsConfig = [
   { label: "Esposo(a)", icon: Heart },
@@ -66,6 +67,7 @@ const occasionsConfig = [
   { label: "Filho(a)", icon: Baby },
   { label: "Irmão(ã)", icon: Users },
   { label: "Eu mesmo", icon: Star },
+  { label: "Música Viral", icon: Music2 },
   { label: "Outro", icon: PenTool },
 ];
 
@@ -195,7 +197,9 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
   const [deliveryNotice, setDeliveryNotice] = useState("");
   const supabaseEnabled = getSupabaseBrowserClient() !== null;
 
-  const effectiveOccasion = occasion === "Outro" ? (customOccasion.trim() || "Outro") : occasion;
+  const effectiveOccasion = occasion === "Outro"
+    ? (customOccasion.trim() || DEFAULT_OCCASION)
+    : (occasion || DEFAULT_OCCASION);
   const effectiveStyle = style === "Outro" ? customStyle.trim() : style;
   const recipientDisplay = name.trim() || "Alguém especial";
   const completeStory = [
@@ -240,13 +244,13 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
           type: "object",
           properties: {
             recipient: { type: "string", minLength: 1 },
-            occasion: { type: "string", minLength: 1, maxLength: 80 },
+            occasion: { type: "string", maxLength: 80 },
             style: { type: "string", enum: styles },
             customStyle: { type: "string", minLength: 1, maxLength: 120 },
             voicePreference: { type: "string", enum: VOICE_OPTIONS.map((voice) => voice.value) },
             story: { type: "string", minLength: 200, maxLength: 4000 },
           },
-          required: ["recipient", "occasion", "style", "voicePreference", "story"],
+          required: ["recipient", "style", "voicePreference", "story"],
           additionalProperties: false,
         },
         annotations: { readOnlyHint: false, untrustedContentHint: true },
@@ -255,14 +259,16 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
           if (
             typeof value.recipient !== "string" ||
             typeof value.story !== "string" ||
-            typeof value.occasion !== "string" ||
+            (value.occasion !== undefined && typeof value.occasion !== "string") ||
             !styles.includes(String(value.style) as (typeof styles)[number]) ||
             !VOICE_OPTIONS.some((voice) => voice.value === value.voicePreference) ||
             (value.style === "Outro" && (typeof value.customStyle !== "string" || !value.customStyle.trim()))
           ) {
             throw new Error("Dados do pedido inválidos.");
           }
-          const passedOccasion = String(value.occasion);
+          const passedOccasion = typeof value.occasion === "string" && value.occasion.trim()
+            ? value.occasion.trim()
+            : DEFAULT_OCCASION;
           const passedStyle = value.style === "Outro" ? String(value.customStyle).trim() : String(value.style);
           const passedVoice = value.voicePreference as VoicePreference;
           const isPredefined = occasionsConfig.some((o) => o.label === passedOccasion);
@@ -408,14 +414,6 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
   };
 
   const createLyricDraft = async () => {
-    if (!occasion) {
-      setLyricsError("Escolha para quem é a música.");
-      return;
-    }
-    if (occasion === "Outro" && !customOccasion.trim()) {
-      setLyricsError("Por favor, diga para quem é a música.");
-      return;
-    }
     if (!effectiveStyle) {
       setLyricsError("Escreva qual ritmo você deseja.");
       return;
@@ -647,16 +645,6 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
 
   const continueBriefing = () => {
     setLyricsError("");
-    if (step === 1) {
-      if (!occasion) {
-        setLyricsError("Escolha para quem é a música.");
-        return;
-      }
-      if (occasion === "Outro" && !customOccasion.trim()) {
-        setLyricsError("Diga para quem é a música.");
-        return;
-      }
-    }
     if (step === 2 && story.trim().length < 200) {
       setLyricsError("Conte um pouco mais: use pelo menos 200 caracteres para criar uma letra pessoal.");
       return;
@@ -673,7 +661,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
   };
 
   return (
-    <main id="conteudo-principal" tabIndex={-1} className="min-h-screen bg-background pb-20 text-foreground selection:bg-rose-500/20 sm:pb-0">
+    <main id="conteudo-principal" tabIndex={-1} className="tc-mobile-font-compact min-h-screen bg-background pb-20 text-foreground selection:bg-rose-500/20 sm:pb-0">
       {/* Top Floating Glass Navigation Header */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-2 px-3 sm:h-20 sm:gap-4 sm:px-8">
@@ -897,7 +885,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
               <div>
                 <Badge className="border-0 bg-rose-100 text-rose-900 hover:bg-rose-100">Etapa 1</Badge>
                 <h1 className="mt-4 font-display text-3xl font-extrabold text-[#2b1722] sm:text-4xl">Para quem é a música?</h1>
-                <p className="mt-2 text-base text-muted-foreground">Escolha uma opção</p>
+                <p className="mt-2 text-base text-muted-foreground">Opcional · escolha uma opção ou continue sem preencher</p>
                 <RadioGroup value={occasion} onValueChange={setOccasion} className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {occasionsConfig.map((item) => {
                     const Icon = item.icon;
@@ -913,7 +901,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
                 </RadioGroup>
                 {occasion === "Outro" && (
                   <label className="mt-5 block space-y-2 text-sm font-bold text-[#2b1722]">
-                    <span>Para quem é a música? *</span>
+                    <span>Para quem é a música? <span className="font-normal text-muted-foreground">(opcional)</span></span>
                     <Input value={customOccasion} onChange={(event) => setCustomOccasion(event.target.value)} maxLength={80} placeholder="Ex.: avó, professor(a), colega de trabalho..." className="h-12 rounded-xl border-rose-300 text-base" />
                   </label>
                 )}
@@ -1166,7 +1154,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
                   <fieldset>
                     <legend className="mb-3 text-base font-bold text-[#2b1722] flex items-center justify-between">
                       <span>1. Para quem é a música?</span>
-                      <span className="text-xs font-normal text-muted-foreground">Escolha uma opção</span>
+                      <span className="text-xs font-normal text-muted-foreground">Opcional</span>
                     </legend>
                     <RadioGroup value={occasion} onValueChange={setOccasion} className="grid grid-cols-2 gap-3">
                       {occasionsConfig.map((item) => {
@@ -1196,7 +1184,7 @@ export default function TeCanteiApp({ initialStep = 0, initialAccountOpen = fals
                         <label className="block space-y-2 text-sm font-bold text-[#2b1722]">
                           <span className="flex items-center gap-2">
                             <PenTool className="size-4 text-rose-700" />
-                            <span>Para quem é a música? *</span>
+                            <span>Para quem é a música? <span className="font-normal text-muted-foreground">(opcional)</span></span>
                           </span>
                           <Input
                             value={customOccasion}

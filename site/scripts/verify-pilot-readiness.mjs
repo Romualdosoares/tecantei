@@ -177,13 +177,13 @@ for (const sample of ["João", "Vitória", "Luís Otávio", "Conceição", "Tain
   assert.equal(new TextEncoder().encode(sample).length > sample.length, true);
   assert.match(sample, /^[\p{L}\p{M} .'-]+$/u);
 }
-for (const style of ["Sertanejo Universitário", "Sertanejo romântico", "Piseiro", "Pagode animado", "Pagode romântico", "Funk", "Funk ostentação", "Funknejo", "Acústico", "Gospel", "Pop", "Pop romântico", "MPB", "Romântico", "Outro"]) {
+for (const style of ["Sertanejo Universitário", "Sertanejo romântico", "Piseiro", "Pagode animado", "Pagode romântico", "Funk", "Funk ostentação", "Funknejo", "Acústico", "Gospel", "Pop", "Pop romântico", "MPB", "Romântico", "Motivacional", "Motivacional impactante", "Trap", "Trap Gospel", "Outro"]) {
   assert.ok(orderOptions.includes(`"${style}"`), `Estilo ausente da experiência: ${style}`);
 }
 assert.match(orderOptions, /Voz masculina/);
 assert.match(orderOptions, /Voz feminina/);
 assert.match(homePage, /Qual ritmo você deseja/);
-for (const recipientOption of ["Esposo(a)", "Namorado(a)", "Reconciliação", "Noivo(a)", "Conquistar um Crush", "Amigo(a)", "Aniversário", "Mãe", "Pai", "Filho(a)", "Irmão(ã)", "Eu mesmo", "Outro"]) {
+for (const recipientOption of ["Esposo(a)", "Namorado(a)", "Reconciliação", "Noivo(a)", "Conquistar um Crush", "Amigo(a)", "Aniversário", "Mãe", "Pai", "Filho(a)", "Irmão(ã)", "Eu mesmo", "Música Viral", "Outro"]) {
   assert.ok(homePage.includes(`"${recipientOption}"`), `Opção de homenageado ausente: ${recipientOption}`);
 }
 assert.doesNotMatch(homePage, /label: "Crush\/Paixão"/);

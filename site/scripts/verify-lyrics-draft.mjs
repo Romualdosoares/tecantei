@@ -19,6 +19,61 @@ assert.match(lyrics, /\[Refrão final\]/);
 assert.ok(lyrics.length >= 100 && lyrics.length <= 5_000);
 assert.equal(createMockLyricDraft({ occasion: "Casal", recipient: "Vitória", story, style: "MPB" }), createMockLyricDraft({ occasion: "Casal", recipient: "Vitória", story, style: "MPB" }));
 
+assert.match(
+  createMockLyricDraft({
+    occasion: "Uma homenagem especial",
+    recipient: "Vitoria",
+    story,
+    style: "Motivacional",
+  }),
+  /Cada passo mostra a força que nos trouxe até aqui/,
+  "Motivacional should use its dedicated style line",
+);
+
+assert.match(
+  createMockLyricDraft({
+    occasion: "Uma homenagem especial",
+    recipient: "Vitoria",
+    story,
+    style: "Motivacional impactante",
+  }),
+  /Num refrão de coragem, nada pode nos parar/,
+  "Motivacional impactante should use its dedicated style line",
+);
+
+assert.match(
+  createMockLyricDraft({
+    occasion: "Música Viral",
+    recipient: "Vitoria",
+    story,
+    style: "Trap",
+  }),
+  /Essa história nasceu para todo mundo cantar/,
+  "Música Viral should use its dedicated occasion line",
+);
+
+assert.match(
+  createMockLyricDraft({
+    occasion: "Música Viral",
+    recipient: "Vitoria",
+    story,
+    style: "Trap",
+  }),
+  /No grave do trap, nossa verdade faz a noite vibrar/,
+  "Trap should use its dedicated style line",
+);
+
+assert.match(
+  createMockLyricDraft({
+    occasion: "Música Viral",
+    recipient: "Vitoria",
+    story,
+    style: "Trap Gospel",
+  }),
+  /No grave e na fé, cada promessa volta a ecoar/,
+  "Trap Gospel should use its dedicated style line",
+);
+
 const [route, home, envExample] = await Promise.all([
   readFile(new URL("../app/api/lyrics/draft/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../components/te-cantei-app.tsx", import.meta.url), "utf8"),

@@ -20,6 +20,7 @@ const occasionLines: Record<string, string> = {
   "Filho(a)": "Meu amor por você cresce sem nunca se acabar",
   "Irmão(ã)": "Nosso laço de irmãos faz qualquer distância se encurtar",
   "Eu mesmo": "Minha própria história também merece celebrar",
+  "Música Viral": "Essa história nasceu para todo mundo cantar",
   Outro: "Hoje esse carinho encontrou um jeito único de cantar",
   Aniversário: "Hoje a vida acende outra luz para celebrar",
   Casal: "Nosso encontro ainda escolhe o mesmo lugar",
@@ -49,6 +50,10 @@ const styleLines: Record<string, string> = {
   Acústico: "Só voz, carinho e verdade para a emoção chegar",
   Gospel: "Com fé e gratidão por tudo que nos fez caminhar",
   Romântico: "Em cada nota apaixonada, o coração escolhe ficar",
+  Motivacional: "Cada passo mostra a força que nos trouxe até aqui",
+  "Motivacional impactante": "Num refrão de coragem, nada pode nos parar",
+  Trap: "No grave do trap, nossa verdade faz a noite vibrar",
+  "Trap Gospel": "No grave e na fé, cada promessa volta a ecoar",
 };
 
 export function createMockLyricDraft(input: LyricDraftInput) {

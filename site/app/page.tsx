@@ -72,7 +72,7 @@ async function getHomeShowcase(): Promise<ShowcaseItem[]> {
 export default async function LandingPage() {
   const showcase = await getHomeShowcase();
   return (
-    <main id="conteudo-principal" tabIndex={-1} className="min-h-screen overflow-x-clip bg-background pb-24 text-foreground sm:pb-0">
+    <main id="conteudo-principal" tabIndex={-1} className="tc-mobile-font-compact min-h-screen overflow-x-clip bg-background pb-24 text-foreground sm:pb-0">
       <header className="sticky top-0 z-50 border-b border-[#D4AF55]/20 bg-[#090807]">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-2 px-3 sm:h-20 sm:px-8">
           <Link href="/" className="flex min-h-11 shrink-0 items-center gap-2.5" aria-label="Te Cantei — sua história virou música — página inicial">

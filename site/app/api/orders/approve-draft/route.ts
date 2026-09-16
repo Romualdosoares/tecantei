@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const payloadSchema = z.object({
   requestId: z.string().uuid(),
-  occasion: z.string().trim().min(1).max(80),
+  occasion: z.string().trim().max(80).optional().transform((value) => value || "Uma homenagem especial"),
   recipient: z.string().trim().min(1).max(120),
   pronunciation: z.string().max(200).default(""),
   story: z.string().min(200).max(4000),

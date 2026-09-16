@@ -13,15 +13,17 @@ Criar um site em português no qual uma pessoa transforma uma história pessoal 
 - Preço padrão da compra avulsa: **R$ 19,90 por pedido**, editável no painel Financeiro; o novo valor deve ser aplicado à oferta pública e às novas cobranças, preservando o valor das cobranças Pix já abertas.
 - Conta simples com **e-mail e senha**, exigida antes da primeira geração musical.
 - Prévia disponível por **14 dias**.
-- A primeira pergunta do briefing é **“Para quem é a música?”**, com as opções Esposo(a), Namorado(a), Reconciliação, Noivo(a), Crush/Paixão, Amigo(a), Mãe, Pai, Filho(a), Irmão(ã), Eu mesmo e Outro; “Outro” permite resposta livre.
-- O formulário oferece **8 ideias de história**, os ritmos Sertanejo, Sertanejo romântico, Piseiro, Pagode animado, Pagode romântico, Funk, Funk ostentação, Funknejo, Acústico, Gospel, Pop, Pop romântico, MPB, Romântico e Outro, além da escolha entre voz masculina e feminina. “Outro” permite informar um ritmo livre.
+- A primeira pergunta do briefing é **“Para quem é a música?”** e é opcional, com as opções Esposo(a), Namorado(a), Reconciliação, Noivo(a), Crush/Paixão, Amigo(a), Mãe, Pai, Filho(a), Irmão(ã), Eu mesmo, Música Viral e Outro; “Outro” permite resposta livre. Quando ignorada, o sistema usa internamente “Uma homenagem especial” sem exigir ação do cliente.
+- O formulário oferece **8 ideias de história**, os ritmos Sertanejo, Sertanejo romântico, Piseiro, Pagode animado, Pagode romântico, Funk, Funk ostentação, Funknejo, Acústico, Gospel, Pop, Pop romântico, MPB, Romântico, Motivacional, Motivacional impactante, Trap, Trap Gospel e Outro, além da escolha entre voz masculina e feminina. “Outro” permite informar um ritmo livre.
 - A experiência de criação segue um **funil guiado de 8 etapas**: destinatário, história, memórias opcionais, estilo, mensagem opcional, revisão manual da letra, geração/prévia/compra e entrega compartilhável. A página inicial deve ser curta e levar diretamente à primeira etapa pelo botão “Criar minha música”.
+- Em telas móveis, a página inicial e as etapas de criação usam os níveis tipográficos principais 2 px menores que no computador; textos auxiliares mínimos permanecem em 12 px para preservar a leitura.
 - A landing deve motivar pela preservação de memórias, exclusividade do presente, reação da pessoa amada, prova social e segurança de ouvir antes de comprar. Usar urgência emocional legítima — momentos e detalhes se perdem com o tempo — sem inventar contadores, vagas, estoque ou prazos.
 - Pagamento: integrar **Pix direto por Efí Bank e Mercado Pago**, mantendo uma interface comum e seleção pelo painel. O checkout exibe QR Code e Pix copia e cola em um modal; o botão de confirmação consulta o provedor e nunca libera a música apenas pela ação do navegador. O primeiro piloto pode priorizar Mercado Pago se a terminação mTLS exigida pelo webhook Efí não estiver comprovada na infraestrutura de publicação.
 - Arquitetura final confirmada: **GitHub** para o repositório, **Vercel** para hospedagem e **Supabase** para autenticação por e-mail/senha, PostgreSQL e arquivos privados.
 - A letra será criada pelos modelos **GPT através da API da Kie.ai**, com seleção administrativa entre GPT-5.6 e GPT-6; a música continuará sendo gerada pelos modelos **Suno através da Kie.ai**.
 - O produto terá um painel administrativo protegido para usuários, integrações, gerações, acessos, vendas, custos, auditoria e **Financeiro**, com preço, gateway e credenciais write-only guardadas no cofre. Exclusões de usuários preservam o histórico operacional e financeiro.
 - O painel administrativo pode escolher a faixa exata de qualquer geração realmente pronta para destacá-la na página inicial ou criar um link administrativo auditado. Esse link é separado da entrega comercial: não confirma pagamento, não altera a versão comprada nem libera o arquivo na conta do cliente.
+- A página pública do presente oferece compartilhamento voluntário pelo menu nativo do celular, WhatsApp, Facebook e cópia do link. A prévia social do link usa como padrão a logo dourada do Te Cantei, sem expor dados privados do briefing. Depois do presente, exibe um convite para o visitante iniciar sua própria música em `/criar`.
 - A criação dos projetos externos, as verificações finais e a publicação no GitHub, Vercel e Supabase serão feitas somente quando a implementação local estiver pronta.
 - Desejo de monetização por música e/ou plano mensal.
 - Primeiro organizar e planejar; a criação deste plano e da skill não inicia a implementação.
@@ -39,7 +41,7 @@ Criar um site em português no qual uma pessoa transforma uma história pessoal 
 - Autorização comercial: a Kie.ai anuncia uso comercial; na pesquisa pública não foi confirmada uma licença específica de revenda ao cliente nem autorização concedida pela Suno. A escolha da Kie.ai está mantida. Registrar a resposta contratual antes de lançar vendas públicas, sem bloquear design, simulação ou desenvolvimento independente.
 
 ## Jornada confirmada
-1. Informa para quem é a música, o nome e um apelido opcional.
+1. Pode informar para quem é a música, além do nome e de um apelido opcional; a escolha de destinatário/ocasião pode ser ignorada.
 2. Conta a história e os momentos especiais.
 3. Compartilha memórias favoritas, opcionalmente.
 4. Escolhe o estilo musical — inclusive um ritmo livre — e a preferência de voz.

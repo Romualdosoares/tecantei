@@ -10,7 +10,7 @@ import { getSupabasePublicConfig } from "@/lib/supabase/env";
 const MAX_BODY_BYTES = 8 * 1_024;
 const NO_STORE = { "Cache-Control": "private, no-store" };
 const payloadSchema = z.object({
-  occasion: z.string().trim().min(1).max(80),
+  occasion: z.string().trim().max(80).optional().transform((value) => value || "Uma homenagem especial"),
   recipient: z.string().trim().min(1).max(120),
   pronunciation: z.string().trim().max(200).default(""),
   story: z.string().trim().min(200).max(4_000),

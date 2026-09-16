@@ -6,11 +6,12 @@ import { fileURLToPath } from "node:url";
 const siteRoot = fileURLToPath(new URL("..", import.meta.url));
 const read = (path) => readFile(join(siteRoot, path), "utf8");
 
-const [config, layout, home, studio, globals, robots, sitemap, manifest, ogImage] = await Promise.all([
+const [config, layout, home, studio, present, globals, robots, sitemap, manifest, ogImage] = await Promise.all([
   read("next.config.ts"),
   read("app/layout.tsx"),
   read("app/page.tsx"),
   read("components/te-cantei-app.tsx"),
+  read("app/presente/[token]/page.tsx"),
   read("app/globals.css"),
   read("app/robots.ts"),
   read("app/sitemap.ts"),
@@ -36,6 +37,11 @@ assert.match(sitemap, /https:\/\/tecantei\.vercel\.app/);
 assert.match(manifest, /display: "standalone"/);
 assert.match(ogImage, /1200/);
 assert.match(ogImage, /630/);
+assert.match(present, /openGraph:/);
+assert.match(present, /twitter:/);
+assert.match(present, /url: "\/tecantei-logodourada\.jpg"/);
+assert.match(present, /images: \["\/tecantei-logodourada\.jpg"\]/);
+assert.match(present, /robots: \{ index: false, follow: false \}/);
 
 assert.match(home, /id="conteudo-principal"/);
 assert.match(home, /role="img" aria-label="Avaliações com cinco estrelas"/);

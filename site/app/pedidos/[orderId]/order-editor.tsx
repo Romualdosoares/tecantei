@@ -26,6 +26,7 @@ const recipientOptions = [
   "Filho(a)",
   "Irmão(ã)",
   "Eu mesmo",
+  "Música Viral",
   "Outro",
 ] as const;
 const editableStatuses = new Set(["draft", "lyrics_review", "lyrics_approved"]);
