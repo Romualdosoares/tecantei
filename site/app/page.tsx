@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 import { ArrowRight, Check, ChevronDown, Gift, Heart, LockKeyhole, Music2, Sparkles, Star } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { StorefrontPriceText } from "@/components/storefront-price-text";
@@ -73,7 +74,31 @@ async function getHomeShowcase(): Promise<ShowcaseItem[]> {
 export default async function LandingPage() {
   const showcase = await getHomeShowcase();
   return (
-    <main id="conteudo-principal" tabIndex={-1} className="tc-mobile-font-compact min-h-screen overflow-x-clip bg-background pb-24 text-foreground sm:pb-0">
+    <>
+      <Script id="meta-pixel" strategy="afterInteractive">
+        {`!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1080024137940742');
+fbq('track', 'PageView');`}
+      </Script>
+      <main id="conteudo-principal" tabIndex={-1} className="tc-mobile-font-compact min-h-screen overflow-x-clip bg-background pb-24 text-foreground sm:pb-0">
+      <noscript>
+        {/* The Meta Pixel fallback must remain a plain tracking image. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          alt=""
+          height="1"
+          width="1"
+          style={{ display: "none" }}
+          src="https://www.facebook.com/tr?id=1080024137940742&ev=PageView&noscript=1"
+        />
+      </noscript>
       <header className="sticky top-0 z-50 border-b border-[#D4AF55]/20 bg-[#090807]">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-2 px-3 sm:h-20 sm:px-8">
           <Link href="/" className="flex min-h-11 shrink-0 items-center gap-2.5" aria-label="Te Cantei — sua história virou música — página inicial">
@@ -189,6 +214,7 @@ export default async function LandingPage() {
       <div className="fixed inset-x-3 bottom-3 z-40 sm:hidden"><Link href="/criar" prefetch={false} className={`${createLinkClass} w-full`}><Heart className="size-4 fill-current" />Criar minha música<ArrowRight className="size-4" /></Link></div>
 
       <FloatingWhatsAppButton />
-    </main>
+      </main>
+    </>
   );
 }

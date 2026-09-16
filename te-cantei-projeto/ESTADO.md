@@ -1338,3 +1338,11 @@ Pedido: inserir na Home a meta tag `facebook-domain-verification` fornecida para
 Entrega: `site/app/layout.tsx` registra o código `lk683l9t1n38n9fsywuougkujzkc8v` pela API de metadados do Next.js, que materializa a tag no `<head>` da página inicial.
 
 Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. Após o deploy `dpl_CUWqvwXGTBnhnG5Wq7ueAHK2W4wi`, a Home pública respondeu HTTP 200 e o HTML entregue contém exatamente `<meta name="facebook-domain-verification" content="lk683l9t1n38n9fsywuougkujzkc8v"/>` dentro do `<head>`.
+
+## Meta Pixel na Home em 16/09/2026
+
+Pedido: instalar o Meta Pixel `1080024137940742` na página Home.
+
+Entrega: `site/app/page.tsx` carrega o script oficial do Meta Pixel apenas na rota `/`, depois da página se tornar interativa, inicializa o identificador informado e registra `PageView`. O fallback oficial via `noscript` também foi incluído, sem redirecionar ou expor qualquer dado do cliente.
+
+Validação: ESLint, TypeScript, `git diff --check` e o build local de produção Next.js 16.3.5 foram aprovados, com 24 páginas geradas. Pendente apenas a confirmação do carregamento pela ferramenta Meta após a publicação.
