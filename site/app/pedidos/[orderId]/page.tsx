@@ -119,6 +119,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
         <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">Música para {order.recipient_name}</h1>
         <p className="mt-2 text-muted-foreground">Revise os detalhes e a letra antes da primeira geração. Cada alteração fica registrada.</p>
         <OrderEditor
+          key={`${order.updated_at}:${generationTask?.updated_at ?? "none"}`}
           order={order}
           latestSource={latestSource}
           latestProposed={latestProposed}

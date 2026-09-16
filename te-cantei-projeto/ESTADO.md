@@ -1304,3 +1304,13 @@ Diagnóstico: a rota publicada `POST /api/lyrics/draft` retornava HTTP 503. Quan
 Correção: `site/app/api/lyrics/draft/route.ts` agora usa o rascunho simulado como contingência identificada quando o carregamento administrativo ou a Kie.ai estiverem indisponíveis. O modo real continua sendo usado normalmente quando estiver configurado e responder com sucesso; falhas ficam registradas no log do servidor, sem bloquear o avanço para a revisão da letra.
 
 Validação: ESLint do arquivo, TypeScript, a suíte estrutural e o build local de produção Next.js 16.3.5 passaram. O deploy `dpl_29UKk9YEEQrR6upiQJqGeuXZXSP8` foi concluído e promovido para `www.tecantei.site`. A rota externa não foi reenviada após a detecção da falha da Kie.ai, para evitar uma nova tentativa com custo externo ambíguo.
+
+## Ajuste retorna à geração de prévia em 16/09/2026
+
+Pedido: corrigir o ajuste que permanecia reservado sem voltar para a geração e a prévia da nova versão.
+
+Diagnóstico: a reserva atômica do ajuste criava a tarefa, mas atualizava somente `adjustment_status`; o `orders.status` permanecia em `preview_ready`, deixando a interface parada na tela de ajuste.
+
+Correção: a migração `site/supabase/migrations/202609160001_adjustment_generation_status.sql` cria um gatilho para mover o pedido a `generating` quando o ajuste é reservado e corrige ajustes pendentes já existentes. A página do pedido passa à etapa de geração imediatamente, atualiza-se a cada 5 segundos enquanto a tarefa estiver ativa e recarrega as prévias quando a nova versão for publicada. A migração foi aplicada no Supabase remoto e o deploy `dpl_JD1jmLSu8wXAgWypWZwYpZSJSQwB` foi promovido para `www.tecantei.site`.
+
+Validação: lint, TypeScript, suíte estrutural, build local e a conferência remota da migração `202609160001` foram aprovados. Não foi disparada uma nova música manualmente durante a validação, evitando duplicar uma geração que pode ter custo.

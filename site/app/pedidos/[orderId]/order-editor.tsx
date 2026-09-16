@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Ban, CheckCircle2, Copy, Download, Gift, LoaderCircle, LockKeyhole, Music2, Play, Save, Share2, ShieldCheck, Sparkles, WandSparkles } from "lucide-react";
@@ -147,6 +147,12 @@ export function OrderEditor({
   const [error, setError] = useState("");
   const editable = editableStatuses.has(status);
 
+  useEffect(() => {
+    if (status !== "generating") return;
+    const refreshTimer = window.setInterval(() => router.refresh(), 5_000);
+    return () => window.clearInterval(refreshTimer);
+  }, [router, status]);
+
   const saveBriefing = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBriefingBusy(true);
@@ -264,6 +270,7 @@ export function OrderEditor({
       return;
     }
     setAdjustmentStatus(data?.status === "failed" ? "available" : "reserved");
+    setStatus("generating");
     setMessage(data?.mode === "live"
       ? "Ajuste reservado e enviado. A versão original continua guardada."
       : "Ajuste reservado em modo simulado, sem consumir créditos. A versão original continua guardada.");
