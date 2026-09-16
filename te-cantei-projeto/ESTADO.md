@@ -1314,3 +1314,11 @@ Diagnóstico: a reserva atômica do ajuste criava a tarefa, mas atualizava somen
 Correção: a migração `site/supabase/migrations/202609160001_adjustment_generation_status.sql` cria um gatilho para mover o pedido a `generating` quando o ajuste é reservado e corrige ajustes pendentes já existentes. A página do pedido passa à etapa de geração imediatamente, atualiza-se a cada 5 segundos enquanto a tarefa estiver ativa e recarrega as prévias quando a nova versão for publicada. A migração foi aplicada no Supabase remoto e o deploy `dpl_JD1jmLSu8wXAgWypWZwYpZSJSQwB` foi promovido para `www.tecantei.site`.
 
 Validação: lint, TypeScript, suíte estrutural, build local e a conferência remota da migração `202609160001` foram aprovados. Não foi disparada uma nova música manualmente durante a validação, evitando duplicar uma geração que pode ter custo.
+
+## Barra de progresso do ajuste em 16/09/2026
+
+Pedido: exibir uma barra de processo durante a criação de uma música ajustada, no estilo da criação da amostra.
+
+Entrega: `site/app/pedidos/[orderId]/order-editor.tsx` agora mostra um painel escuro/dourado enquanto o pedido está em geração, com percentual orientado pelo estado real da tarefa, etapa atual, barra de progresso e os marcos Recebido, Melodia, Produção e Prévia. A página já atualiza automaticamente durante a tarefa; quando a prévia ajustada for publicada, ela substitui o painel pelas versões disponíveis para comparação.
+
+Validação: ESLint, TypeScript, build local de produção e `git diff --check` foram aprovados. O deploy `dpl_CchfazhrcsuYqCRDKTasXqAuf9BU` foi concluído e promovido para `www.tecantei.site`.

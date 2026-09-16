@@ -31,6 +31,26 @@ const recipientOptions = [
 ] as const;
 const editableStatuses = new Set(["draft", "lyrics_review", "lyrics_approved"]);
 
+function generationProgress(status: string | undefined) {
+  switch (status) {
+    case "created": return 12;
+    case "submitting": return 24;
+    case "submitted": return 38;
+    case "processing": return 76;
+    case "reconciling": return 88;
+    case "succeeded": return 98;
+    default: return 8;
+  }
+}
+
+function generationPhase(status: string | undefined, progress: number) {
+  if (status === "reconciling") return "Confirmando o processamento com o estúdio";
+  if (progress < 20) return "Preparando sua nova versão";
+  if (progress < 50) return "Criando melodia e arranjo";
+  if (progress < 86) return "Produzindo voz e interpretação";
+  return "Finalizando a prévia de 50 segundos";
+}
+
 type OrderRecord = {
   id: string;
   status: string;
@@ -146,6 +166,8 @@ export function OrderEditor({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const editable = editableStatuses.has(status);
+  const currentGenerationProgress = generationProgress(generationTask?.status);
+  const currentGenerationPhase = generationPhase(generationTask?.status, currentGenerationProgress);
 
   useEffect(() => {
     if (status !== "generating") return;
@@ -465,6 +487,17 @@ export function OrderEditor({
 
       {(message || error) && <div className={`rounded-2xl p-4 text-sm lg:col-span-2 ${error ? "bg-destructive/10 text-destructive" : "bg-emerald-100 text-emerald-900"}`} role={error ? "alert" : "status"}>{error || message}</div>}
       {!editable && <div className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground lg:col-span-2"><p>A história e a letra ficam somente para consulta depois que a geração musical começa.</p>{generationTask && <p className="mt-2 font-semibold text-foreground">{generationTask.status === "reconciling" ? "Estamos conferindo se o fornecedor recebeu o pedido; nenhum novo envio será feito agora." : generationTask.status === "failed" ? "A tentativa falhou e ficou registrada para uma retomada segura." : generationTask.status === "succeeded" && readyVersions.length > 0 ? "Sua prévia está pronta para ouvir abaixo." : generationTask.status === "succeeded" ? "O áudio chegou e está sendo preparado para a prévia." : "A criação musical está na fila ou em processamento."}</p>}</div>}
+
+      {status === "generating" && <section className="relative overflow-hidden rounded-[30px] border border-[#d4af55]/30 bg-[#090807] p-6 text-white shadow-[9px_9px_0_rgba(140,106,42,.08)] sm:p-8 lg:col-span-2">
+        <div className="generation-studio-grid pointer-events-none absolute inset-0" />
+        <div className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full border-[38px] border-[#d4af55]/[.07]" />
+        <div className="relative">
+          <Badge className="border border-[#d4af55]/25 bg-[#1a1813] text-[#f5d77e] hover:bg-[#1a1813]"><span className="mr-2 size-2 rounded-full bg-emerald-300 generation-live-dot" />Novo ajuste em criação</Badge>
+          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="font-display text-3xl font-semibold">Sua nova música está sendo criada</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">A versão original continua protegida. Assim que a nova prévia estiver pronta, ela aparecerá aqui para você comparar e escolher.</p></div><p className="font-display text-4xl font-bold tabular-nums text-[#f5d77e]">{currentGenerationProgress}%</p></div>
+          <div className="mt-7 rounded-[24px] border border-[#d4af55]/25 bg-[#1a1813] p-5 sm:p-6"><div className="flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-[#d4af55]">Etapa atual</p><p className="mt-1 text-sm font-semibold" aria-live="polite">{currentGenerationPhase}</p></div><Music2 className="size-7 shrink-0 text-[#f5d77e]" /></div><div className="mt-5 h-4 overflow-hidden rounded-full border border-white/10 bg-black/25 p-0.5" role="progressbar" aria-label="Progresso da criação do ajuste" aria-valuemin={0} aria-valuemax={100} aria-valuenow={currentGenerationProgress}><div className="generation-progress-fill relative h-full overflow-hidden rounded-full bg-gradient-to-r from-[#8c6a2a] via-[#d4af55] to-[#f5d77e] transition-[width] duration-700 ease-out" style={{ width: `${currentGenerationProgress}%` }}><span className="generation-progress-shine absolute inset-0" /></div></div><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{[["Recebido", 1], ["Melodia", 28], ["Produção", 58], ["Prévia", 90]].map(([label, threshold]) => <div key={String(label)} className={`rounded-2xl border px-3 py-3 text-xs font-bold ${currentGenerationProgress >= Number(threshold) ? "border-[#d4af55]/35 bg-[#28241a] text-white" : "border-white/[.06] bg-black/10 text-white/45"}`}>{currentGenerationProgress >= Number(threshold) ? "✓ " : "○ "}{label}</div>)}</div></div>
+          <p className="mt-5 text-xs text-white/60">Esta página se atualiza automaticamente enquanto a criação estiver em andamento. O progresso chega a 100% somente quando a prévia estiver pronta.</p>
+        </div>
+      </section>}
 
       {readyVersions.length > 0 && ["preview_ready", "payment_pending", "paid", "delivered"].includes(status) && (
         <section id="amostras" className="relative scroll-mt-24 overflow-hidden rounded-[34px] border border-[#d4af55]/30 bg-[#090807] p-5 text-white shadow-[9px_9px_0_rgba(140,106,42,.08)] sm:p-9 lg:col-span-2">
