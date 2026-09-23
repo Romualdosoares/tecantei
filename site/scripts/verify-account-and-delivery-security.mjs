@@ -38,7 +38,7 @@ assert.match(adminUser, /whatsapp: input\.data\.whatsapp \|\| null/);
 assert.match(paymentGuard, /\.eq\("status", "confirmed"\)/);
 assert.match(paymentGuard, /query\.in\("provider", \["efi", "mercado_pago"\]\)/);
 assert.match(paymentGuard, /query\.eq\("provider", "mock"\)/);
-assert.match(checkout, /provider\.getPixCharge\(data\.external_payment_id\)/);
+assert.match(checkout, /getPixChargeWithRetry\(provider, data\.external_payment_id\)/);
 assert.match(checkout, /applyVerifiedProviderCharge/);
 assert.match(orderEditor, /if \(data\.status === "confirmed"\)/);
 assert.match(deliveryPage, /hasConfirmedDeliveryPayment\(admin, order\.id, delivery\.version_id\)/);

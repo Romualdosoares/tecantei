@@ -1,5 +1,14 @@
 # Te Cantei — estado do projeto
-Atualizado em 15/09/2026.
+Atualizado em 23/09/2026.
+
+## Correção Pix — 23/09/2026
+Estado: em validação de produção.
+
+- O checkout agora repete uma vez a consulta de cobrança existente somente para timeout, HTTP 408, 429 ou 5xx. A tentativa não cria outro Pix.
+- A rota registra no servidor somente o tipo do erro, sem dados de cliente ou credenciais. A interface informa indisponibilidade temporária com segurança.
+- Arquivos: `site/lib/payment/pix-checkout-retry.ts`, checkout, editor e verificadores de pagamento.
+- Validação local: `node scripts/verify-pix-checkout-retry.mjs`, `npm run db:verify`, lint dos arquivos alterados e `npm run build` aprovados.
+- Pendente: publicar e confirmar o botão em produção com consulta Efí real.
 
 ## Situação atual
 Etapas 0 a 2 concluídas; base Supabase, história/letra, integração musical simulada, pagamento, entrega e piloto local estão em desenvolvimento.

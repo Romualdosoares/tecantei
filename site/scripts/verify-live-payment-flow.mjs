@@ -28,10 +28,13 @@ assert.match(migration, /on conflict \(provider, external_event_id\) do nothing/
 assert.match(migration, /when payment_record\.status = 'confirmed' then 'confirmed'/);
 
 const reserveIndex = checkout.indexOf('supabase.rpc("prepare_provider_checkout"');
+const retryIndex = checkout.indexOf("getPixChargeWithRetry(provider, data.external_payment_id)");
 const createIndex = checkout.indexOf("provider.createPixCharge");
 const attachIndex = checkout.indexOf("await attachProviderCharge");
 const reconcileIndex = checkout.indexOf("await applyVerifiedProviderCharge");
 assert.ok(reserveIndex > 0 && createIndex > reserveIndex && attachIndex > createIndex && reconcileIndex > attachIndex);
+assert.ok(retryIndex > reserveIndex && retryIndex < createIndex);
+assert.match(checkout, /data\.external_payment_id\s+\? await getPixChargeWithRetry\(provider, data\.external_payment_id\)\s+\: await provider\.createPixCharge/);
 assert.match(checkout, /data\.amount_cents < 100/);
 assert.match(checkout, /settings\.paymentProvider/);
 assert.match(checkout, /charge\.externalReference !== null/);

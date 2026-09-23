@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getApplicationSettings } from "@/lib/admin/settings";
 import { assertPaymentLiveEnabled, getPaymentMode } from "@/lib/payment/env";
+import { getPixChargeWithRetry } from "@/lib/payment/pix-checkout-retry";
 import { applyVerifiedProviderCharge, attachProviderCharge } from "@/lib/payment/provider-persistence";
 import { createConfiguredPixProvider } from "@/lib/payment/providers/configured-provider";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -67,7 +68,7 @@ export async function POST(
 
       const provider = await createConfiguredPixProvider(admin, providerName, settings.efiEnvironment);
       const charge = data.external_payment_id
-        ? await provider.getPixCharge(data.external_payment_id)
+        ? await getPixChargeWithRetry(provider, data.external_payment_id)
         : await provider.createPixCharge({
           amountCents: data.amount_cents,
           externalReference: data.payment_intent_id,
@@ -128,8 +129,12 @@ export async function POST(
       mode: "mock",
       simulated: true,
     }, { headers: { "Cache-Control": "private, no-store" } });
-  } catch {
-    return NextResponse.json({ error: "checkout_unavailable" }, { status: 503 });
+  } catch (error) {
+    console.error("pix_checkout_failed", {
+      orderId: orderId.data,
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
+    return NextResponse.json({ error: "checkout_provider_unavailable" }, { status: 503 });
   }
 }
 

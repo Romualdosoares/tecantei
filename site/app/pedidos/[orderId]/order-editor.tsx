@@ -313,12 +313,15 @@ export function OrderEditor({
       body: JSON.stringify({ versionId: selectedVersionId, requestId: checkoutRequestId }),
     }).catch(() => null);
     setPaymentBusy(false);
+    const responseData = response ? await response.json().catch(() => null) as { error?: string } | null : null;
     if (!response?.ok) {
       setCheckoutRequestId(crypto.randomUUID());
-      setError("Não foi possível preparar o pagamento. A música completa continua bloqueada.");
+      setError(responseData?.error === "checkout_provider_unavailable"
+        ? "O Pix está temporariamente indisponível. Tente novamente em instantes; nenhuma cobrança foi recriada."
+        : "Não foi possível preparar o pagamento. A música completa continua bloqueada.");
       return;
     }
-    const data = await response.json() as {
+    const data = responseData as {
       paymentIntentId?: string;
       status?: string;
       mode?: "mock" | "live";
