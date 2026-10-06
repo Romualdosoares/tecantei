@@ -88,7 +88,9 @@ export async function POST(
       }
       const applied = await applyVerifiedProviderCharge(
         admin,
-        charge,
+        // A consulta Efí pode omitir a referência. Reutilizar a intenção validada
+        // mantém o mesmo hash do evento registrado na criação desta cobrança.
+        { ...charge, externalReference: data.payment_intent_id },
         `checkout:${charge.externalId}:${charge.status}`,
       );
       if (!applied.found) {
