@@ -1450,7 +1450,7 @@ Validação final da correção de metadados: suíte completa, ESLint e build We
 
 Sincronização final: commit `59b15d3` enviado à `main`. Hostinger concluiu implantação `01a111c6-8cae-7167-a33b-5e8bc0c3c6c2` com Node.js 24, build de 1min51s, publicação, reinício e estado `Concluído`. Conferência HTTPS direta após a publicação novamente aprovou Home/CSS/configuração, checkout protegido e rotina autenticada vazia. Comprovante local: `.vercel/hostinger-pix-final-deploy.jpg`. Este registro final de publicação permanece local para não acionar uma compilação adicional somente de documentação.
 
-## Migração do webhook Efí para Hostinger em 06/10/2026 — em andamento
+## Migração do webhook Efí para Hostinger em 06/10/2026 — concluída
 
 Pedido: migrar o webhook Efí da Vercel para a Hostinger. Sondagem vazia com token válido e primeiro `X-Forwarded-For` forjado recebeu HTTP 200 no processo Hostinger; a sondagem sem falsificação recebeu HTTP 403. Nenhum evento de pagamento foi enviado. A documentação oficial da Hostinger explica que o CDN acrescenta o endereço da conexão ao fim da cadeia e que os endereços anteriores não são confiáveis.
 
@@ -1461,3 +1461,21 @@ Validação local: teste unitário reproduziu aceitação indevida de primeiro I
 Próximo passo: concluir publicação, verificar rejeição real de cabeçalhos forjados nos ingressos oferecidos pela hospedagem e cadastrar URL canônica protegida na Efí. Não criar cobrança, pagar ou simular confirmação financeira durante a migração. Plano: `docs/superpowers/plans/2026-10-06-efi-hostinger.md`.
 
 Fontes: https://www.hostinger.com/support/hostinger-cdn-visitor-ip-addresses-in-logs-and-analytics/ ; https://dev.efipay.com.br/en/docs/api-pix/webhooks/ .
+
+Conclusão: correção sincronizada no commit `15a3ad4`; Hostinger confirmou a versão como `Concluído Atual`. Após a publicação, sondagens vazias com token válido e IP forjado foram recusadas com HTTP 403 pelo domínio público, CDN e endereço direto do site observado no painel. Não houve evento de pagamento nesses testes. Consulta pública já não apresentou `x-vercel-id`.
+
+Cadastro efetivamente migrado: chamada autenticada Efí `PUT /v2/webhook/:chave` retornou HTTP 200, seguida de `GET` HTTP 200 confirmando origem `https://www.tecantei.site`, caminho `/api/payments/webhooks/efi`, token original preservado e parâmetro `ignorar` presente. Foi preservado o modo de cadastro da instalação anterior em hospedagem compartilhada, com IP oficial e token; não se afirma terminação mTLS no servidor Hostinger. Credenciais OAuth/certificado das consultas Efí continuam com mTLS e validação normal TLS. Configuração anterior guardada somente no arquivo privado ignorado `.vercel/efi-webhook-before-hostinger.json`.
+
+Resultado: migração do endereço e validação de cadastro concluídas. Nenhuma cobrança, pagamento ou geração musical criada. Confirmar uma compra aprovada e entrega final continua sendo teste separado; rotina agendada e token Meta também continuam pendentes. Registro de conclusão e plano atualizado mantidos locais para evitar outra compilação só de documentação.
+
+## Sincronização integral solicitada em 06/10/2026
+
+Pedido: sincronizar tudo na Hostinger. O repositório `Romualdosoares/tecantei`, branch `main`, está conectado à publicação automática. Os registros locais de migração serão enviados ao mesmo repositório para alinhar a documentação à aplicação já publicada.
+
+Verificação atual: o painel de variáveis, após recarregar, confirmou `EFI_WEBHOOK_MTLS_TERMINATION=hostinger` salvo e nenhuma alteração pendente. Conferência privada das 35 variáveis confirmou conexão ao Supabase, GPT `gpt-6-1-sol` com raciocínio `high`, certificado Efí, consulta de cobrança existente e QR disponível. Consulta autenticada Efí retornou HTTP 200 e confirmou webhook protegido em `https://www.tecantei.site/api/payments/webhooks/efi`.
+
+Aplicação Hostinger: HTTPS com certificado validado, Home/CSS/configuração pública HTTP 200, checkout sem sessão HTTP 401, webhook sem autenticação HTTP 403. Rotina autenticada retornou HTTP 200, estado `idle`, zero itens processados, após verificar fila vazia. Nenhuma cobrança, pagamento ou geração nova realizada.
+
+DNS: consultas diretas ao Google e Cloudflare confirmaram CNAME `www` para `www.tecantei.site.cdn.hstgr.net` e servidores Hostinger `aster.dns-parking.com`/`helios.dns-parking.com`. O resolvedor local ainda retornou endereços Vercel com cache restante de cerca de 30 minutos; por isso uma requisição comum deste computador ainda apresentou `x-vercel-id`. A verificação direta do CDN Hostinger não apresentou esse cabeçalho. Nenhum registro DNS ou de e-mail foi alterado.
+
+Dependências concretas: busca por `cron` no menu do site Node.js e na busca global do hPanel não encontrou opção de agendamento. O endpoint está funcional, mas não há rotina automática Hostinger cadastrada ou comprovada. Token Meta CAPI continua ausente; compra paga com entrega final e avaliação auditiva de uma geração real continuam sem teste. Essas dependências não são marcadas como concluídas pela sincronização do código.

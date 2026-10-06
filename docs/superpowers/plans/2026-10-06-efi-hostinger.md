@@ -6,12 +6,12 @@
 
 **Stack:** Next.js 16.3.5, Node.js 24, API Pix Efí, Supabase Vault.
 
-- [ ] Reproduzir rejeição de cabeçalho forjado em teste comportamental, antes de corrigir.
-- [ ] Adaptar `site/lib/payment/providers/efi-webhook.ts`, rota Efí, preflight e exemplo de ambiente; preservar token e confirmação pelo provedor.
-- [ ] Validar testes, lint, compilação e revisar o controle de origem.
-- [ ] Configurar modo Hostinger no arquivo privado e no painel, publicar e conferir rejeição de cabeçalhos forjados em HTTPS real.
-- [ ] Consultar e guardar configuração anterior em arquivo privado; cadastrar o novo endereço na Efí somente após a proteção estar ativa. Preservar a modalidade de cadastro usada na instalação anterior, sem desabilitar proteção existente.
-- [ ] Confirmar cadastro por GET, teste real de registro Efí e documentação do resultado. Não criar cobrança nem simular pagamento aprovado.
+- [x] Reproduzir rejeição de cabeçalho forjado em teste comportamental, antes de corrigir.
+- [x] Adaptar `site/lib/payment/providers/efi-webhook.ts`, rota Efí, preflight e exemplo de ambiente; preservar token e confirmação pelo provedor.
+- [x] Validar testes, lint, compilação e revisar o controle de origem.
+- [x] Configurar modo Hostinger no arquivo privado e no painel, publicar e conferir rejeição de cabeçalhos forjados em HTTPS real.
+- [x] Consultar e guardar configuração anterior em arquivo privado; cadastrar o novo endereço na Efí somente após a proteção estar ativa. Preservar a modalidade de cadastro usada na instalação anterior, sem desabilitar proteção existente.
+- [x] Confirmar cadastro por GET, teste real de registro Efí e documentação do resultado. Não criar cobrança nem simular pagamento aprovado.
 
 **Evidência inicial:** sondagem vazia ao processo Hostinger, com token válido e `X-Forwarded-For` forjado, recebeu HTTP 200. A mesma sondagem sem cabeçalho forjado recebeu HTTP 403. Nenhum evento financeiro foi enviado. Isso exige corrigir a interpretação do cabeçalho antes do cadastro.
 
