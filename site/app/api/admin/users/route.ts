@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminIdentity } from "@/lib/admin/auth";
+import { roleFlags, writeAudit } from "@/lib/admin/user-management";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -45,28 +46,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "user_create_failed" }, { status: 503, headers: NO_STORE });
   }
-}
-
-export function roleFlags(role: "user" | "support" | "admin") {
-  return { isAdmin: role === "admin", isSupport: role === "support" || role === "admin" };
-}
-
-export async function writeAudit(
-  admin: ReturnType<typeof createSupabaseAdminClient>,
-  actorId: string,
-  action: string,
-  targetType: string,
-  targetId: string | null,
-  reason: string,
-  metadata: Record<string, unknown> = {},
-) {
-  const { error } = await admin.from("admin_audit_log").insert({
-    actor_id: actorId,
-    action,
-    target_type: targetType,
-    target_id: targetId,
-    reason,
-    metadata,
-  });
-  if (error) throw error;
 }

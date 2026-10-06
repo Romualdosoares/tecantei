@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getAdminIdentity } from "@/lib/admin/auth";
 import { getKieApiKey } from "@/lib/admin/secrets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { writeAudit } from "../../users/route";
+import { writeAudit } from "@/lib/admin/user-management";
 
 export const runtime = "nodejs";
 const schema = z.object({ provider: z.literal("kie"), reason: z.string().trim().min(8).max(300) });

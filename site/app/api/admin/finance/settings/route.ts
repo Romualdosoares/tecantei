@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminIdentity } from "@/lib/admin/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { writeAudit } from "../../users/route";
+import { writeAudit } from "@/lib/admin/user-management";
 
 const schema = z.object({
   productPriceCents: z.number().int().min(100).max(1_000_000),

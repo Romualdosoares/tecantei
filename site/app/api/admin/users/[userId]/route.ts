@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminIdentity } from "@/lib/admin/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { roleFlags, writeAudit } from "../route";
+import { roleFlags, writeAudit } from "@/lib/admin/user-management";
 
 const idSchema = z.string().uuid();
 const updateSchema = z.object({

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getAdminIdentity } from "@/lib/admin/auth";
 import { ADMIN_KIE_MODELS, KIE_LYRIC_MODELS } from "@/lib/admin/settings";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { writeAudit } from "../users/route";
+import { writeAudit } from "@/lib/admin/user-management";
 
 const schema = z.object({
   lyricsMode: z.enum(["mock", "kie"]),
