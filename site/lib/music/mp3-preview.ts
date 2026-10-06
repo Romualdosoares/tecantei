@@ -48,21 +48,75 @@ export function extractMp3Preview(source: Uint8Array) {
 
   let previewEnd = firstFrameOffset;
   let previewDurationSeconds = 0;
+  const previewFrames: typeof frames = [];
   for (const frame of frames) {
     if (previewDurationSeconds + frame.seconds > MAX_PREVIEW_SECONDS) break;
     previewDurationSeconds += frame.seconds;
     previewEnd = frame.offset + frame.length;
+    previewFrames.push(frame);
   }
 
   if (previewEnd === firstFrameOffset) {
     throw new Mp3PreviewError("preview_empty");
   }
 
+  const bytes = source.slice(firstFrameOffset, previewEnd);
+  rewritePreviewSeekHeader(bytes, previewFrames, firstFrameOffset);
   return {
-    bytes: source.slice(firstFrameOffset, previewEnd),
+    bytes,
     durationSeconds: previewDurationSeconds,
     sourceDurationSeconds,
   };
+}
+
+function rewritePreviewSeekHeader(
+  bytes: Uint8Array,
+  frames: Array<{ offset: number; length: number; seconds: number }>,
+  firstFrameOffset: number,
+) {
+  const header = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const bits = header.getUint32(0);
+  const isMpeg1 = ((bits >>> 19) & 3) === 3;
+  const mono = ((bits >>> 6) & 3) === 3;
+  const sideInfoBytes = isMpeg1 ? (mono ? 17 : 32) : (mono ? 9 : 17);
+  // Xing keeps this fixed offset even when the MPEG frame has CRC protection.
+  const tagOffset = 4 + sideInfoBytes;
+  const firstFrameEnd = frames[0].length;
+  if (tagOffset + 8 > firstFrameEnd) return;
+  const tag = String.fromCharCode(...bytes.slice(tagOffset, tagOffset + 4));
+  if (tag !== "Xing" && tag !== "Info") return;
+  const flags = header.getUint32(tagOffset + 4);
+  if ((flags & ~15) !== 0) return;
+  const fieldsLength = ((flags & 1) ? 4 : 0) + ((flags & 2) ? 4 : 0) +
+    ((flags & 4) ? 100 : 0) + ((flags & 8) ? 4 : 0);
+  if (tagOffset + 8 + fieldsLength > firstFrameEnd) return;
+
+  let offset = tagOffset + 8;
+  // Xing's count excludes its own silent metadata frame.
+  if (flags & 1) {
+    header.setUint32(offset, frames.length - 1);
+    offset += 4;
+  }
+  if (flags & 2) {
+    header.setUint32(offset, bytes.length);
+    offset += 4;
+  }
+  if (flags & 4) {
+    bytes[offset] = 0;
+    for (let percent = 1; percent < 100; percent += 1) {
+      const index = 1 + Math.floor((frames.length - 1) * percent / 100);
+      const position = frames[Math.min(index, frames.length - 1)].offset - firstFrameOffset;
+      bytes[offset + percent] = Math.min(255, Math.floor(position * 256 / bytes.length));
+    }
+    offset += 100;
+  }
+  if (flags & 8) offset += 4;
+  // Encoder padding, original byte counts and checksums describe the full song.
+  // Remove only recognized optional encoder metadata; leave audio frames intact.
+  const encoder = String.fromCharCode(...bytes.slice(offset, offset + 4));
+  if (offset + 36 <= firstFrameEnd && ["LAME", "Lavc", "Lavf"].includes(encoder)) {
+    bytes.fill(0, offset, offset + 36);
+  }
 }
 
 export async function createAndStoreMp3Preview(input: {

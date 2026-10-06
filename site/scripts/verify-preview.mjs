@@ -35,6 +35,52 @@ assert.ok(preview.sourceDurationSeconds >= 150);
 assert.equal(preview.bytes.length % frameLength, 0);
 assert.deepEqual(Array.from(preview.bytes.slice(0, 4)), [0xff, 0xfb, 0x90, 0x00]);
 
+// Real provider MP3s retain Xing/Info duration and seek data for the full song.
+// A preview must advertise only its retained audio frames, not that full duration.
+for (const tag of ["Xing", "Info"]) {
+  const taggedSource = source.slice();
+  const tagOffset = id3.length + 36;
+  const view = new DataView(taggedSource.buffer);
+  taggedSource.set(new TextEncoder().encode(tag), tagOffset);
+  view.setUint32(tagOffset + 4, 15);
+  view.setUint32(tagOffset + 8, frameCount - 1);
+  view.setUint32(tagOffset + 12, frames.length);
+  taggedSource.fill(255, tagOffset + 16, tagOffset + 116);
+  taggedSource.set(new TextEncoder().encode("Lavc test"), tagOffset + 120);
+  const original = taggedSource.slice();
+  const taggedPreview = extractMp3Preview(taggedSource);
+  const previewView = new DataView(taggedPreview.bytes.buffer);
+  const retainedFrames = taggedPreview.bytes.length / frameLength;
+  assert.equal(previewView.getUint32(44), retainedFrames - 1, `${tag} frame count must describe the preview`);
+  assert.equal(previewView.getUint32(48), taggedPreview.bytes.length);
+  assert.equal(taggedPreview.bytes[52], 0);
+  assert.ok(taggedPreview.bytes[151] > 240 && taggedPreview.bytes[151] < 256);
+  for (let i = 53; i < 152; i += 1) assert.ok(taggedPreview.bytes[i] >= taggedPreview.bytes[i - 1]);
+  assert.deepEqual(taggedPreview.bytes.slice(156, 192), new Uint8Array(36));
+  assert.deepEqual(taggedPreview.bytes.slice(frameLength), preview.bytes.slice(frameLength), "audio frames must remain unchanged");
+  assert.deepEqual(taggedSource, original, "the full song must remain unchanged");
+}
+
+for (const fixture of [
+  { header: [0xff, 0xfb, 0x90, 0xc0], tagOffset: 21 }, // MPEG-1 mono
+  { header: [0xff, 0xfa, 0x90, 0x00], tagOffset: 36 }, // MPEG-1 stereo with CRC
+  { header: [0xff, 0xf3, 0xc0, 0x00], tagOffset: 21 }, // MPEG-2 stereo
+  { header: [0xff, 0xf2, 0xc0, 0xc0], tagOffset: 13 }, // MPEG-2 mono with CRC
+]) {
+  const audio = frames.slice();
+  for (let offset = 0; offset < audio.length; offset += frameLength) audio.set(fixture.header, offset);
+  audio.set(new TextEncoder().encode("Xing"), fixture.tagOffset);
+  const view = new DataView(audio.buffer);
+  view.setUint32(fixture.tagOffset + 4, 3);
+  view.setUint32(fixture.tagOffset + 8, frameCount - 1);
+  view.setUint32(fixture.tagOffset + 12, audio.length);
+  const clip = extractMp3Preview(audio);
+  const clipView = new DataView(clip.bytes.buffer);
+  assert.equal(clipView.getUint32(fixture.tagOffset + 8), clip.bytes.length / frameLength - 1);
+  assert.equal(clipView.getUint32(fixture.tagOffset + 12), clip.bytes.length);
+  assert.deepEqual(clip.bytes.slice(frameLength), audio.slice(frameLength, clip.bytes.length));
+}
+
 const shortSource = source.slice(0, id3.length + frameLength * 1_000);
 assert.throws(
   () => extractMp3Preview(shortSource),
