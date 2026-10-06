@@ -19,6 +19,7 @@ await import("./verify-admin-login.mjs");
 await import("./verify-navigation.mjs");
 await import("./verify-delivery.mjs");
 await import("./verify-payment-providers.mjs");
+await import("./verify-efi-webhook-hostinger.mjs");
 await import("./verify-pix-checkout-retry.mjs");
 await import("./verify-pix-checkout.mjs");
 await import("./verify-live-payment-flow.mjs");

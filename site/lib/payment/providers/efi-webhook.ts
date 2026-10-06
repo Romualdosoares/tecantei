@@ -8,7 +8,8 @@ export type EfiPixNotification = {
 };
 
 // Endereço publicado pela Efí para callbacks Pix. A Vercel sobrescreve
-// x-forwarded-for com o IP real da conexão, impedindo spoofing pelo cliente.
+// x-forwarded-for com o IP real da conexão. Hostinger CDN acrescenta o IP
+// da conexão ao fim da cadeia; os endereços anteriores não são confiáveis.
 export const EFI_PIX_WEBHOOK_IPS = ["34.193.116.226"] as const;
 
 export function verifyEfiWebhookToken(received: string | null, expected: string) {
@@ -21,9 +22,11 @@ export function verifyEfiWebhookToken(received: string | null, expected: string)
 export function verifyEfiWebhookSourceIp(
   received: string | null,
   allowedIps: readonly string[] = EFI_PIX_WEBHOOK_IPS,
+  trustedPosition: "first" | "last" = "first",
 ) {
   if (!received) return false;
-  const normalized = received.split(",", 1)[0]?.trim().replace(/^::ffff:/i, "");
+  const addresses = received.split(",");
+  const normalized = (trustedPosition === "last" ? addresses.at(-1) : addresses[0])?.trim().replace(/^::ffff:/i, "");
   return Boolean(normalized && allowedIps.some((allowedIp) => allowedIp === normalized));
 }
 

@@ -95,6 +95,7 @@ export async function integrationReadiness(admin: SupabaseClient) {
     getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookToken, "EFI_WEBHOOK_TOKEN"),
     getPaymentSecret(admin, PAYMENT_SECRET_NAMES.efiWebhookMtlsGatewaySecret, "EFI_WEBHOOK_MTLS_GATEWAY_SECRET"),
   ]);
+  const efiWebhookMode = process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim();
   return {
     kieKeyConfigured: Boolean(kieApiKey),
     kieWebhookHmacConfigured: Boolean(kieWebhookHmacKey),
@@ -102,11 +103,13 @@ export async function integrationReadiness(admin: SupabaseClient) {
     kieLiveGateEnabled: process.env.KIE_LIVE_GENERATION_ENABLED?.trim() === "true" &&
       getKieGenerationMode() === "live" && Boolean(kieWebhookHmacKey),
     mercadoPagoConfigured: Boolean(mercadoPagoAccessToken && mercadoPagoWebhookSecret),
-    efiConfigured: Boolean(efiClientId && efiClientSecret && efiPixKey && efiCertificate && efiWebhookToken && efiGatewaySecret),
+    efiConfigured: Boolean(efiClientId && efiClientSecret && efiPixKey && efiCertificate && efiWebhookToken &&
+      (efiWebhookMode !== "gateway" || efiGatewaySecret)),
     paymentMode: getPaymentMode(),
     paymentLiveGateEnabled: process.env.PAYMENT_LIVE_ENABLED?.trim() === "true",
     efiMtlsGatewayEnabled: process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() === "gateway",
     efiDirectWebhookEnabled: process.env.EFI_WEBHOOK_MTLS_TERMINATION?.trim() === "direct",
+    efiHostingerWebhookEnabled: efiWebhookMode === "hostinger",
   };
 }
 

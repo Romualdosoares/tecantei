@@ -164,6 +164,11 @@ assert.equal(verifyEfiWebhookSourceIp("34.193.116.226"), true);
 assert.equal(verifyEfiWebhookSourceIp("::ffff:34.193.116.226"), true);
 assert.equal(verifyEfiWebhookSourceIp("198.51.100.8"), false);
 assert.equal(verifyEfiWebhookSourceIp("198.51.100.8, 34.193.116.226"), false);
+assert.equal(verifyEfiWebhookSourceIp("34.193.116.226, 198.51.100.8", undefined, "last"), false, "Hostinger must reject a forged first address");
+assert.equal(verifyEfiWebhookSourceIp("198.51.100.8, 34.193.116.226", undefined, "last"), true);
+assert.equal(verifyEfiWebhookSourceIp("198.51.100.8, ::ffff:34.193.116.226", undefined, "last"), true);
+assert.equal(verifyEfiWebhookSourceIp("34.193.116.226,", undefined, "last"), false);
+assert.equal(verifyEfiWebhookSourceIp(null, undefined, "last"), false);
 assert.deepEqual(parseEfiPixWebhook({
   pix: [{
     endToEndId: "E12345678202609111500abcdefghijk",

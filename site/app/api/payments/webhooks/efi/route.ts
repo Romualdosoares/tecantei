@@ -26,7 +26,9 @@ export async function POST(request: Request) {
       verifyEfiWebhookToken(request.headers.get("x-efi-mtls-gateway-secret"), gatewaySecret ?? "");
     const verifiedDirectly = terminationMode === "direct" &&
       verifyEfiWebhookSourceIp(request.headers.get("x-forwarded-for"));
-    if (!verifiedByGateway && !verifiedDirectly) {
+    const verifiedByHostinger = terminationMode === "hostinger" &&
+      verifyEfiWebhookSourceIp(request.headers.get("x-forwarded-for"), undefined, "last");
+    if (!verifiedByGateway && !verifiedDirectly && !verifiedByHostinger) {
       return NextResponse.json({ error: "mtls_not_verified" }, { status: 403 });
     }
     const hmac = new URL(request.url).searchParams.get("hmac");

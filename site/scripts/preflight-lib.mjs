@@ -346,9 +346,17 @@ function checkPaymentProvider(value, configured, add) {
   }
   const validToken = configured("EFI_WEBHOOK_TOKEN") && value("EFI_WEBHOOK_TOKEN").length >= 24;
   add(validToken ? "pass" : "block", "Efí", validToken ? "token adicional do webhook atende ao tamanho mínimo" : "EFI_WEBHOOK_TOKEN precisa ter ao menos 24 caracteres e não pode ser placeholder");
-  const validGatewaySecret = configured("EFI_WEBHOOK_MTLS_GATEWAY_SECRET") && value("EFI_WEBHOOK_MTLS_GATEWAY_SECRET").length >= 24;
-  add(validGatewaySecret ? "pass" : "block", "Efí", validGatewaySecret ? "segredo entre o gateway mTLS e a aplicação está configurado" : "EFI_WEBHOOK_MTLS_GATEWAY_SECRET precisa ter ao menos 24 caracteres e não pode ser placeholder");
-  add(value("EFI_WEBHOOK_MTLS_TERMINATION") === "gateway" ? "pass" : "block", "Efí", value("EFI_WEBHOOK_MTLS_TERMINATION") === "gateway" ? "terminação mTLS externa foi declarada" : "produção Efí exige EFI_WEBHOOK_MTLS_TERMINATION=gateway após validação real");
+  const mode = value("EFI_WEBHOOK_MTLS_TERMINATION");
+  if (mode === "gateway") {
+    const validGatewaySecret = configured("EFI_WEBHOOK_MTLS_GATEWAY_SECRET") && value("EFI_WEBHOOK_MTLS_GATEWAY_SECRET").length >= 24;
+    add(validGatewaySecret ? "pass" : "block", "Efí", validGatewaySecret ? "segredo entre o gateway mTLS e a aplicação está configurado" : "EFI_WEBHOOK_MTLS_GATEWAY_SECRET precisa ter ao menos 24 caracteres e não pode ser placeholder");
+    add("pass", "Efí", "terminação mTLS externa foi declarada");
+  } else if (mode === "hostinger" || mode === "direct") {
+    add("pass", "Efí", mode === "hostinger" ? "origem usa último IP acrescentado pela Hostinger CDN" : "origem usa IP sobrescrito pela Vercel");
+    add("warn", "Efí", "modo de IP e token não termina mTLS; valide proxy e registro real do webhook antes de operar");
+  } else {
+    add("block", "Efí", "EFI_WEBHOOK_MTLS_TERMINATION deve declarar gateway, direct ou hostinger após validação real");
+  }
 }
 
 async function readText(filename) {

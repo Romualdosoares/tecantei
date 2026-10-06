@@ -48,6 +48,14 @@ assert.ok(production.checks.some((check) => check.message.includes("ambiente ofi
 assert.ok(production.checks.some((check) => check.message.includes("MERCADO_PAGO_ACCESS_TOKEN") && check.level === "block"));
 assert.doesNotMatch(JSON.stringify(production.checks), /segredo-de-teste|sb_secret_valor/);
 
+const hostinger = await runPreflight({ rootDir, target: "production", env: {
+  PAYMENT_PROVIDER: "efi", EFI_ENVIRONMENT: "production",
+  EFI_WEBHOOK_MTLS_TERMINATION: "hostinger",
+  EFI_WEBHOOK_TOKEN: "token-de-teste-com-mais-de-24-caracteres",
+} });
+assert.ok(hostinger.checks.some(check => check.area === "Efí" && check.level === "pass" && check.message.includes("Hostinger CDN")));
+assert.ok(!hostinger.checks.some(check => check.area === "Efí" && check.level === "block" && check.message.includes("GATEWAY_SECRET")));
+
 assert.deepEqual(parseEnv("A=1\nB='dois'\n# comentário\nC=três=partes\n"), { A: "1", B: "dois", C: "três=partes" });
 
 console.log("PASS: preflight local aceita simulações seguras sem exigir credenciais");
