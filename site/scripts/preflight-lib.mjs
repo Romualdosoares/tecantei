@@ -32,6 +32,7 @@ const REQUIRED_MIGRATIONS = [
   "202609140002_customer_contact.sql",
   "202609150001_home_showcase.sql",
   "202609150002_admin_present_shares.sql",
+  "202610060001_gpt_6_1_sol.sql",
 ];
 
 const REQUIRED_ENV_KEYS = [
@@ -72,7 +73,7 @@ const REQUIRED_ENV_KEYS = [
 
 const SAFE_DEFAULTS = {
   KIE_LIVE_LYRICS_ENABLED: "false",
-  KIE_LYRICS_MODEL: "gpt-5-6-terra",
+  KIE_LYRICS_MODEL: "gpt-6-1-sol",
   KIE_MODEL: "V6",
   KIE_GENERATION_MODE: "mock",
   KIE_LIVE_GENERATION_ENABLED: "false",
@@ -94,7 +95,7 @@ const ALLOWED_PUBLIC_KEYS = new Set([
   "NEXT_PUBLIC_SITE_URL",
 ]);
 const KIE_MODELS = new Set(["V3_5", "V4", "V4_5", "V4_5PLUS", "V4_5ALL", "V5", "V5_5", "V6", "V6_MINI", "V6_WILD"]);
-const KIE_LYRIC_MODELS = new Set(["gpt-5-6-sol", "gpt-5-6-terra", "gpt-5-6-luna", "gpt-6-astra"]);
+const KIE_LYRIC_MODELS = new Set(["gpt-5-6-sol", "gpt-5-6-terra", "gpt-5-6-luna", "gpt-6-astra", "gpt-6-1-sol"]);
 
 export function parseEnv(source) {
   const result = {};

@@ -90,7 +90,7 @@ assert.match(home, /\/api\/lyrics\/draft/);
 assert.match(home, /Rascunho simulado/);
 assert.match(envExample, /LYRICS_GENERATION_MODE=mock/);
 assert.match(envExample, /KIE_LIVE_LYRICS_ENABLED=false/);
-assert.match(envExample, /KIE_LYRICS_MODEL=gpt-5-6-terra/);
+assert.match(envExample, /KIE_LYRICS_MODEL=gpt-6-1-sol/);
 
 console.log("PASS: rascunho local usa nome, história e ocasião sem chamar a geração musical");
 console.log("PASS: rota limita o corpo, alterna entre simulação e GPT via Kie.ai e mantém a letra editável antes da aprovação");

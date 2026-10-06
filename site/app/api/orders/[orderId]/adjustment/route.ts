@@ -14,7 +14,8 @@ import { effectiveMusicMode, getApplicationSettings } from "@/lib/admin/settings
 import { getKieApiKey, getKieWebhookHmacKey } from "@/lib/admin/secrets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { musicStyleWithVoice, type VoicePreference } from "@/lib/order-options";
+import type { VoicePreference } from "@/lib/order-options";
+import { buildMusicDirection, MusicAdjustmentNotesError } from "@/lib/music/style-profiles";
 
 const idSchema = z.string().uuid();
 const inputSchema = z.object({
@@ -83,6 +84,15 @@ export async function POST(
       return NextResponse.json({ error: "generation_not_open" }, { status: 503 });
     }
     const model = settings.musicModel;
+    let musicDirection;
+    try {
+      musicDirection = buildMusicDirection(order.style, order.voice_preference as VoicePreference, model, input.data.notes);
+    } catch (error) {
+      if (error instanceof MusicAdjustmentNotesError) {
+        return NextResponse.json({ error: "adjustment_notes_too_long", maxCharacters: error.maxCharacters }, { status: 400 });
+      }
+      throw error;
+    }
     const estimatedCreditsMillis = mode === "live" ? getKieEstimatedCreditsMillis() : 0;
     const budget = requireGenerationBudgetConfig(mode);
     const [kieApiKey, webhookHmacKey] = mode === "live"
@@ -152,17 +162,13 @@ export async function POST(
     }
 
     try {
-      const styleLimit = model === "V3_5" || model === "V4" ? 200 : 1_000;
-      const adjustedStyle = `${musicStyleWithVoice(order.style, order.voice_preference as VoicePreference)}. Ajuste solicitado: ${input.data.notes}`
-        .slice(0, styleLimit);
       const client = new KieMusicClient(liveConfig!.apiKey);
       const submission = await client.submitGeneration({
         approvedLyrics: approvedLyrics.content,
-        style: adjustedStyle,
+        ...musicDirection,
         title: `Ajuste para ${order.recipient_name}`.slice(0, 80),
         model,
         callbackUrl: liveConfig!.callbackUrl,
-        vocalGender: order.voice_preference === "masculina" ? "m" : "f",
         ...(["V5_5", "V6", "V6_MINI", "V6_WILD"].includes(model) ? { durationSeconds: 180 } : {}),
       });
       const { data: recorded, error: recordError } = await admin.rpc(

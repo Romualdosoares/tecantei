@@ -29,6 +29,10 @@ export type MusicGenerationRequest = {
   callbackUrl: string;
   durationSeconds?: number;
   vocalGender?: "m" | "f";
+  styleWeight?: number;
+  weirdnessConstraint?: number;
+  variety?: number;
+  negativeTags?: string;
 };
 
 export type ProviderTrack = {
@@ -112,6 +116,10 @@ export class KieMusicClient {
           style: request.style,
           title: request.title,
           ...(request.vocalGender ? { vocalGender: request.vocalGender } : {}),
+          ...(request.styleWeight !== undefined ? { styleWeight: request.styleWeight } : {}),
+          ...(request.weirdnessConstraint !== undefined ? { weirdnessConstraint: request.weirdnessConstraint } : {}),
+          ...(request.variety !== undefined ? { variety: request.variety } : {}),
+          ...(request.negativeTags ? { negativeTags: request.negativeTags } : {}),
           ...(request.durationSeconds
             ? { duration: request.durationSeconds }
             : {}),
@@ -207,6 +215,21 @@ export function advanceGenerationState(
 }
 
 function validateGenerationRequest(request: MusicGenerationRequest) {
+  if (!KIE_MODELS.includes(request.model)) throw new Error("Modelo musical inválido.");
+  if (request.vocalGender !== undefined && request.vocalGender !== "m" && request.vocalGender !== "f") {
+    throw new Error("Preferência vocal inválida.");
+  }
+  for (const value of [request.styleWeight, request.weirdnessConstraint]) {
+    if (value !== undefined && (!Number.isFinite(value) || value < 0 || value > 1 || Math.abs(value * 100 - Math.round(value * 100)) > 1e-8)) {
+      throw new Error("Os controles de estilo devem ficar entre 0 e 1, com até duas casas decimais.");
+    }
+  }
+  if (request.variety !== undefined && (!Number.isInteger(request.variety) || request.variety < 0 || request.variety > 4)) {
+    throw new Error("A diversidade deve ser um inteiro entre 0 e 4.");
+  }
+  if (request.negativeTags !== undefined && request.negativeTags.length > 1_000) {
+    throw new Error("As exclusões musicais devem ter até 1000 caracteres.");
+  }
   const promptLimit = request.model === "V3_5" || request.model === "V4"
     ? 3_000
     : 5_000;
@@ -241,7 +264,7 @@ function validateGenerationRequest(request: MusicGenerationRequest) {
   }
   if (
     request.durationSeconds !== undefined &&
-    (request.durationSeconds < 150 || request.durationSeconds > 240)
+    (!Number.isFinite(request.durationSeconds) || request.durationSeconds < 150 || request.durationSeconds > 240)
   ) {
     throw new Error("A duração desejada deve ficar entre 150 e 240 segundos.");
   }

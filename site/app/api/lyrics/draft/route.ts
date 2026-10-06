@@ -9,6 +9,7 @@ import { getSupabasePublicConfig } from "@/lib/supabase/env";
 
 const MAX_BODY_BYTES = 8 * 1_024;
 const NO_STORE = { "Cache-Control": "private, no-store" };
+export const maxDuration = 240;
 type LyricSettings = Pick<ApplicationSettings, "lyricsMode" | "lyricsModel" | "lyricsReasoningEffort" | "musicMode" | "musicModel">;
 const payloadSchema = z.object({
   occasion: z.string().trim().max(80).optional().transform((value) => value || "Uma homenagem especial"),
@@ -38,8 +39,8 @@ export async function POST(request: Request) {
 
     const fallbackSettings: LyricSettings = {
       lyricsMode: "mock" as const,
-      lyricsModel: "gpt-5-6-terra" as const,
-      lyricsReasoningEffort: "low" as const,
+      lyricsModel: "gpt-6-1-sol" as const,
+      lyricsReasoningEffort: "high" as const,
       musicMode: "mock" as const,
       musicModel: "V6" as const,
     };

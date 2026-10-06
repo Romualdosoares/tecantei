@@ -3,6 +3,8 @@ await import("./verify-premium-theme.mjs");
 await import("./verify-lyrics.mjs");
 await import("./verify-lyrics-draft.mjs");
 await import("./verify-kie-contract.mjs");
+await import("./verify-music-direction.mjs");
+await import("./verify-kie-lyrics.mjs");
 await import("./verify-generation-budget.mjs");
 await import("./verify-generation-storage.mjs");
 await import("./verify-generation-progress-ui.mjs");

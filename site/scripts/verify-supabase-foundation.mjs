@@ -246,7 +246,7 @@ assert.match(adjustmentRoute, /admin\.rpc\(\s*"claim_generation_submission"/);
 assert.match(adjustmentRoute, /estimatedCreditsMillis = mode === "live"/);
 assert.match(adjustmentRoute, /generation_limit_reached/);
 assert.match(adjustmentRoute, /error instanceof KieSubmissionUnknownError/);
-assert.match(adjustmentRoute, /Ajuste solicitado/);
+assert.match(adjustmentRoute, /buildMusicDirection\(order\.style, order\.voice_preference as VoicePreference, model, input\.data\.notes\)/);
 assert.doesNotMatch(adjustmentRoute, /while\s*\(|setInterval\s*\(|setTimeout\s*\(/);
 assert.match(kieCallbackRoute, /x-webhook-timestamp/);
 assert.match(kieCallbackRoute, /x-webhook-signature/);

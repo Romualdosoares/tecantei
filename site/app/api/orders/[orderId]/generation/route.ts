@@ -15,7 +15,8 @@ import { effectiveMusicMode, getApplicationSettings } from "@/lib/admin/settings
 import { getKieApiKey, getKieWebhookHmacKey } from "@/lib/admin/secrets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { musicStyleWithVoice, type VoicePreference } from "@/lib/order-options";
+import type { VoicePreference } from "@/lib/order-options";
+import { buildMusicDirection } from "@/lib/music/style-profiles";
 
 const idSchema = z.string().uuid();
 
@@ -144,11 +145,10 @@ export async function POST(
       const client = new KieMusicClient(liveConfig!.apiKey);
       const submission = await client.submitGeneration({
         approvedLyrics: approvedLyrics.content,
-        style: musicStyleWithVoice(order.style, order.voice_preference as VoicePreference),
+        ...buildMusicDirection(order.style, order.voice_preference as VoicePreference, model),
         title: `Canção para ${order.recipient_name}`.slice(0, 80),
         model,
         callbackUrl: liveConfig!.callbackUrl,
-        vocalGender: order.voice_preference === "masculina" ? "m" : "f",
         ...(["V5_5", "V6", "V6_MINI", "V6_WILD"].includes(model) ? { durationSeconds: 180 } : {}),
       });
       const { data: recorded, error: recordError } = await admin.rpc(

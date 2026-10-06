@@ -284,8 +284,12 @@ export function OrderEditor({
       body: JSON.stringify({ sourceVersionId, notes: adjustmentNotes }),
     }).catch(() => null);
     setAdjustmentBusy(false);
-    const data = response ? await response.json().catch(() => null) as { error?: string; mode?: "mock" | "live"; status?: string } | null : null;
+    const data = response ? await response.json().catch(() => null) as { error?: string; maxCharacters?: number; mode?: "mock" | "live"; status?: string } | null : null;
     if (!response?.ok) {
+      if (data?.error === "adjustment_notes_too_long" && Number.isInteger(data.maxCharacters)) {
+        setError(`Resuma o ajuste em até ${data.maxCharacters} caracteres para enviar todas as instruções junto com o estilo escolhido. Seu ajuste continua disponível.`);
+        return;
+      }
       setError(data?.error === "generation_limit_reached"
         ? "O limite temporário de criações foi atingido. Seu ajuste continua disponível; tente novamente mais tarde."
         : "Não foi possível reservar o ajuste. Nenhuma nova geração automática foi feita.");
@@ -354,7 +358,8 @@ export function OrderEditor({
       router.push(`/pedidos/${order.id}/entrega`);
       return;
     }
-    router.refresh();
+    // O checkout atualiza order.updated_at no servidor. Recarregar aqui remonta
+    // este editor pela key da página e apaga a janela com o QR Code recém-recebido.
   };
 
   const simulatePaymentEvent = async (incomingStatus: "confirmed" | "failed") => {

@@ -1373,3 +1373,33 @@ Resultado: **não está pronto para anunciar com otimização em Purchase**. A c
 Bloqueios: não há emissão de `Purchase` para Meta Pixel ou API de Conversões em nenhuma confirmação de pagamento. O único `purchase_confirmed` encontrado é uma métrica analítica interna acionada pela navegação da interface de simulação, não um evento Meta e não é vinculado a valor, moeda, `order_id`, `event_id` ou estado validado pelo provedor. A deduplicação atual cobre apenas `PageView`. Também não há implementação de boleto: os provedores configurados criam e consultam cobranças Pix. Por isso não é possível verificar no Events Manager uma compra-teste, origem browser/servidor ou deduplicação de `Purchase` ainda.
 
 Próximo passo: implementar `Purchase` exclusivamente dentro da transição idempotente de pagamento confirmado, com `value: 19.90`, `currency: "BRL"`, `order_id` e um `event_id` persistido/compartilhado para CAPI e browser quando houver retorno à página. Em seguida, realizar uma compra-teste autorizada e conferir no Events Manager: valor, moeda, IDs, origem browser/servidor, deduplicação e status aprovado. Boleto requer integração própria antes de poder ser incluído nessa validação.
+
+## GPT-6.1 Sol Alto e fidelidade musical em 06/10/2026
+
+Pedido: adicionar GPT-6.1 Sol com raciocínio Alto e corrigir os parâmetros para respeitar o estilo escolhido com criação profissional e original.
+
+Estado: implementação local concluída e validada. Migração aplicada no Supabase remoto em 06/10/2026, com `gpt-6-1-sol` e `high` confirmados por consulta. Publicação e avaliação auditiva real permanecem pendentes.
+
+Modelo: `site/lib/admin/settings.ts`, `site/app/admin/admin-dashboard.tsx`, `site/scripts/preflight-lib.mjs` e `site/.env.example` aceitam o identificador da Kie.ai `gpt-6-1-sol`. Selecionar o modelo no painel também seleciona raciocínio `high`. A migração `site/supabase/migrations/202610060001_gpt_6_1_sol.sql` amplia a restrição do banco e configura Sol/Alto no registro administrativo, preservando os modos e as portas de geração existentes. O motivo de alteração inclui o esforço de raciocínio na auditoria.
+
+Direção musical: `site/lib/music/style-profiles.ts` cobre os 18 estilos nomeados da interface, seus dois aliases antigos e estilos livres. Letra e arranjo compartilham orientação de ritmo, instrumentos, interpretação, métrica e refrão. Geração original e ajuste passam a enviar `styleWeight: 0.9`, `weirdnessConstraint: 0.3`, `variety: 0`, voz escolhida e exclusões coerentes. Estes controles são escolhas iniciais de produto para priorizar fidelidade e criatividade dentro do gênero; os valores não foram calibrados por escuta nesta sessão. A letra aprovada permanece integral no campo de letra; a duração desejada continua em 180 segundos. O peso de referência de áudio não é enviado sem referência.
+
+Correções de contrato: `site/lib/lyrics/kie-client.ts` separa instruções do compositor dos dados JSON do cliente, exige resposta concluída, aceita JSON e evento terminal SSE aninhado e limita a letra a 5.000 caracteres. O tempo de espera passou a 180 segundos, com limite de execução da rota em 240 segundos. `site/lib/music/kie-client.ts` valida os controles musicais antes da chamada ao provedor. O ajuste valida a capacidade efetiva das instruções antes de reservar direito ou orçamento; quando excedida, a interface informa o limite e mantém o ajuste disponível. Nenhuma instrução aceita é silenciosamente cortada.
+
+Validação: novos testes `site/scripts/verify-music-direction.mjs` e `site/scripts/verify-kie-lyrics.mjs` integrados à suíte. Falhas reproduzidas antes das correções; verificações finais de toda a suíte, ESLint, TypeScript e build Next.js 16.3.5 aprovadas, com 24 páginas geradas. O primeiro build falhou somente no acesso às fontes Google; a execução com acesso autorizado à rede e o build final após a revisão passaram. Revisão independente encontrou aceitação de resposta parcial e corte de notas de ajuste; ambos corrigidos e novamente revisados. `git diff --check` aprovado. Nenhuma chamada paga de letra, música ou pagamento foi executada.
+
+Fontes: documentação oficial OpenAI https://developers.openai.com/api/docs/models/gpt-6.1-sol ; documentação Kie.ai https://docs.kie.ai/market/chat/gpt-6-1-sol e https://docs.kie.ai/old-model/suno-api/generate-music . A interface musical anterior permanece documentada; não foi realizada migração para o novo contrato de jobs.
+
+Próximo passo: publicar a alteração na Vercel. Depois, executar um piloto musical com gasto autorizado e avaliar por escuta gênero, voz, fidelidade à letra, arranjo e acabamento antes de calibrar os parâmetros. O suporte real ao modelo pela credencial cadastrada e a qualidade sonora não foram testados nesta sessão.
+
+## Diagnóstico do carregamento Pix em 06/10/2026
+
+Pedido: sincronizar a atualização e verificar o Pix que não carrega no checkout.
+
+Causa reproduzida em produção: a Efí responde e a cobrança é persistida, mas `prepareCheckout` chama `router.refresh()` imediatamente após abrir a janela. O checkout atualiza `orders.updated_at`, usado na `key` do editor; a recarga remonta o componente e apaga os estados da janela e do QR Code. O clique controlado criou uma cobrança de R$ 19,90, pendente e vinculada ao provedor, com validade de uma hora; nenhum pagamento foi efetuado e nenhuma música foi gerada.
+
+Correção: removida a recarga do checkout pendente. A resposta já atualiza localmente estado, valor e dados Pix; pagamento confirmado continua navegando para a entrega. A chave de remontagem e a atualização periódica durante a geração musical permanecem preservadas.
+
+Validação local: suíte completa, ESLint, TypeScript e build de produção aprovados. Revisão independente não encontrou regressões concretas no fluxo Pix. A conferência visual após publicação permanece pendente.
+
+Sincronização: migração Sol/Alto aplicada no banco remoto. A conta inicialmente conectada à CLI Vercel pertence ao ZapPage e não possui o projeto vinculado; o proprietário indicou `https://vercel.com/romualdosoares/tecantei` para conferir a hospedagem correta. GitHub e publicação serão registrados após confirmação das respectivas operações.

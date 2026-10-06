@@ -25,6 +25,7 @@ export async function PATCH(request: Request) {
     await writeAudit(admin, identity.id, "update_ai_settings_requested", "application_settings", "1", input.data.reason, {
       lyricsMode: input.data.lyricsMode,
       lyricsModel: input.data.lyricsModel,
+      lyricsReasoningEffort: input.data.lyricsReasoningEffort,
       musicMode: input.data.musicMode,
       musicModel: input.data.musicModel,
     });

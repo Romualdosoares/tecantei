@@ -11,6 +11,7 @@ export const KIE_LYRIC_MODELS = [
   "gpt-5-6-terra",
   "gpt-5-6-luna",
   "gpt-6-astra",
+  "gpt-6-1-sol",
 ] as const;
 export type KieLyricModel = (typeof KIE_LYRIC_MODELS)[number];
 export const ADMIN_KIE_MODELS = ["V5", "V5_5", "V6", "V6_MINI", "V6_WILD"] as const;
@@ -43,7 +44,7 @@ export async function getApplicationSettings(
       : envLyricsModel(),
     lyricsReasoningEffort: isReasoningEffort(data?.lyrics_reasoning_effort)
       ? data.lyrics_reasoning_effort
-      : "low",
+      : "high",
     musicMode: data?.music_mode === "live" || data?.music_mode === "mock"
       ? data.music_mode
       : getKieGenerationMode(),
@@ -117,7 +118,7 @@ function envLyricsModel(): KieLyricModel {
   const configured = process.env.KIE_LYRICS_MODEL?.trim();
   return KIE_LYRIC_MODELS.includes(configured as KieLyricModel)
     ? configured as KieLyricModel
-    : "gpt-5-6-terra";
+    : "gpt-6-1-sol";
 }
 
 function isReasoningEffort(value: unknown): value is ApplicationSettings["lyricsReasoningEffort"] {
