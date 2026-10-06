@@ -6,6 +6,7 @@ site/.vinext/
 site/.wrangler/
 site/.sites-runtime/
 site/supabase/.temp/
+supabase/.temp/
 site/build/
 .vercel/
 site/tsconfig.tsbuildinfo

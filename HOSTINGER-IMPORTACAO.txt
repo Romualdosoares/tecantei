@@ -1,0 +1,12 @@
+Arquivo .env.hostinger gerado com credenciais reais do projeto Supabase Te Cantei.
+Domínio: https://www.tecantei.site. Não publicar esse arquivo no GitHub ou em pasta pública.
+Chaves Supabase e do cofre foram recuperadas sem exibi-las no chat.
+Configuração da Hostinger: pasta raiz site; Node.js 24; build npm run build; iniciar npm run start.
+CRON_SECRET é novo para esta hospedagem. Configure rotina GET/POST /api/jobs/generation-outputs com Authorization: Bearer seguido do valor privado dessa variável. O horário anterior era 04:15 UTC diariamente.
+Limites reconstruídos do estado registrado do projeto: 1.000.000 créditos por conta e ambiente em 24h. Novas gerações consomem créditos reais da Kie.ai.
+Efí mantém as credenciais existentes. O webhook da conta ainda aponta para tecantei.vercel.app; não foi alterado por esta exportação. A confirmação também consulta o provedor no checkout.
+Token da API de Conversões Meta não está no cofre Supabase e não pôde ser recuperado da Vercel.
+Verificação realizada em 06/10/2026: conexão Supabase, GPT-6.1 Sol/Alto e consulta Efí de cobrança existente com QR Code aprovados. Nenhuma cobrança, pagamento ou música foi criada nessa exportação.
+Após publicar na Hostinger, cadastrar a rotina automática, migrar o webhook Efí com a proteção exigida pela aplicação e verificar o checkout no domínio novo. A exportação não realiza essas alterações na hospedagem.
+Importação oficial: nas variáveis de ambiente da implantação, selecionar Import .env e escolher o arquivo .env.hostinger. Conferir os valores e salvar antes de publicar.
+Referência: https://www.hostinger.com/support/how-to-add-environment-variables-during-node-js-application-deployment/
